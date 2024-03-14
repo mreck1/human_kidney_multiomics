@@ -5,4 +5,4 @@ The main datasets (including Seurat objects used here) are available on GEO: GSE
 
 Intermediate data needed for some parts of the analysis is available in the supplementary data repository.
 
-unitls.R includes essential helper function required to execute the code.
+utils.R includes essential helper function required to execute the code.
