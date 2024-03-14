@@ -1,6 +1,7 @@
+# Path prefix
+path <- "path/to/files"
 # Load utilities
-source('../../utils.R')
-
+source(file.path(path, 'utils.R'))
 # Load the data
 multiome <- readRDS(multiome_path)
 #-------------------------------------------------------------------------------
@@ -10,7 +11,7 @@ multiome <- readRDS(multiome_path)
 
 # Figure 1b - UMAP coloured by level 2 annotations
 p <- DimPlot(multiome, label=F, pt.size=0.1, 
-             cols=colours_1b, group.by = 'Annotation.Lvl2', 
+             cols=colours_multiome_lvl2, group.by = 'Annotation.Lvl2', 
              reduction='umap_wnn', order=F) + 
   NoLegend() + NoAxes() + ggtitle('')
 
@@ -18,35 +19,31 @@ LabelClusters(p, id = "Annotation.Lvl2", size=4,
               fontface = "bold", color = "black", 
               box=F, repel=T, force = 5)
 
-ggsave(filename = "../../Graphs/umap_full.svg", 
+ggsave(filename = file.path(path, 'umap_full.svg'), 
        scale = 0.5, width = 70, height = 55, units='cm')
 
 
 # Figure 1c - UMAP coloured by control vs UUO
 DimPlot(multiome, label=F, pt.size=0.1, 
-        cols=c('Control' = pastellize('#6570be', 1),
-               'UUO' = 'grey80'), 
-        group.by = 'Condition', reduction='umap_wnn', 
-        order=F, shuffle=T) + 
-  NoLegend() + NoAxes() + ggtitle('')
-
-ggsave(filename = "../../Graphs/umap_control_uuo.pdf", 
-       scale = 0.5, width = 70, height = 55, units='cm')
-
-
-# Figure 1d - UMAP coloured by injury score
-palette_annotation1 <- c('Control' = 'grey80',
-                         'UUO' = pastellize('#702963', 0.9))
-
-DimPlot(multiome, label=F, pt.size=1, 
         cols=c('Control' = 'grey80',
                'UUO' = pastellize('#702963', 0.9)), 
         group.by = 'Condition', reduction='umap_wnn', 
         order=F, shuffle=T) + 
-  NoAxes() + ggtitle('') + theme(legend.text = element_text(colour="grey10", size=10, face="bold"))
+  NoLegend() + NoAxes() + ggtitle('')
 
-ggsave(filename = "../../Graphs/umap_injury_score.png", 
-       scale = 0.5, width = 70, height = 55, units='cm')
+ggsave(filename = file.path(path, 'umap_control_uuo.png'), 
+       scale = 0.5, width = 25, height = 25, units='cm')
+
+
+# Figure 1d - UMAP coloured by injury score
+multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'ITGB6', 'ITGB8'))) 
+pal <- viridis(n = 10, option = "B")
+FeaturePlot_scCustom(multiome, features='injury_score_UCell', 
+                     reduction='umap_wnn', order=T, col=pal) + 
+  NoLegend() + NoAxes() + ggtitle('')
+
+ggsave(filename = file.path(path, 'umap_injury_score.png'), 
+       scale = 0.5, width = 25, height = 25, units='cm')
 
 
 # Figure 1e - Comparrison of cell type proportions in control vs UUO
@@ -89,7 +86,7 @@ ncells <- as.data.frame(cbind(sapply(ncells, function(x) x[1]), sapply(ncells, f
 colnames(ncells) <- c('Sample', 'c_updated')
 
 non_epithelia$combination <- paste(non_epithelia$SampleXCondition, non_epithelia$cluster, sep='.')
-possible_combination <- crossing(non_epithelia$SampleXCondition, non_epithelia$cluster)
+possible_combination <- tidyr::crossing(non_epithelia$SampleXCondition, non_epithelia$cluster)
 possible_combination <- paste(possible_combination$`non_epithelia$SampleXCondition`, possible_combination$`non_epithelia$cluster`, sep='.')
 missing_combinations <- setdiff(possible_combination, non_epithelia$combination)
 
@@ -152,7 +149,7 @@ ggplot(non_epithelia, aes(cluster, percent, fill = Condition)) +
                              '**', '**', '**'),
               tip_length = 0.005)
 
-ggsave(filename = "../../Graphs/barplot_non_epithelia.svg", 
+ggsave(filename = file.path(path, 'barplot_non_epithelia.svg'), 
        scale = 0.5, width = 100, height = 33.5, units='cm')
 
 
@@ -190,7 +187,7 @@ ncells <- as.data.frame(cbind(sapply(ncells, function(x) x[1]), sapply(ncells, f
 colnames(ncells) <- c('var1', 'c_updated')
 
 plot_data$combination <- paste(plot_data$SampleXCondition, plot_data$cluster, sep='.')
-possible_combination <- crossing(meta_epithelia$SampleXCondition, meta_epithelia$cluster)
+possible_combination <- tidyr::crossing(meta_epithelia$SampleXCondition, meta_epithelia$cluster)
 possible_combination <- paste(possible_combination$`meta_epithelia$SampleXCondition`, possible_combination$`meta_epithelia$cluster`, sep='.')
 missing_combinations <- setdiff(possible_combination, plot_data$combination)
 
@@ -244,5 +241,6 @@ ggplot(plot_data, aes(cluster, percent, fill = Condition)) +
                              '**', '**', '**', '**', '**', '**', '**', '*'),
               tip_length = 0.005)
 
-ggsave(filename = "../../Graphs/barplot_epithelia.svg", 
+ggsave(filename = file.path(path, 'barplot_epithelia.svg'), 
        scale = 0.5, width = 55, height = 30, units='cm')
+
