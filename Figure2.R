@@ -337,7 +337,19 @@ for (gene_set in 1:length(go_ids)){
   
 
 # Figure 2g - PT cell states in mouse models
-meta <- read.csv(file.path(path, 'mouse_meta_data.csv'))
+iri <- readRDS(file.path(path,'iri_pt_data.rds'))
+meta_iri <- iri@meta.data
+meta_iri <- meta_iri[,colnames(meta_iri) %in% c('Cell_ID', 'Annotation_new', 'Timepoint')]
+meta_iri <- cbind(meta_iri, as.data.frame(iri@reductions[["umap.rpca"]]@cell.embeddings))
+meta_iri$model <- rep('IRI', nrow(meta_iri))
+
+ruuo <- readRDS(file.path(path, 'ruuo_pt_data.rds'))
+meta_ruuo <- ruuo@meta.data
+meta_ruuo <- meta_ruuo[,colnames(meta_ruuo) %in% c('Cell_ID', 'Annotation_new', 'Timepoint')]
+meta_ruuo <- cbind(meta_ruuo, as.data.frame(ruuo@reductions[["umap.rpca"]]@cell.embeddings))
+meta_ruuo$model <- rep('RUUO', nrow(meta_ruuo))
+
+meta <- rbind(meta_iri, meta_ruuo)
 meta$Timepoint <- as.character(meta$Timepoint)
 meta$Timepoint[meta$Timepoint=='4hours'] <- '4 Hours'
 meta$Timepoint[meta$Timepoint=='12hours'] <- '12 Hours'
@@ -349,29 +361,29 @@ meta$Timepoint[meta$Timepoint=='UUO d2'] <- 'Day 2'
 meta$Timepoint[meta$Timepoint=='UUO d7'] <- 'Day 7'
 meta$Timepoint[meta$Timepoint=='RUUO d21'] <- 'Day 21'
 
-meta_ruuo <- meta[meta$Model=='RUUO',]
-meta_iri <- meta[meta$Model=='IRI',]
+meta_ruuo <- meta[meta$model=='RUUO',]
+meta_iri <- meta[meta$model=='IRI',]
 
 # Plot for RUUO model
-plot_data_ruuo <- meta_ruuo %>% group_by(Timepoint, Annotation) %>%
+plot_data_ruuo <- meta_ruuo %>% group_by(Timepoint, Annotation_new) %>%
   summarise(Nb = n()) %>%
   mutate(C = sum(Nb)) %>%
   mutate(percent = Nb/C*100)
 
-plot_data_ruuo <- plot_data_ruuo[plot_data_ruuo$Annotation != 'PT Cycling',]
-plot_data_ruuo$Annotation <- factor(plot_data_ruuo$Annotation, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
+plot_data_ruuo <- plot_data_ruuo[plot_data_ruuo$Annotation_new != 'PT Cycling',]
+plot_data_ruuo$Annotation_new <- factor(plot_data_ruuo$Annotation_new, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
 plot_data_ruuo$Timepoint <- factor(plot_data_ruuo$Timepoint, levels=c('Control', 'Day 2', 'Day 7', 'Day 21'))
 plot_data_ruuo$percent <- as.numeric(plot_data_ruuo$percent)
 
 # Plot data for IRI model
-meta_iri$Annotation[meta_iri$Annotation %in% c('PT S1', 'PT S2', 'PT S3')] <- 'PT Healthy'
-plot_data_iri <- meta_iri %>% group_by(Timepoint, Annotation) %>%
+meta_iri$Annotation_new[meta_iri$Annotation_new %in% c('PT S1', 'PT S2', 'PT S3')] <- 'PT Healthy'
+plot_data_iri <- meta_iri %>% group_by(Timepoint, Annotation_new) %>%
   summarise(Nb = n()) %>%
   mutate(C = sum(Nb)) %>%
   mutate(percent = Nb/C*100)
 
-plot_data_iri <- plot_data_iri[plot_data_iri$Annotation != 'PT Cycling',]
-plot_data_iri$Annotation <- factor(plot_data_iri$Annotation, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
+plot_data_iri <- plot_data_iri[plot_data_iri$Annotation_new != 'PT Cycling',]
+plot_data_iri$Annotation_new <- factor(plot_data_iri$Annotation_new, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
 plot_data_iri$Timepoint <- factor(plot_data_iri$Timepoint, levels=c('Control', '4 Hours', '12 Hours', 'Day 2', 'Day 14', 'Week 6'))
 plot_data_iri$percent <- as.numeric(plot_data_iri$percent)
 
@@ -391,7 +403,7 @@ plot_data$Group[plot_data$Group=='Day 14'] <- 14
 plot_data$Group[plot_data$Group=='Week 6'] <- 42
 plot_data$Group <- as.numeric(plot_data$Group)
 
-ggplot(plot_data, aes(x=log10(Group+1), y=percent+1, group=Annotation, color=Annotation)) +
+ggplot(plot_data, aes(x=log10(Group+1), y=percent+1, group=Annotation_new, color=Annotation_new)) +
   geom_line(size=2) +
   geom_point(size=4) +
   scale_color_manual(values = c(purples[5], "sandybrown" , '#702963', 'mediumseagreen')) +
@@ -423,11 +435,38 @@ ggsave(filename = file.path(path, 'mouse_pt_proportions.svg'),
 
 # Figure 2h - RPTEC score UMAP
 subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
-dge_list <- read.csv(file.path(path, 'DEGs_RPTEC.csv'))
 
-dge_list <- dge_list[dge_list$Symbol %in% rownames(subset_pt),]
-dge_list <- dge_list[order(dge_list$log2FoldChange, decreasing = T),]
-genes_up <- dge_list[dge_list$log2FoldChange>1, 'Symbol']
+# Perform DE analysis from raw counts
+counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
+rownames(counts) <- counts$X; counts$X <- NULL
+counts <- counts[rowSums(counts)>0,]
+
+rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
+meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
+                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
+                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
+
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = meta,
+                              design = ~ Condition+Replicate)
+dds <- dds[rowSums(counts(dds)) >= 100,]
+dds <- DESeq(dds)
+res <- results(dds)
+
+resLFC <- lfcShrink(dds, coef=resultsNames(dds)[2], type="apeglm")
+resLFC <- as.data.frame(resLFC)
+resLFC$gene_id <- rownames(resLFC)
+
+ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+genemap <- getBM(attributes = c("ensembl_gene_id", "hgnc_symbol"), filters = "ensembl_gene_id", 
+                 values = rownames(resLFC), mart = ensembl) 
+resLFC <- merge(resLFC, genemap, by.x="gene_id", by.y="ensembl_gene_id")
+resLFC$Symbol <- resLFC$hgnc_symbol
+resLFC$hgnc_symbol <- NULL
+
+resLFC <- resLFC[resLFC$Symbol %in% rownames(subset_pt),]
+resLFC <- resLFC[order(resLFC$log2FoldChange, decreasing = T),]
+genes_up <- resLFC[resLFC$log2FoldChange<(-1), 'Symbol']
 
 subset_pt <- AddModuleScore_UCell(subset_pt,features = list('upregulated'=genes_up),
                              chunk.size = 8000, ncores = 10, name='')
@@ -446,8 +485,21 @@ ggsave(filename = file.path(path, 'umap_rptec_score.pdf'),
 
 
 # Figure 2i - Expression pattern of markers in irradiated RPTECs
-rptec_matrix <- read.csv(file.path(path, 'rptec_norm_counts.csv'))
-rptec_matrix$X <- NULL
+counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
+rownames(counts) <- counts$X; counts$X <- NULL
+counts <- counts[rowSums(counts)>0,]
+rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
+meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
+                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
+                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
+
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = meta,
+                              design = ~ Condition+Replicate)
+dds <- dds[rowSums(counts(dds)) >= 100,]
+dds <- DESeq(dds)
+normalized_counts <- vst(dds, blind=FALSE)
+
 rownames(rptec_matrix) <- make.unique(rptec_matrix$Symbol)
 rptec_matrix$Symbol <- NULL
 colnames(rptec_matrix) <- sub('\\.', '-', colnames(rptec_matrix))

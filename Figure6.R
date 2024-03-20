@@ -62,7 +62,7 @@ ggsave(filename = file.path(path, 'tf_scatterplot.svg'),
 multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
 pseudotime <- read.csv(file.path(path, 'PT_pseudotime_values.csv'))
 multiome_pt$Pseudotime <- pseudotime$Pseudotime
-regions <- read.csv(file.path(path, 'pt_pseudotime_regions.csv'))
+regions <- read.csv(file.path(path, 'PT_pseudotime_regions.csv'))
 
 # Bin cells in pseudotime
 groups <- cut(multiome_pt$Pseudotime,breaks = 500)

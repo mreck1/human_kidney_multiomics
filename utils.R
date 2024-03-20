@@ -25,6 +25,16 @@ library(ChIPpeakAnno)
 library(ggrepel)
 library(ggpp)
 library(reshape2)
+library(ggridges)
+library(networkD3)
+library(flipPlots)
+library(corrplot)
+library(DESeq2)
+library(biomaRt)
+library(EnhancedVolcano)
+library(ChIPseeker)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(EnsDb.Hsapiens.v86)
 library(motifmatchr)
 library(JASPAR2020)
 library(TFBSTools)
@@ -79,7 +89,25 @@ greys <- pal_material("grey", alpha = 0.5)(10)
 browns <- pal_material("brown", alpha = 0.5)(10)
 pinks <- pal_material("pink", alpha = 0.5)(10)
 
+
 # Colour maps
+colours_multiome_lvl1 <- c('TAL'=pastellize(indigos[5], 0.8),
+                           'T Cell'=pastellize(browns[7], 0.5),
+                           'Myeloid Cell'=pastellize(oranges[8], 0.5),
+                           'Endothelia'=pastellize(reds[5], 0.8),
+                           'PT'=pastellize(purples[5], 0.8),
+                           'IC-B'=pastellize(greens[3], 0.8),
+                           'IC-A'=pastellize(greens[7], 0.8),
+                           'CNT'=pastellize(blues[5], 0.8),
+                           'B Cell'=pastellize(pinks[5], 0.3),
+                           'DCT'=pastellize(blues[9], 0.8),
+                           'PC'=pastellize(blues[2], 0.8),
+                           'Interstitium'=pastellize(light_blues[3], 0.8),
+                           'PEC'=pastellize(greys[6], 0.3),
+                           'ATL'=pastellize(blue_greys[2], 0.8),
+                           'Podocyte'=pastellize(greys[8], 0.3),
+                           'DTL'=pastellize(blue_greys[4], 0.8))
+
 colours_multiome_lvl2 <- c('TAL Injured'=pastellize(indigos[5], 0.8),
                          'mTAL'=pastellize(indigos[4], 0.8),
                          'TAL Inflammatory'=pastellize(indigos[8], 0.8),
@@ -163,6 +191,32 @@ colours_cosmx_lvl1 <- c('LOH-DCT'=pastellize(indigos[8], 1),
                         'Fibroblast'=pastellize(light_blues[6], 1),
                         'PEC'=pastellize('gray22', 1),
                         'Podocyte'=pastellize('mistyrose', 1))
+
+colours_cosmx_lvl2 <- c('PT'=pastellize(purples[3], 0.8),
+                                 'PT Injured'=pastellize(purples[5], 0.8),
+                                 'PT Inflammatory'=pastellize(purples[8], 0.8),
+                                 'LOH-DCT'=pastellize(indigos[4], 0.8),
+                                 'LOH-DCT Injured'=pastellize(indigos[5], 0.8),
+                                 'LOH-DCT Inflammatory'=pastellize(indigos[8], 0.8),
+                                 'PC'=pastellize(blues[5], 0.8),
+                                 'IC'=pastellize(greens[5], 0.8),
+                                 'CD Injured'=pastellize(blues[8], 0.8),
+                                 'Monocyte'=pastellize(oranges[3], 0.8),
+                                 'Macrophage'=pastellize(oranges[5], 0.8),
+                                 'cDC'=pastellize(oranges[7], 0.8),
+                                 'Mast Cell'=pastellize(oranges[9], 0.8),
+                                 'T Cell'=pastellize(browns[5], 0.8),
+                                 'NK'=pastellize(browns[8], 0.8),
+                                 'B Cell'=pastellize(pinks[5], 0.5),
+                                 'Plasma Cell'=pastellize(pinks[8], 0.5),
+                                 'Fibroblast'=pastellize(light_blues[7], 0.3),
+                                 'Myofibroblast'=pastellize(browns[10], 0.3),
+                                 'Podocyte'=pastellize(greys[8], 0.3),
+                                 'Endothelia Glomerular'=pastellize(reds[5], 0.8),
+                                 'PEC'=pastellize(greys[6], 0.3),
+                                 'Mesangial Cell'=pastellize(light_blues[5], 0.3),
+                                 'Endothelia'=pastellize(reds[6], 0.8),
+                                 'SMC'=pastellize(light_blues[3], 0.3))
 
 colours_cosmx_niche <- c('LOH'=pastellize(indigos[6], 1),
                          'Endothelia'=pastellize(reds[9], 0.8),
