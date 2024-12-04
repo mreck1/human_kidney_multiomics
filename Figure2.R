@@ -4,7 +4,9 @@ path <- "path/to/files"
 source(file.path(path, 'utils.R'))
 # Load the data
 multiome <- readRDS(multiome_path)
+cosmx <- readRDS(cosmx6k_path)
 #-------------------------------------------------------------------------------
+
 
 # Figure 2a - RNA velocity UMAP
 # Export cell data and UMAP coordinates from Seurat
@@ -94,32 +96,41 @@ plot_data$Condition <- sapply(split_vector, "[", 2)
 plot_data$Annotation.Lvl2 <- factor(plot_data$Annotation.Lvl2, levels=c('PT S1', 'PT S2', 'PT S3', 'PT Injured', 'PT Inflammatory'))
 plot_data <- plot_data[plot_data$Annotation.Lvl2%in%c('PT Injured', 'PT Inflammatory'),]
 
+# Data summary for plotting purposes
+summary <- plot_data %>%
+  group_by(Annotation.Lvl2, Condition) %>%
+  summarize(
+    mean = mean(percent, na.rm = TRUE),
+    sem = sd(percent, na.rm = TRUE) / sqrt(n())
+  )
+
 # Significance calculated with wilcox.test, bars manually positioned below, e.g.:
 wilcox.test(plot_data$percent[plot_data$Annotation.Lvl2=='PT Inflammatory'&plot_data$Condition=='Control'], 
             plot_data$percent[plot_data$Annotation.Lvl2=='PT Inflammatory'&plot_data$Condition=='UUO'], 
             alternative = "two.sided")
 
 # Plot proportions
-ggplot(plot_data, aes(Annotation.Lvl2, percent, fill = Condition)) +
-  geom_bar(position = 'dodge', stat = 'summary', fun.y = 'mean') +
-  scale_fill_manual(values = c('grey60', '#702963')) +
+ggplot(summary, aes(fill = Condition, y = mean, x = Annotation.Lvl2)) +
+  geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
+                position = position_dodge(width = 0.9), width=0.4, size=1) +
+  geom_bar(stat = "identity", color="black", position='dodge') +
+  geom_jitter(data = plot_data, aes(x = Annotation.Lvl2, y = percent),
+              position = position_dodge(width = 0.9), size = 1.5, alpha = 1) +
   theme_classic() +
-  xlab("") + ylab("% of PT cells") +
-  theme(axis.title.y = element_text(face = "bold", size=12, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=12, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))+
-  geom_errorbar(stat = 'summary', position = 'dodge', width = 0.9) +
-  labs(fill = "Group") +
+  RotatedAxis() +
+  xlab('') + ylab(bquote('% of PT cells')) + 
+  scale_fill_manual(values = c('grey50', '#7366bd')) +
+  theme(axis.text.x = element_text(size = 12, color='black'),
+        axis.text.y = element_text(size = 12)) +
+  ylim(0,80) +
   geom_signif(xmin = c(0.75, 1.75), xmax = c(1.25, 2.25),
-              y_position = c(72, 28), 
-              annotation = c("**", "**"),
-              tip_length = 0.01)
+              y_position = c(75, 40), 
+              annotation = c("**", "**"), textsize = 5,
+              tip_length = 0.01) + NoLegend()
 
 ggsave(filename = file.path(path, 'pt_barplot.svg'), 
-       scale = 0.5, width = 15, height = 20, units='cm')
+       scale = 0.5, width = 13, height = 20, units='cm')
+
 
 
 # Figure 2c - Dotplots with PT cell state marker genes
@@ -128,91 +139,225 @@ Idents(subset_pt) <- factor(subset_pt$Annotation.Lvl2, levels=c('PT Inflammatory
 
 # Subplot 1
 # LINC02511 is included to keep consistent sizes of all sub-plots, cropped later
-DotPlot(subset_pt, features = c('PAX8', 'HNF4A', 'MME', 'CUBN', 'SLC34A1', 'VCAM1', 'HAVCR1', 'PROM1', 'DCDC2', 'TPM1', 'VIM', 'LINC02511'), 
+DotPlot(subset_pt, features = c('PAX8', 'HNF4A', 'MME', 'CUBN', 'VCAM1', 'HAVCR1', 'SOX9', 'ITGB8', 'LINC02511'), 
         cols=c('grey85', 'skyblue4'), scale=T) + NoLegend() + 
   theme_bw() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = "", y = "") +
-  annotate("rect", xmin = 0, xmax = 17, ymin = 2.5, ymax = 5.5,
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
            alpha = .1,fill = "white") + 
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=2)) +
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression")
+  labs(colour = "Average Expression") + NoLegend()
 
 ggsave(filename = file.path(path, 'pt_markers_1.svg'), 
-       scale = 0.5, width = 29, height = 16, units='cm')
+       scale = 0.5, width = 35, height = 16, units='cm')
+
 
 # Subplot 2
-DotPlot(subset_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'LIF', 'TNF', 'TGFB2', 'CDKN1A', 'FAS', 'LINC02511'), 
+DotPlot(subset_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'CXCL16', 'TNF', 'LIF', 'TNFSF14', 'IL34', 'LINC02511'),
         cols=c('grey85', 'red4'), scale=T) + NoLegend() + 
   theme_bw() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = "", y = "") +
-  annotate("rect", xmin = 0, xmax = 17, ymin = 2.5, ymax = 5.5,
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
            alpha = .1,fill = "white") + 
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=2)) +
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression")
+  labs(colour = "Average Expression") + NoLegend()
 
 ggsave(filename = file.path(path, 'pt_markers_2.svg'), 
-       scale = 0.5, width = 29, height = 16, units='cm')
+       scale = 0.5, width = 35, height = 16, units='cm')
 
 # Subplot 3
-DotPlot(subset_pt, features = c('HDAC9', 'BIRC3', 'CCN1', 'TP53BP2', 'ICAM1', 'CLDN1', 'CD44', 'MMP7', 'TNC', 'ADAMTS1', 'TGM2', 'IL18', 'IL32', 'C3', 'SYTL2', 'LINC02511'), 
+DotPlot(subset_pt, features = c('IL18', 'IL32', 'C3', 'TGFB2', 'TGM2', 'PDGFB', 'PDGFD', 'TNC', 'MMP7', 'CCN1', 'LINC02511'), 
         cols=c('grey85', 'darkgreen'), scale=T) + NoLegend() + 
   theme_bw() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = "", y = "") +
-  annotate("rect", xmin = 0, xmax = 17, ymin = 2.5, ymax = 5.5,
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
            alpha = .1,fill = "white") + 
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=2)) +
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression")
+  labs(colour = "Average Expression") + NoLegend()
 
 ggsave(filename = file.path(path, 'pt_markers_3.svg'), 
        scale = 0.5, width = 29, height = 16, units='cm')
 
+# Subplot 4
+DotPlot(subset_pt, features = c('ICAM1', 'CLDN1', 'CD44', 'CDKN1A', 'HDAC9', 'BIRC3', 'FAS', 'LINC02511'), 
+        cols=c('grey85', 'purple4'), scale=T) + NoLegend() + 
+  theme_bw() +
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") #+ NoLegend()
 
-# Figure 2d - PT UMAP coloured by pseudotime
+ggsave(filename = file.path(path, 'pt_markers_4.svg'), 
+       scale = 0.5, width = 60, height = 16, units='cm')
+
+
+# Figure 2d - KPMP aPT and projected inflammatory PT UMAP plot
+# Preparation - Projection of KPMP data
+# Load KPMP data (availible for download on KPMP website)
+kpmp <- LoadH5Seurat(kpmp_data)
+kpmp <- CreateSeuratObject(counts = kpmp@assays[["RNA"]]@counts, meta=kpmp@meta.data, min.cells = 30)
+
+# Load Multiome data
+multiome <- readRDS(multiome_path)
+multiome@assays[["ATAC"]] <- NULL
+multiome@assays[["chromvar"]] <- NULL
+multiome@assays[["regulon_gene"]] <- NULL
+multiome@assays[["regulon_region"]] <- NULL
+multiome@assays[["regulon"]] <- NULL
+multiome@reductions[["lsi_atac"]] <- NULL
+multiome@reductions[["umap_atac"]] <- NULL
+multiome@graphs[["wknn"]] <- NULL
+multiome@graphs[["wsnn"]] <- NULL
+
+# Data projection
+anchors <- FindTransferAnchors(
+  reference = multiome,
+  query = kpmp,
+  normalization.method = "SCT",
+  reference.reduction = "pca_gex",
+  dims = 1:50, 
+  reference.assay='SCT'
+)
+
+kpmp_transfered <- MapQuery(
+  anchorset = anchors,
+  query = kpmp,
+  reference = multiome,
+  refdata = list(
+    Annotation.Lvl1 = "Annotation.Lvl1", Annotation.Lvl2 = "Annotation.Lvl2", Condition="Condition"),
+  reference.reduction = "pca_gex", 
+  reduction.model = "umap_wnn"
+)
+
+# Add transfered data to kpmp object
+kpmp@reductions[["umap_projected"]] <- kpmp_transfered@reductions[["ref.umap"]]
+kpmp$Annotation.Lvl1_projected <- kpmp_transfered$predicted.Annotation.Lvl1
+kpmp$Annotation.Lvl2_projected <- kpmp_transfered$predicted.Annotation.Lvl2
+kpmp$Condition_projected <- kpmp_transfered$predicted.Condition
+kpmp@reductions[["umap"]] <- kpmp@reductions[["umap_projected"]]
+coords <- cbind(kpmp$UMAP_1, kpmp$UMAP_2)
+colnames(coords) <- c('UMAP_1', 'UMAP_2')
+rownames(coords) <- rownames(kpmp@reductions[["umap"]]@cell.embeddings)
+kpmp@reductions[["umap"]]@cell.embeddings <- coords
+kpmp@reductions[["umap"]]@key <- 'UMAP_'
+
+kpmp <- SCTransform(kpmp, vst.flavor = "v2", verbose = T)
+
+
+# Plot1 - Highlight aPT
+Idents(kpmp) <- kpmp$subclass.l2
+Cluster_Highlight_Plot(seurat_object = kpmp, 
+                       cluster_name = c('aPT'), 
+                       reduction='umap',
+                       highlight_color = c("navy"), pt.size = 0.01) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title=element_text(size=20), 
+        legend.text=element_text(size=20))
+
+ggsave(filename = file.path(path, 'umap_aPT.png'), 
+       scale = 0.5, width = 45, height = 30, units='cm')
+
+
+# Plot2 - Highlight projected PT Inflammatory
+Idents(kpmp) <- kpmp$Annotation.Lvl2_projected
+Cluster_Highlight_Plot(seurat_object = kpmp, 
+                       cluster_name = c('PT Inflammatory'), 
+                       reduction='umap',
+                       highlight_color = c('#702963'), pt.size = 0.01) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        legend.title=element_text(size=20), 
+        legend.text=element_text(size=20))
+
+ggsave(filename = file.path(path, 'umap_PTInfl.png'), 
+       scale = 0.5, width = 45, height = 30, units='cm')
+
+
+# Figure 2e - KPMP co-expression plots
+# Plot1 - Co-expression of HAVCR1/VCAM1
+p <- plot_density(kpmp, c("HAVCR1", "VCAM1"), joint = TRUE, combine = FALSE, adjust=12, method='wkde')
+p[["HAVCR1+ VCAM1+"]] +
+  ggtitle('HAVCR1/VCAM1 co-expression') +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = element_text(size = 12),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=12)
+  )
+ggsave(filename = file.path(path, 'umap_vcam_havcr1.png'), 
+       scale = 0.5, width = 30, height = 20, units='cm')
+
+# Plot1 - Co-expression of CCL2/CXCL1
+p <- plot_density(kpmp, c("CCL2", "CXCL1"), joint = TRUE, combine = FALSE, adjust=7, method='wkde')
+p[["CCL2+ CXCL1+"]] +
+  ggtitle('CCL2/CXCL1 co-expression') +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = element_text(size = 12),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=12)
+  )
+ggsave(filename = file.path(path, 'umap_ccl2_cxcl1.png'), 
+       scale = 0.5, width = 30, height = 20, units='cm')
+
+
+# Figure 2f - PT UMAP coloured by pseudotime
 subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
 pseudotime <- read.csv(file.path(path, 'PT_pseudotime_values.csv'))
 subset_pt$Pseudotime <- pseudotime$Pseudotime
 
-FeaturePlot(subset_pt, features = 'Pseudotime', reduction = 'umap_wnn', pt.size = 1.3) +
-  scale_color_viridis(option="B", begin=0.1, end=0.9) + 
+FeaturePlot(subset_pt, features = 'Pseudotime', reduction = 'umap_wnn', pt.size = 0.8) +
+  scale_color_viridis(option="B", begin=0.2, end=0.9) + 
   NoLegend()+ ggtitle('') + NoAxes() +
-  theme(legend.text = element_text(colour="grey10", size=16, face="bold")) +
+  theme(legend.text = element_text(colour="black", size=16)) +
   theme(legend.position='bottom') +
-  labs(colour="Latent time") +
+  labs(colour="Pseudotime") +
   theme(legend.key.width = unit(1.2, 'cm'),
-        legend.title = element_text(size=16, face='bold', vjust=0.85))
+        legend.title = element_text(size=16, vjust=1))
 
 ggsave(filename = file.path(path, 'umap_pseudotime.png'), 
        scale = 0.5, width = 35, height = 25, units='cm')
 
 
-# Figure 2e - Heatmap of pseudotime gene expression dynamics
+# Figure 2g - Heatmap of pseudotime gene expression dynamics
 subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
 pseudotime <- read.csv(file.path(path, 'PT_pseudotime_values.csv'))
 subset_pt$Pseudotime <- pseudotime$Pseudotime
@@ -234,7 +379,7 @@ result <- count_df %>%
   group_by(Interval, CellType) %>%
   summarize(TotalCount = sum(Count.Freq)) %>%
   group_by(Interval) %>%
-  filter(TotalCount == max(TotalCount)) %>%
+  dplyr::filter(TotalCount == max(TotalCount)) %>%
   ungroup()
 result <- result %>%
   arrange(Interval) %>%
@@ -242,7 +387,7 @@ result <- result %>%
     PrevInterval = lag(Interval),
     NextInterval = lead(Interval)
   ) %>%
-  filter(!is.na(PrevInterval) | !is.na(NextInterval)) %>%
+  dplyr::filter(!is.na(PrevInterval) | !is.na(NextInterval)) %>%
   group_by(Interval) %>%
   summarise(
     MostCommonCellType = CellType[which.max(TotalCount)],
@@ -274,9 +419,9 @@ heat <- pheatmap(avg_expr, cluster_cols=F, scale='row',
                  clustering_method='ward.D2', 
                  labels_col = rep('', ncol(avg_expr)),
                  labels_row = row_anno,
-                 color=c(viridis(1000, option='C', begin=0, end=0.2),
-                         viridis(300, option='B', begin=0.2, end=0.7),
-                         viridis(1000, option='B', begin=0.7, end=1)), 
+                 color=c(viridis(1000, option='D', begin=0, end=0.2),
+                         viridis(300, option='D', begin=0.2, end=0.8),
+                         viridis(1000, option='D', begin=0.8, end=1)), 
                  annotation_colors = list('Group'=c('PT S1' = purples[2] , 'PT S2' = purples[4],
                                                     'PT S3' = purples[6], 'PT Injured' = 'sandybrown',
                                                     'PT Inflammatory' = '#702963')),
@@ -284,7 +429,7 @@ heat <- pheatmap(avg_expr, cluster_cols=F, scale='row',
 add.flag(heat, kept.labels = row_anno, repel.degree = 0.2)
 
 
-# Figure 2f - GO term scores in pseudotime
+# Figure 2h - GO term scores in pseudotime
 subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
 pseudotime <- read.csv(file.path(path, 'PT_pseudotime_values.csv'))
 subset_pt$Pseudotime <- pseudotime$Pseudotime
@@ -309,34 +454,34 @@ for (gene_set in 1:length(go_ids)){
   plot_data$col <- rep('placeholder', nrow(plot_data))
   
   p <- ggplot(plot_data, aes(x=pseudotime, y=go_score, color=col)) +
-  geom_smooth(method='loess', se=F, span=0.6, size=2) +
-  theme_bw() +
-  ggtitle(go_names[gene_set]) +
-  scale_color_manual(values=colours[gene_set]) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
-  labs(x = "", y = "") +
-  theme(legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
-  guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") + 
-  theme(plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + coord_cartesian(ylim = c(-2, 2)) +
-  geom_hline(yintercept = 0, size=1, color='grey10', linetype = "dashed")
+    geom_smooth(method='loess', se=F, span=0.6, size=2) +
+    theme_bw() +
+    ggtitle(go_names[gene_set]) +
+    scale_color_manual(values=colours[gene_set]) +
+    theme(axis.text.x = element_blank(),
+          axis.text.y = element_text(face="bold", color="grey10", size=12),
+          axis.title.y = element_text(face="bold", color="grey10", size=12),
+          panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+    labs(x = "", y = "") +
+    theme(legend.position = "left", legend.box = "horizontal",
+          legend.text = element_text(colour="grey10", size=10, 
+                                     face="bold"),
+          legend.title = element_text(colour="grey10", size=10, 
+                                      face="bold"),
+          panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+    guides(colour = guide_colourbar(title.vjust = 0.85)) +
+    labs(colour = "Average Expression") + 
+    theme(plot.title = element_text(colour="grey10", size=12, 
+                                    face="bold")) + coord_cartesian(ylim = c(-2, 2)) +
+    geom_hline(yintercept = 0, size=1, color='grey10', linetype = "dashed")
   print(p)
   
   ggsave(filename = file.path(path, paste(go_names[gene_set], '.svg', sep='')),
          scale = 0.5, width = 25, height = 18, units='cm')
 }
-  
 
-# Figure 2g - PT cell states in mouse models
+
+# Figure 2i - PT cell states in mouse models
 iri <- readRDS(file.path(path,'iri_pt_data.rds'))
 meta_iri <- iri@meta.data
 meta_iri <- meta_iri[,colnames(meta_iri) %in% c('Cell_ID', 'Annotation_new', 'Timepoint')]
@@ -364,13 +509,16 @@ meta$Timepoint[meta$Timepoint=='RUUO d21'] <- 'Day 21'
 meta_ruuo <- meta[meta$model=='RUUO',]
 meta_iri <- meta[meta$model=='IRI',]
 
+meta_iri <- meta_iri[meta_iri$Annotation_new != 'PT Cycling',]
+meta_ruuo <- meta_ruuo[meta_ruuo$Annotation_new != 'PT Cycling',]
+
+
 # Plot for RUUO model
 plot_data_ruuo <- meta_ruuo %>% group_by(Timepoint, Annotation_new) %>%
   summarise(Nb = n()) %>%
   mutate(C = sum(Nb)) %>%
   mutate(percent = Nb/C*100)
 
-plot_data_ruuo <- plot_data_ruuo[plot_data_ruuo$Annotation_new != 'PT Cycling',]
 plot_data_ruuo$Annotation_new <- factor(plot_data_ruuo$Annotation_new, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
 plot_data_ruuo$Timepoint <- factor(plot_data_ruuo$Timepoint, levels=c('Control', 'Day 2', 'Day 7', 'Day 21'))
 plot_data_ruuo$percent <- as.numeric(plot_data_ruuo$percent)
@@ -382,7 +530,6 @@ plot_data_iri <- meta_iri %>% group_by(Timepoint, Annotation_new) %>%
   mutate(C = sum(Nb)) %>%
   mutate(percent = Nb/C*100)
 
-plot_data_iri <- plot_data_iri[plot_data_iri$Annotation_new != 'PT Cycling',]
 plot_data_iri$Annotation_new <- factor(plot_data_iri$Annotation_new, levels = c('PT Healthy', 'PT Injured', 'PT Inflammatory', 'PT Cycling'))
 plot_data_iri$Timepoint <- factor(plot_data_iri$Timepoint, levels=c('Control', '4 Hours', '12 Hours', 'Day 2', 'Day 14', 'Week 6'))
 plot_data_iri$percent <- as.numeric(plot_data_iri$percent)
@@ -402,167 +549,181 @@ plot_data$Group[plot_data$Group=='12 Hours'] <- 0.5
 plot_data$Group[plot_data$Group=='Day 14'] <- 14
 plot_data$Group[plot_data$Group=='Week 6'] <- 42
 plot_data$Group <- as.numeric(plot_data$Group)
+plot_data <- as.data.frame(plot_data)
 
-ggplot(plot_data, aes(x=log10(Group+1), y=percent+1, group=Annotation_new, color=Annotation_new)) +
-  geom_line(size=2) +
-  geom_point(size=4) +
-  scale_color_manual(values = c(purples[5], "sandybrown" , '#702963', 'mediumseagreen')) +
-  theme_bw() + 
+# As area plot
+ggplot(plot_data, aes(log10(Group+1), percent, fill = Annotation_new)) +
+  geom_area(color = "black", alpha=0.9, lwd = 0.2, linetype = 1) +
+  scale_fill_manual(values = c(purples[2], "sandybrown" , '#702963', 'mediumseagreen')) +
+  theme_classic() + 
   xlab('') + ylab('% of PT Cells') + labs(color = '') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=45, hjust=1),
-        axis.text.y = element_text(face="bold", color="grey10", size=10),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+  theme(axis.text.x = element_text(color="black", size=12, angle=45, hjust=1),
+        axis.text.y = element_text(color="black", size=10),
+        axis.title.y = element_text(color="black", size=12),
         legend.position = "top", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=12, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        legend.text = element_text(colour="black", size=12),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   guides(color = guide_legend(override.aes = list(size = 3))) + 
   scale_x_continuous(breaks = c(0, 0.06445799, 0.1760913, 0.4771213, 0.90309, 1.176091, 1.342423, 1.633468), 
                      labels = paste0(c('Baseline', '4 Hours', '12 Hours', '2 Days', '7 Days', '14 Days', '21 Days', '6 Weeks')),
-                     minor_breaks = c()) + 
-  scale_y_continuous(trans = log2_trans(), 
-                     breaks = c(1, 3, 9, 17, 33, 65, 101), 
-                     minor_breaks = c(),
-                     labels = c(0, 2, 8, 16, 32, 64, 100)) +
+                     minor_breaks = c(), expand = c(0, 0)) +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank()) +
   facet_grid(rows = vars(dataset)) + theme(strip.text.y = element_blank())
 
-ggsave(filename = file.path(path, 'mouse_pt_proportions.svg'),
-       scale = 0.5, width = 35, height = 25, units='cm')
+ggsave(filename = file.path(path, 'mouse_pt_proportions.pdf'),
+       scale = 0.5, width = 30, height = 22, units='cm')
 
 
-# Figure 2h - RPTEC score UMAP
-subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
 
-# Perform DE analysis from raw counts
-counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
-rownames(counts) <- counts$X; counts$X <- NULL
-counts <- counts[rowSums(counts)>0,]
+# Figure S2j - Dotplot, inflammatory PT markers in CosMx dataset
+subset_pt <- subset(cosmx, subset=Annotation.Lvl1 %in% c('PT'))
+Idents(subset_pt) <- factor(subset_pt$Annotation.Lvl2, levels=c('PT Inflammatory', 'PT Injured', 'PT'))
 
-rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
-meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
-                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
-                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
+# Subplot 1
+# CDK5RAP3 is included to keep consistent sizes of all sub-plots, cropped later
+DotPlot(subset_pt, features = c('PAX8', 'HNF4A', 'MME', 'CUBN', 'VCAM1', 'SOX9', 'ITGB8', 'DCDC2',  'CDK5RAP3'), 
+        cols=c('grey85', 'skyblue4'), scale=T) + NoLegend() + 
+  theme_bw() +
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
 
-dds <- DESeqDataSetFromMatrix(countData = counts,
-                              colData = meta,
-                              design = ~ Condition+Replicate)
-dds <- dds[rowSums(counts(dds)) >= 100,]
-dds <- DESeq(dds)
-res <- results(dds)
+ggsave(filename = file.path(path, 'pt_markers_1.svg'), 
+       scale = 0.5, width = 35, height = 13, units='cm')
 
-resLFC <- lfcShrink(dds, coef=resultsNames(dds)[2], type="apeglm")
-resLFC <- as.data.frame(resLFC)
-resLFC$gene_id <- rownames(resLFC)
+# Subplot 2
+DotPlot(subset_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL8', 'CXCL16', 'C3', 'TNC', 'MMP7', 'CDK5RAP3'),
+        cols=c('grey85', 'red4'), scale=T) + NoLegend() + 
+  theme_bw() +
+  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="grey10", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=10),
+        legend.title = element_text(colour="grey10", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
 
-ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-genemap <- getBM(attributes = c("ensembl_gene_id", "hgnc_symbol"), filters = "ensembl_gene_id", 
-                 values = rownames(resLFC), mart = ensembl) 
-resLFC <- merge(resLFC, genemap, by.x="gene_id", by.y="ensembl_gene_id")
-resLFC$Symbol <- resLFC$hgnc_symbol
-resLFC$hgnc_symbol <- NULL
-
-resLFC <- resLFC[resLFC$Symbol %in% rownames(subset_pt),]
-resLFC <- resLFC[order(resLFC$log2FoldChange, decreasing = T),]
-genes_up <- resLFC[resLFC$log2FoldChange<(-1), 'Symbol']
-
-subset_pt <- AddModuleScore_UCell(subset_pt,features = list('upregulated'=genes_up),
-                             chunk.size = 8000, ncores = 10, name='')
-subset_pt$upregulated_scaled <- scale(subset_pt$upregulated)
-
-FeaturePlot(subset_pt, features='upregulated_scaled', reduction='umap_wnn', min.cutoff = 0, order=T,
-            cols = c('grey80', 'navy'), pt.size = 0.05) +
-  xlab("") + ylab("") +
-  theme(axis.text.x = element_text(face = "bold", size=0, angle = 45, hjust = 1, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=0, color = "grey10"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10')) + ggtitle('')
-
-ggsave(filename = file.path(path, 'umap_rptec_score.pdf'), 
-       scale = 0.5, width = 20, height = 15, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_2.svg'), 
+       scale = 0.5, width = 35, height = 13, units='cm')
 
 
-# Figure 2i - Expression pattern of markers in irradiated RPTECs
-counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
-rownames(counts) <- counts$X; counts$X <- NULL
-counts <- counts[rowSums(counts)>0,]
-rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
-meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
-                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
-                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
+# Figure 2k - CosMx spatial plots
+cosmx$InjuryState <- cosmx$Annotation.Lvl2
+cosmx$InjuryState[cosmx$InjuryState%in%c('B Cell', 'NK Cell', 'T Cell', 'Plasma Cell', 'Treg')] <- 'Other'
+cosmx$InjuryState[cosmx$InjuryState%in%c('CD16 Monocyte', 'cDC', 'Macrophage', 'CD14 Monocyte', 'Mast Cell', 'pDC', 'Monocyte Transitioning')] <- 'Myeloid Cell'
+cosmx$InjuryState[cosmx$InjuryState%in%c('Myofibroblast')] <- 'Myofibroblast'
+cosmx$InjuryState[cosmx$InjuryState%in%c('Endothelia', 'SMC/Pericyte', 'JG Cell')] <- 'Other'
+cosmx$InjuryState[cosmx$InjuryState%in%c('Fibroblast', 'PEC', 'Podocyte', 'Mesangial Cell', 'Endothelia Glomerular')] <- 'Other'
+cosmx$InjuryState[cosmx$InjuryState%in%c('DCT/CNT', 'DCT/CNT Injured', 'LOH', 'LOH Injured', 'LOH Inflammatory', 'IC', 'PC', 'PC Injured', 'IC Injured')] <- 'Non-PT Epithelia'
 
-dds <- DESeqDataSetFromMatrix(countData = counts,
-                              colData = meta,
-                              design = ~ Condition+Replicate)
-dds <- dds[rowSums(counts(dds)) >= 100,]
-dds <- DESeq(dds)
-normalized_counts <- vst(dds, blind=FALSE)
+cosmx$InjuryState <- factor(cosmx$InjuryState, levels=c('PT', 'PT Injured', 'PT Inflammatory', 'Non-PT Epithelia', 'Myeloid Cell', 'Myofibroblast', 'Other', 'Capsule', 'Border Region'))
 
-rownames(rptec_matrix) <- make.unique(rptec_matrix$Symbol)
-rptec_matrix$Symbol <- NULL
-colnames(rptec_matrix) <- sub('\\.', '-', colnames(rptec_matrix))
 
-genes <- unique(c('CCL2', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'LIF', 'TNF', 
-                  'CDKN1A', 'FAS', 'HDAC9', 'BIRC3', 'CCN1', 'TP53BP2', 'ICAM1', 'CLDN1', 
-                  'CD44', 'ADAMTS1', 'TGM2', 'IL18', 'IL32', 'C3', 'SYTL2'))
 
-rptec_matrix_ss <- rptec_matrix[(rownames(rptec_matrix) %in% genes),]
-
-annotations <- as.data.frame(rep(c('Control', 'Irradiated'), 5))
-colnames(annotations) <- c('Treatment')
-row.names(annotations) <- colnames(rptec_matrix_ss)
-
-annot_colors=list(Treatment=c(Irradiated="#702963", Control="lightskyblue"))
-rptec_matrix_ss <- rptec_matrix_ss[match(genes, rownames(rptec_matrix_ss)),]
-rptec_matrix_ss <- rptec_matrix_ss[,match(c('B1-NR', 'B3-NR', 'B4-NR', 'B5-NR', 'B6-NR',
-                                'B1-IR', 'B3-IR', 'B4-IR', 'B5-IR', 'B6-IR'), colnames(rptec_matrix_ss))]
-
-pheatmap(rptec_matrix_ss, scale='row', color=colorRampPalette(c(muted("navy", l=30, c = 70), "white", muted("red", l=40, c = 90)))(500),
-         annotation_col = annotations, annotation_colors=annot_colors, cluster_rows=F, cluster_cols=F,
-         clustering_method='ward.D2', gaps_col=5, show_colnames=F, fontsize=14,
-         labels_row = make_bold_names(rptec_matrix_ss, rownames, rownames(rptec_matrix_ss)),
-         labels_col = make_bold_names(rptec_matrix_ss, colnames, colnames(rptec_matrix_ss)))
-
-# Figure 2j - Expression pattern of markers in irradiated RPTECs
-multiome$class <- multiome$Annotation.Lvl2
-multiome$class[multiome$class %in% c('PT S1', 'PT S2', 'PT S3')] <- 'PT Healthy'
-multiome$class[multiome$class %in% c('cTAL1', 'cTAL2', 'mTAL', 'Macula Densa')] <- 'TAL Healthy'
-multiome$class[multiome$class %in% c('DCT1', 'DCT2')] <- 'DCT Healthy'
-multiome$class[multiome$class %in% c('CNT')] <- 'CNT Healthy'
-multiome$class[multiome$class %in% c('cPC', 'mPC')] <- 'PC Healthy'
-multiome$class[multiome$class %in% c('mIC-A', 'IC-B', 'cIC-A')] <- 'IC Healthy'
-multiome$class[multiome$class %in% c('IC-A Injured')] <- 'IC Injured'
-Idents(multiome) <- multiome$class
-
-genes <- c('PROM1', 'DCDC2', 'SPP1', 'ITGB6', 'ITGB8',
-           'CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'LIF', 'TNF', 'TGFB2', 'CDKN1A', 'FAS',
-           'HDAC9', 'BIRC3', 'CCN1', 'TP53BP2', 'ICAM1', 'CLDN1', 'CD44', 'MMP7', 'TNC', 'ADAMTS1', 'TGM2', 'IL18', 'IL32', 'C3', 'SYTL2')
-avg_expr <- AverageExpression(multiome, assays = 'SCT', slot='data')
-avg_expr <- as.data.frame(avg_expr[["SCT"]])
-avg_expr <- avg_expr[rownames(avg_expr) %in% genes,]
-avg_expr <- avg_expr[genes,]
-
-avg_expr <- avg_expr[,colnames(avg_expr) %in% c('PT Injured', 'PT Inflammatory',
-                                                'TAL Injured', 'TAL Inflammatory', 'DCT Injured', 'CNT Injured', 'PC Injured', 'IC Injured', 
-                                                'PT Healthy', 'TAL Healthy', 'DCT Healthy', 'CNT Healthy', 'PC Healthy', 'IC Injured', 'IC Healthy')]
-
-avg_expr <- as.data.frame(t(as.matrix(avg_expr)))
-avg_expr <- avg_expr[c('PT Inflammatory', 'PT Injured', 'PT Healthy', 'TAL Inflammatory', 'TAL Injured', 'TAL Healthy', 
-                       'DCT Injured', 'DCT Healthy', 'CNT Injured', 'CNT Healthy',
-                       'PC Injured', 'PC Healthy'),]
-
-pheatmap(avg_expr, cluster_rows=F, cluster_cols=F, scale='column', 
-             clustering_method='ward.D2',
-             color=c(viridis(1000, option='B', begin=0, end=0.2),
-                     viridis(300, option='B', begin=0.2, end=0.6),
-                     viridis(1000, option='B', begin=0.6, end=1)), 
-             gaps_row = c(3, 6, 8, 10, 12),
-             gaps_col = c(5, 5, 5),
-             border_color = "grey10",
-             labels_row = make_bold_names(avg_expr, rownames, rownames(avg_expr)),
-             labels_col = make_bold_names(avg_expr, colnames, colnames(avg_expr)),
-             fontsize = 14
+palette_InjuryState <- c('PT'=pastellize(purples[3], 0.7),
+                    'PT Injured'=pastellize("sandybrown", 1),
+                    'PT Inflammatory'=pastellize('#702963', 1),
+                    'Myeloid Cell'=pastellize('#02FF07', 0.5),
+                    'Myofibroblast'=pastellize('yellow', 0.7),
+                    'Other'=pastellize('grey50', 1),
+                    'Glomeruli'=pastellize('grey30', 1),
+                    'Non-PT Epithelia'=pastellize('#0018A8', 0.5)
 )
+
+molcols <- c( 'CXCL1' = 'lightgoldenrod1',
+             'ITGB8' ='red',
+             'VCAM1' ='red'
+)
+
+
+#Overview plot
+ImageDimPlot(cosmx,
+             fov = "UUO2", axes = TRUE, group.by = 'InjuryState', 
+             cols = "glasbey", dark.background=F, size=1.2, boundaries='centroids') + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_classic() #+ NoLegend() 
+
+ggsave(filename = file.path(path, 'overview.png'),
+       scale = 0.5, width = 60, height = 60, units='cm')
+
+
+#Inflammatory PT areas
+
+crop1 <- SeuratObject::Crop(cosmx[["UUO2"]], x = c(69100, 70400), y = c((18050), (19450)))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
+
+ImageDimPlot(cosmx,
+             fov = "zoom1", axes = TRUE, group.by = 'InjuryState',
+             mols.cols = molcols, nmols=10000000, mols.size = 3,
+             molecules = c('CXCL1', 'VCAM1', 'ITGB8'),
+             cols = "glasbey", dark.background=F, size=1.2) + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_classic() #+ NoLegend() 
+
+ggsave(filename = file.path(path, 'InflammatoryPT_1.png'),
+       scale = 0.5, width = 50, height = 50, units='cm')
+
+
+
+crop1 <- SeuratObject::Crop(cosmx[["UUO2"]], x = c(69500, 70500), y = c((12400), (13400)))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
+
+ImageDimPlot(cosmx,
+             fov = "zoom1", axes = TRUE, group.by = 'InjuryState',
+             mols.cols = molcols, nmols=10000000, mols.size = 3,
+             molecules = c('CXCL1', 'VCAM1', 'ITGB8'),
+             cols = "glasbey", dark.background=F, size=1.2) + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_classic() #+ NoLegend() 
+
+ggsave(filename = file.path(path, 'InflammatoryPT_2.png'),
+       scale = 0.5, width = 50, height = 50, units='cm')
+
+
+#Injured PT areas
+crop1 <- SeuratObject::Crop(cosmx[["UUO2"]], x = c(62400, 63200), y = c((24000), (25300)))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
+
+ImageDimPlot(cosmx,
+             fov = "zoom1", axes = TRUE, group.by = 'InjuryState',
+             mols.cols = molcols, nmols=10000000, mols.size = 3,
+             molecules = c('CXCL1', 'VCAM1', 'ITGB8'),
+             cols = "glasbey", dark.background=F, size=1.2) + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_classic() #+ NoLegend() 
+
+ggsave(filename = file.path(path, 'InjuredPT_1.png'),
+       scale = 0.5, width = 50, height = 50, units='cm')
+
+
+crop1 <- SeuratObject::Crop(cosmx[["UUO2"]], x = c(52300, 53700), y = c((18000), (18900)))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
+
+ImageDimPlot(cosmx,
+             fov = "zoom1", axes = TRUE, group.by = 'InjuryState',
+             mols.cols = molcols, nmols=10000000, mols.size = 3,
+             molecules = c('CXCL1', 'VCAM1', 'ITGB8'),
+             cols = "glasbey", dark.background=F, size=1.2) + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_classic() #+ NoLegend() 
+
+ggsave(filename = file.path(path, 'InjuredPT_2.png'),
+       scale = 0.5, width = 40, height = 40, units='cm')
+
 

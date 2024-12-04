@@ -26,7 +26,7 @@ ggsave(filename = file.path(path, 'umap_full.svg'),
 # Figure 1c - UMAP coloured by control vs UUO
 DimPlot(multiome, label=F, pt.size=0.1, 
         cols=c('Control' = 'grey80',
-               'UUO' = pastellize('#702963', 0.9)), 
+               'UUO' = pastellize('#7366bd', 0.9)), 
         group.by = 'Condition', reduction='umap_wnn', 
         order=F, shuffle=T) + 
   NoLegend() + NoAxes() + ggtitle('')
@@ -37,10 +37,10 @@ ggsave(filename = file.path(path, 'umap_control_uuo.png'),
 
 # Figure 1d - UMAP coloured by injury score
 multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'ITGB6', 'ITGB8'))) 
-pal <- viridis(n = 10, option = "B")
+multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'MET', 'RELB', 'ITGB6', 'ITGB8'))) 
+pal <- viridis(n = 100, option = "D")
 FeaturePlot_scCustom(multiome, features='injury_score_UCell', 
-                     reduction='umap_wnn', order=T, col=pal) + 
-  NoLegend() + NoAxes() + ggtitle('')
+                     reduction='umap_wnn', order=T, col=pal, na_cutoff = 0) + NoLegend() + NoAxes() + ggtitle('')
 
 ggsave(filename = file.path(path, 'umap_injury_score.png'), 
        scale = 0.5, width = 25, height = 25, units='cm')
@@ -107,25 +107,31 @@ non_epithelia$Condition <- sapply(split_elements, function(x) x[2])
 non_epithelia <- merge(non_epithelia, ncells, by = "Sample")
 non_epithelia$percent <- ((as.numeric(non_epithelia$Nb)+1)/as.numeric(non_epithelia$c_updated))*100
 
+
+summary_non_epithelia <- non_epithelia %>%
+  group_by(cluster, Condition) %>%
+  summarize(
+    mean = mean(percent, na.rm = TRUE),
+    sem = sd(percent, na.rm = TRUE) / sqrt(n())
+  )
+
 # Significance calculated with wilcox.test, bars manually positioned below, e.g.:
 wilcox.test(non_epithelia$percent[non_epithelia$cluster=='PEC'&non_epithelia$Condition=='Control'], 
             non_epithelia$percent[non_epithelia$cluster=='PEC'&non_epithelia$Condition=='UUO'], 
             alternative = "two.sided", exact=T)
 
-# Plot non-epithelial proportions
-ggplot(non_epithelia, aes(cluster, percent, fill = Condition)) +
-  geom_bar(position = 'dodge', stat = 'summary') +
-  scale_fill_manual(values = c('grey60', '#702963')) +
+ggplot(summary_non_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
+  geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
+                position = position_dodge(width = 0.9), width=0.4, size=1)+
+  geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
   theme_classic() +
-  xlab("") + ylab("% of total cells") +
-  theme(axis.title.y = element_text(face = "bold", size=18, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=18, angle = 65, vjust=1,  hjust = 1, color = "black"),
-        axis.text.y = element_text(face = "bold", size=18, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=18, color="grey10"),
-        legend.text = element_text(face='bold', size=14, color='grey10'))+
-  geom_errorbar(stat = 'summary', position = 'dodge', width = 0.9) +
-  labs(fill = "Group") +
+  RotatedAxis() +
+  xlab('') + ylab(bquote('% of total cells')) + 
+  scale_fill_manual(values = c('grey50', '#7366bd')) +
+  theme(axis.text.x = element_text(size = 18, colour='black'),
+        axis.text.y = element_text(size = 18),
+        axis.title.y =element_text(size = 24)) +
+  ylim(0,20) +
   # Add significance bars
   geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 
                        4.75, 5.75, 6.75, 7.75, 8.75, 
@@ -139,15 +145,16 @@ ggplot(non_epithelia, aes(cluster, percent, fill = Condition)) +
                        28.25, 29.25, 30.25, 31.25, 32.25, 33.25, 34.25),
               y_position = c(2.3, 1, 2.3, 1.5, 2,  4.5,
                              1.5, 1.5, 1.5, 2.5, 3, 
-                             1.5, 1.5, 1.5, 4.5, 2.8, 1, 1, 3.3, 1, 1.8, 1, 
+                             2.5, 2.5, 2.5, 4.5, 2.8, 1, 1, 3.3, 1, 1.8, 1, 
                              5.2, 14.5, 4, 7.5, 7.5, 3, 3, 3, 3,
                              3, 14.5, 2.5), 
               annotation = c('NS', 'NS', 'NS', 'NS', 'NS', '*',
                              'NS', 'NS', '**', '**', '**',
-                             'NS', 'NS', '*', '**', '**', 'NS', '*', '**', 'NS', '**', 'NS',
+                             'NS', '**', '*', '**', '**', 'NS', '*', '**', 'NS', '**', 'NS',
                              '**', '**', '*', '**', '**', '*', 'NS', '**', 'NS',
                              '**', '**', '**'),
               tip_length = 0.005)
+
 
 ggsave(filename = file.path(path, 'barplot_non_epithelia.svg'), 
        scale = 0.5, width = 100, height = 33.5, units='cm')
@@ -210,23 +217,29 @@ plot_data$percent <- ((as.numeric(plot_data$Nb)+1)/as.numeric(plot_data$c_update
 
 # Order cell types
 plot_data$cluster <- factor(plot_data$cluster, levels=c('PT Healthy', 'TAL Healthy', 'DTL', 'ATL', 'DCT Healthy',
-                                                  'CNT Healthy', 'PC Healthy', 'IC Healthy', 'PT Injured', 'PT Inflammatory',
-                                                  'TAL Injured', 'TAL Inflammatory', 'DCT Injured', 'CNT Injured', 'PC Injured', 'IC-A Injured'))
+                                                        'CNT Healthy', 'PC Healthy', 'IC Healthy', 'PT Injured', 'PT Inflammatory',
+                                                        'TAL Injured', 'TAL Inflammatory', 'DCT Injured', 'CNT Injured', 'PC Injured', 'IC-A Injured'))
+plot_data$Condition <- sub(".*_","",plot_data$SampleXCondition)
 
-# Plot epithelial cell types
-ggplot(plot_data, aes(cluster, percent, fill = Condition)) +
-  geom_bar(position = 'dodge', stat = 'summary') +
-  scale_fill_manual(values = c('grey60', '#702963')) +
+summary_epithelia <- plot_data %>%
+  group_by(cluster, Condition) %>%
+  summarize(
+    mean = mean(percent, na.rm = TRUE),
+    sem = sd(percent, na.rm = TRUE) / sqrt(n())
+  )
+
+ggplot(summary_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
+  geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
+                position = position_dodge(width = 0.9), width=0.4, size=1)+
+  geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
   theme_classic() +
-  xlab("") + ylab("% of epithelial cells") +
-  theme(axis.title.y = element_text(face = "bold", size=20, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=20, angle = 65, vjust=1,  hjust = 1, color = "black"),
-        axis.text.y = element_text(face = "bold", size=20, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=20, color="grey10"),
-        legend.text = element_text(face='bold', size=16, color='grey10'))+
-  geom_errorbar(stat = 'summary', position = 'dodge', width = 0.9) +
-  labs(fill = "Group") +
+  RotatedAxis() +
+  xlab('') + ylab(bquote('% of epithelial cells')) + 
+  scale_fill_manual(values = c('grey50', '#7366bd')) +
+  theme(axis.text.x = element_text(size = 18, colour='black'),
+        axis.text.y = element_text(size = 18),
+        axis.title.y =element_text(size = 24)) +
+  ylim(0,50) +
   # Add significance bars
   geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 
                        4.75, 5.75, 6.75, 7.75, 8.75, 
@@ -236,11 +249,52 @@ ggplot(plot_data, aes(cluster, percent, fill = Condition)) +
                        9.25, 10.25, 11.25, 12.25, 13.25, 14.25, 15.25, 16.25),
               y_position = c(28, 42, 5,  7,
                              17, 12, 12, 12, 22, 
-                             12, 32, 12, 17, 7, 7, 8), 
+                             12, 32, 17, 17, 7, 7, 8), 
               annotation = c('*', '*', 'NS', 'NS', '**', '*', 'NS', 'NS',
                              '**', '**', '**', '**', '**', '**', '**', '*'),
               tip_length = 0.005)
 
 ggsave(filename = file.path(path, 'barplot_epithelia.svg'), 
        scale = 0.5, width = 55, height = 30, units='cm')
+
+
+# Figure 1f - CosMx umap
+DimPlot(cosmx_proj, label=F, pt.size=0.00001, cols=colours_cosmx6k_lvl1, group.by = 'Annotation.Lvl1', raster=F, order=F, repel=T, alpha=0.1) + NoAxes() + ggtitle('') #+ NoLegend()
+
+ggsave(filename = file.path(path, 'umap_6k.png'), 
+       scale = 0.5, width = 35, height = 27, units='cm')
+
+
+# Figure 1g - CosMx spatial plots
+# Control example
+crop1 <- SeuratObject::Crop(cosmx[["ffpe"]], x = c(61159, 81159), y = c(69563, 89563))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "centroids"
+
+ImageDimPlot(cosmx, 
+             fov = "ffpe", axes = TRUE, group.by = 'Annotation.Lvl1',
+             dark.background=F, size=1.2) + 
+  scale_fill_manual(values =   cols <- colours_cosmx6k_lvl1) + theme_classic() + NoLegend()
+
+ggsave(filename = file.path(path, 'control_overview.png'), 
+       scale = 0.5, width = 30, height = 30, units='cm')
+
+
+# UUO example
+crop1 <- SeuratObject::Crop(cosmx[["ffpe"]], y = c(1012, 21012), x = c(107462, 127462))
+cosmx[["zoom2"]] <- crop1
+DefaultBoundary(cosmx[["zoom2"]]) <- "centroids"
+
+
+ImageDimPlot(cosmx, 
+             fov = "zoom2", axes = TRUE, group.by = 'Annotation.Lvl1',
+             cols = "glasbey", dark.background=F, size=1) + 
+  scale_fill_manual(values =   cols <- colours_cosmx6k_lvl1) + theme_classic() + NoLegend()
+
+ggsave(filename = file.path(path, 'uuo_overview.png'), 
+       scale = 0.5, width = 30, height = 30, units='cm')
+
+
+
+
 

@@ -4,747 +4,410 @@ path <- "path/to/files"
 source(file.path(path, 'utils.R'))
 # Load the data
 multiome <- readRDS(multiome_path)
+cosmx1k <- readRDS(cosmx_path)
+cosmx6k <- readRDS(cosmx6k_path)
+options(future.globals.maxSize = 60000 * 1024^2)
+
 #-------------------------------------------------------------------------------
 
-# Figure 5a - graphic
-
-
-# Figure 5b - Histogram, number of linked CREs per gene
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
-
-genes <- c()
-n_cres <- c()
-for (gene in unique(regulons$Gene)){
-  n_cre <- length(unique(regulons$Region[regulons$Gene==gene]))
-  genes <- c(genes, gene)
-  n_cres <- c(n_cres, n_cre)
-}
-
-df <- as.data.frame(cbind(genes, n_cres))
-df$n_cres <- as.numeric(df$n_cres)
-df <- df[df$n_cres<50,]
-
-ggplot(df, aes(x=n_cres)) + 
-  geom_histogram(stat="count", binwidth=1, color='white', fill='grey45') +
-  theme_bw() + 
-  scale_color_viridis_c(option='B', begin=0, end=1) +
-  xlab("N Genes") + ylab("N linked CREs") +
-  labs(color = "% Inflammatory PT") + 
-  theme(axis.title.y = element_text(face = "bold", size=14, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=14, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=14, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=14, color = "grey10"),
-        legend.title = element_text(face = "bold", size=14, color="grey10", vjust=0.8),
-        legend.text = element_text(face='bold', size=14, color='grey10'),
-        legend.position = 'top') +
-  geom_vline(xintercept = 11, linetype="dashed", color = "grey20", size=1.5)
-
-ggsave(filename = file.path(path, 'histogram_cre_links.pdf'), 
-       scale = 0.5, width = 26, height = 10, units='cm')
-
-
-# Figure 5c - Histogram of TFs in healthy PTs
+# Figure 5a and 5f - Outgoing interaction dot plots
 multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
+Idents(multiome_pt) <- factor(multiome_pt$Annotation.Lvl2, levels=rev(c('PT Inflammatory', 'PT Injured', 'PT S3', 'PT S2', 'PT S1')))
+multiome_other <- subset(multiome, subset=Annotation.Lvl1%in%c('T Cell', 'Myeloid Cell', 'B Cell', 'Interstitium'))
+multiome_other <- subset(multiome_other, subset=Annotation.Lvl2 %in% c('vSMC', 'Pericyte', 'JG Cell'), invert=T)
+Idents(multiome_other) <- factor(multiome_other$Annotation.Lvl2, levels=c('Fibroblast', 'Myofibroblast', 'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated',
+                                                                          'Macrophage Resident', 'Macrophage HIF1A+', 'cDC1', 'cDC2', 'cDC CCR7+', 'pDC', 'Mast Cell', 'Naïve Th Cell', 'Effector Th Cell',
+                                                                          'Treg', 'Naïve Tc Cell', 'Effector Tc Cell', 'MAIT', 'NKT Cell', 'NK CD56dim',
+                                                                          'NK CD56bright', 'Naïve B Cell', 'Memory B Cell', 'Plasma Cell'))
 
-# Rankplot of DEGs between healthy and altered PTs
-markers <- FindMarkers(multiome_pt, ident.1 = c('PT S1', 'PT S2', 'PT S3'), 
-                       ident.2 = c('PT Injured', 'PT Inflammatory'), 
-                       min.pct = 0.03, logfc.threshold=0.1)
+# All subplots were generated with DotPlot, e.g.:
+DotPlot(multiome_pt, features=rev(c('CCL2', 'CCL20', 'CCL28')), cols=c('grey85', '#702963'), scale=T) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() + theme(axis.text.y = element_text(hjust = 0)) +
+  theme(axis.text.y = element_text(face="bold", size=10, hjust=1, vjust=0.5),
+        axis.text.x = element_text(face="bold", size=10, angle=90, hjust=0, vjust=0.5))
 
-genes_up <- rownames(markers)[markers$avg_log2FC>0.1]
-lfcs <- markers[order(-markers$avg_log2FC),]
-plot_df <- as.data.frame(cbind(lfcs$avg_log2FC, lfcs$p_val, 1:nrow(lfcs)))
-
-ggplot(plot_df, aes(x=V3, y=-V1, color=-log10(V2+10^-99))) +
-  geom_point() + 
-  theme_classic() + 
-  scale_color_viridis_c(option='D') +
-  xlab("") +
-  xlab("Number of genes") + ylab("Log2 fold change") +
-  labs(color = "-log10 P value") + 
-  theme(axis.title.y = element_text(face = "bold", size=10, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=8, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=10, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=8, color = "grey10"),
-        legend.title = element_text(face = "bold", size=10, color="grey10", vjust=0.8),
-        legend.text = element_text(face='bold', size=8, color='grey10'),
-        legend.position = 'top')
-
-ggsave(filename = file.path(path, 'rankplot.pdf'), 
-       scale = 0.5, width = 30, height = 10, units='cm')
+DotPlot(multiome_other, features=rev(c('CCR2', 'CCR6', 'CCR3', 'CCR10')), cols=c('grey85', '#702963'), scale=T) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() + theme(axis.text.y = element_text(hjust = 0)) +
+  theme(axis.text.y = element_text(face="bold", size=10, hjust=1, vjust=0.5),
+        axis.text.x = element_text(face="bold", size=10, angle=90, hjust=0, vjust=0.5))
 
 
-# Histogram of top TFs
-tf_list <- c()
-ngenes_list <- c()
-ncres_list <- c()
-corr_list <- c()
-for (tf in unique(regulons$TF)){
-  tf_list <- c(tf_list, tf)
-  tf_genes <- unique(regulons$Gene[regulons$TF==tf])
-  n_genes <- length(genes_up[genes_up%in%tf_genes])
-  ncres_list <- c(ncres_list, nrow(regulons[regulons$Gene %in% genes_up &
-                                                 regulons$TF ==tf ,]))
-  corr_list <- c(corr_list, mean(regulons[regulons$Gene %in% genes_up &
-                                            regulons$TF ==tf , 'TF2G_importance_x_rho']))
-  ngenes_list <- c(ngenes_list, n_genes)
+# Figure 5b - Spatial niche plot
+colours_cosmx6k_niche <- c('Blood Vessels'=pastellize('#525252', 1),
+                           'Normal Epithelia'=pastellize(indigos[6], 0.7),
+                           'Fibrotic Niche'= '#702963',
+                           'Injured Epithelia'=pastellize('sandybrown', 0.7),
+                           'Glomeruli'=pastellize('#525252', 1),
+                           'TLS' = 'yellow2')
+
+
+ImageDimPlot(cosmx6k,
+             fov = "UUO3", axes = TRUE, group.by = 'Niche',
+             dark.background=F, size=1.2, boundaries = 'centroids') + 
+  scale_fill_manual(values =   cols <- colours_cosmx6k_niche) + theme_classic() #+ NoLegend()
+
+ggsave(filename = file.path(path, 'uuo3_niche.png'), 
+       scale = 0.5, width = 50, height = 50, units='cm')
+
+
+# Figure S16c - Cell type enrichment in niches
+meta <- cosmx@meta.data
+meta$group <- as.character(meta$Annotation.Lvl2)
+meta <- meta[!meta$Annotation.Lvl1%in%c('Capsule', 'Border Region'),]
+
+# Generate counts per niche and cell type
+plot_data <- meta %>% group_by(Niche, group) %>% 
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+ct_vec <- c()
+fibrotic_vec <- c()
+inj_vec <- c()
+healthy_vec <- c()
+for (ct in unique(plot_data$group)){
+  fibrotic <- plot_data$Nb[plot_data$Niche=='Fibrotic Niche' & plot_data$group==ct]
+  inj <- plot_data$Nb[plot_data$Niche=='Injured Epithelia' & plot_data$group==ct]
+  healthy <- plot_data$Nb[plot_data$Niche=='Normal Epithelia' & plot_data$group==ct]
+  
+  ct_vec <- c(ct_vec, ct)
+  fibrotic_vec <- c(fibrotic_vec, fibrotic)
+  inj_vec <- c(inj_vec, inj)
+  healthy_vec <- c(healthy_vec, healthy)
 }
-df <- as.data.frame(cbind(tf_list, ngenes_list, ncres_list, corr_list))
-df <- rbind(df, c('All downregulated genes', 986, 1, 1))
-df <- rbind(df, c('Downregulated genes with linked CREs', 813, 1, 1))
-df$ngenes_list <- as.numeric(df$ngenes_list); df$ncres_list <- as.numeric(df$ncres_list)
-df$corr_list <- as.numeric(df$corr_list)
 
-df <- df[order(-df$ngenes_list),]
-df <- df[df$ngenes_list>200,]
-df$ngenes_list <- as.numeric(df$ngenes_list)
+df_prop <- data.frame(ct=ct_vec, fibrotic_count=fibrotic_vec, inj_count = inj_vec, healthy_count = healthy_vec)
+ct_counts <- df_prop$fibrotic_count+df_prop$inj_count+df_prop$healthy_count
+ct_counts <- ct_counts/sum(ct_counts)
 
-df <- df %>% mutate(name = fct_reorder(tf_list, dplyr::desc(-ngenes_list))) 
+# Generate expected cell counts by chance based on proportions of cell types in the dataset
+df_prop$fibrotic_chance <- 176659*ct_counts
+df_prop$injured_chance <- 157333*ct_counts
+df_prop$healthy_chance <- 86404*ct_counts
 
-ggplot(df, aes(x=name, y=ngenes_list, fill=ncres_list)) +
-  geom_bar(stat="identity", alpha=1, width=0.6) +
+# Calculate observed vs expected ratio, log2+1, centred on 0
+df_prop$fibrotic_ratio <- log2((df_prop$fibrotic_count/df_prop$fibrotic_chance)+1)-1
+df_prop$inj_ratio <- log2((df_prop$inj_count/df_prop$injured_chance)+1)-1
+df_prop$healthy_ratio <- log2((df_prop$healthy_count/df_prop$healthy_chance)+1)-1
+
+df_prop <- df_prop[df_prop$ct%in%c('CD14 Monocyte', 'Monocyte Transitioning', 'Myofibroblast', 'Macrophage', 'cDC', 'PT Inflammatory', 'PT Injured', 'PT'),]
+
+plot_data <- df_prop %>%
+  select(ct, fibrotic_ratio, inj_ratio, healthy_ratio) %>%
+  pivot_longer(cols = ends_with("ratio"), 
+               names_to = "Niche", 
+               values_to = "Enrichment_Ratio") %>%
+  mutate(Niche = recode(Niche, 
+                        fibrotic_ratio = "Fibrotic Niche", 
+                        inj_ratio = "Injured Epithelia", 
+                        healthy_ratio = "Healthy Epithelia"))
+
+# Order cell types by mean enrichment to improve readability (optional)
+plot_data <- plot_data %>% 
+  group_by(ct) %>% 
+  mutate(mean_ratio = mean(Enrichment_Ratio, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(mean_ratio) %>%
+  mutate(ct = factor(ct, levels = unique(ct)))
+
+plot_data$ct <- factor(plot_data$ct, levels=rev(c('PT', 'PT Injured', 'PT Inflammatory',
+                                              'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage', 'cDC', 'Myofibroblast')))
+
+ggplot(plot_data, aes(x = ct, y = Enrichment_Ratio)) +
+  geom_segment(aes(x = ct, xend = ct, y = 0, yend = Enrichment_Ratio), color = "black", size = 0.6) +
+  geom_point(aes(color = Niche), size = 4) +
+  scale_color_manual(values = c("Fibrotic Niche" = "#702963", "Injured Epithelia" = "sandybrown", "Healthy Epithelia" = indigos[6])) +
+  labs(x = "", y = "Enrichment [log2]") +
+  theme_minimal() +
+  geom_hline(yintercept = 0) +
   coord_flip() +
-  xlab("") +
-  theme_classic() + scale_fill_viridis_c(option='D') +
-  xlab("") + ylab("Number of genes with linked CREs") +
-  labs(fill = "Number of linked CREs") + 
-  theme(axis.title.y = element_text(face = "bold", size=14, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=14, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))
+  scale_y_continuous(limits = c(-1.5, 1.5), breaks = seq(-1.5, 1.5, by = 0.5)) +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, size=10),
+    axis.text.y = element_text(size=10),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)  # Adds a black border
+  ) + NoLegend()
 
-ggsave(filename = file.path(path, 'tf_n_target_genes.pdf'), 
-       scale = 0.5, width = 50, height = 38, units='cm')
+ggsave(filename = file.path(path, 'niche_ct_enrichment.pdf'), 
+       scale = 0.5, width = 20, height = 18, units='cm')
 
 
-# Figure 5d - Histogram of TFs in healthy PTs
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
-tfs <- c('CUX1', 'NFIB', 'PPARA', 'GLIS1', 'HNF4A', 'MAF', 'TFEC', 'HNF4G', 'HNF4A', 'MLXIPL',
-         'TFC2PL1', 'THRB', 'NR6A1', 'ESRRG', 'SOX6', 'PAX2', 'PAX8', 'PBX1', 'TEAD1',
-         'NFIC', 'FOXO1', 'ZBTB16', 'FOXO3', 'AR', 'ZNF69', 'NFIA', 'NR1H4')
 
-regulons <- regulons[regulons$TF %in% tfs,]
-regulons <- regulons[regulons$Gene %in% genes_up,]
-
-
-target_list <- list()
-for (tf in unique(regulons$TF)){
-  print(tf)
-  target_genes <- unique(regulons[regulons$TF==tf, 'Gene'])
-  target_list[[paste0(tf)]] <- target_genes
-}
-
-num_elements <- length(target_list)
-jaccard_matrix <- matrix(0, nrow = num_elements, ncol = num_elements)
-
-jaccard <- function(a, b) {
-  intersection = length(intersect(a, b))
-  union = length(a) + length(b) - intersection
-  return (intersection/union)
-}
-
-# Calculate Jaccard indices
-for (i in 1:num_elements) {
-  for (j in 1:num_elements) {
-    if (i == j) {
-      jaccard_matrix[i, j] <- 1
-    } else {
-      jaccard_matrix[i, j] <- jaccard(target_list[[i]], target_list[[j]])
-    }
-  }
-}
-colnames(jaccard_matrix) <- names(target_list)
-rownames(jaccard_matrix) <- names(target_list)
-
-pheatmap(jaccard_matrix, single=T, cluster_cols=T, scale='none', 
-             clustering_method='ward.D2',
-             border_color = "grey10",
-             fontsize = 10,
-             cutree_rows=4,
-             cutree_cols=4,
-             color = viridis(1000, option='B', alpha=.9),
-             labels_row = make_bold_names(jaccard_matrix, rownames, rownames(jaccard_matrix)),
-             labels_col = make_bold_names(jaccard_matrix, colnames, colnames(jaccard_matrix)),
+# Figure 5d - Localisation of inflammatory PT cells (UUO3)
+palette_InjuryState <- c('PT'=pastellize(purples[3], 0.7),
+                         'PT Injured'=pastellize("sandybrown", 1),
+                         'PT Inflammatory'=pastellize('#702963', 1),
+                         'Myeloid Cell'=pastellize('#00FFFF', 0.4),
+                         'Myofibroblast'=pastellize('#66FF00', 0.4),
+                         'Other'=pastellize('grey50', 1),
+                         'Glomeruli'=pastellize('grey30', 1),
+                         'Non-PT Epithelia'=pastellize('#0018A8', 1)
 )
 
+# Density maps
+p0 <- ImageDimPlot(cosmx,
+                   fov = "ffpe", axes = TRUE, group.by = 'InjuryState',
+                   cols = "glasbey", dark.background=F, size=1.2, boundaries='centroids') + 
+  scale_fill_manual(values =  palette_InjuryState) + theme_void() + NoLegend() 
+p0
+ggsave(filename = file.path(path, 'celltype_overview.jpg'), 
+       scale = 0.5, width = 250, height = 250, units='cm', limitsize = FALSE)
 
-# Figure 5e - Network graph created from SCENIC+ analysis
+p_data <- p0[[1]][["data"]]
+p1 <- ggplot(p_data, aes(x = y, y = x)) +
+  geom_point(size=0.01, aes(color=InjuryState)) +
+  scale_colour_manual(values =  palette_InjuryState) +
+  xlim(min(p_data$y), max(p_data$y)) +
+  ylim(min(p_data$x), max(p_data$x)) + 
+  geom_density_2d_filled(data = subset(p_data, InjuryState %in% c('PT Inflammatory')),
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.1) +
+  scale_fill_viridis_d(option = "magma", na.value = "white",) + theme_void() + scale_alpha(guide = 'none') + NoLegend()
+p1
+ggsave(filename = file.path(path, 'density_overview.jpg'), 
+       scale = 0.5, width = 120, height = 100, units='cm')
 
 
-# Figure 5f - TF transcript level, target gene score, target CREs in pseudotime
+
+# Figure 5e - Transcript origins in firbrotic niche
+cosmx6k_fib <- subset(cosmx6k, subset=Niche=='Fibrotic Niche')
+cosmx6k_fib$Annotation.Lvl1 <- as.character(cosmx6k_fib$Annotation.Lvl1)
+cosmx6k_fib$Annotation.Lvl1[cosmx6k_fib$Annotation.Lvl1%in%c('Endothelia Glomerular', 'Podocyte', 'PEC', 'SMC/Pericyte')] <- 'Other'
+cosmx6k_fib$Annotation.Lvl1[cosmx6k_fib$Annotation.Lvl2%in%c('PT Inflammatory')] <- 'PT Inflammatory'
+cosmx6k_fib$Annotation.Lvl1[cosmx6k_fib$Annotation.Lvl2%in%c('PT Injured')] <- 'PT Injured'
+cosmx6k_fib$Annotation.Lvl1[cosmx6k_fib$Annotation.Lvl1%in%c('LOH', 'LOH', 'DCT/CNT', 'PC', 'IC')] <- 'Non-PT Epithelia'
+cosmx6k_fib$Annotation.Lvl1 <- factor(cosmx6k_fib$Annotation.Lvl1, levels=rev(c('PT', 'PT Injured', 'PT Inflammatory', 'Non-PT Epithelia', 'Endothelia', 'Fibroblast', 'Myeloid Cell', 'T Cell', 'B Cell', 'Other')))
+
+colours_cosmx6k_lvl1 <- c('PT'=pastellize(purples[9], 0.8),
+                          'PT Injured'=pastellize('sandybrown', 1),
+                          'PT Inflammatory'=pastellize('#702963', 1),
+                            'Non-PT Epithelia'=pastellize(indigos[9], 0.9),
+                            'T Cell'=pastellize('purple3', 0.5),
+                            'B Cell'=pastellize(browns[7], 0.7),
+                            'Myeloid Cell'=pastellize(oranges[7], 0.7),
+                            'Endothelia'=pastellize(reds[9], 1),
+                            'Endothelia Glomerular'=pastellize(reds[9], 1),
+                            'SMC/Pericyte'=pastellize('yellow', 0.6),
+                            'Fibroblast'=pastellize('yellow', 0.6),
+                            'Other'=pastellize('gray20', 0.8),
+                            'Podocyte'=pastellize('gray20', 0.8))
+
+# Query genes
+genes <- rev(c('CCL2', 'CCL20', 'CCL28', "CXCL1", 'CXCL2', 'CXCL3', 'CXCL8', 'CXCL16'))
+all_summary_data <- data.frame()
+
+# Loop through each gene to summarize data and store it in all_summary_data
+for (gene in genes) {
+  
+  # Fetch data for the current gene
+  data <- FetchData(cosmx6k_fib, vars = gene)
+  data$ct <- cosmx6k_fib$Annotation.Lvl1
+  colnames(data) <- c("gene", "ct")
+  
+  # Summarize data by cell type and adjust counts
+  summary_data <- data %>%
+    group_by(ct) %>%
+    summarise(total_count = sum(gene), 
+              abundance = n()) %>%
+    mutate(adjusted_count = total_count - (0.09 * abundance),
+           adjusted_proportion = adjusted_count / sum(total_count)) #Remove random noise in cosmx assay
+  
+  # Ensure no negative proportions
+  summary_data$adjusted_proportion[summary_data$adjusted_proportion < 0] <- 0
+  
+  # Add the current gene name as a column
+  summary_data$gene <- gene
+  
+  # Combine with the overall dataframe
+  all_summary_data <- bind_rows(all_summary_data, summary_data)
+}
+
+all_summary_data$gene <- factor(all_summary_data$gene, levels=genes)
+
+ggplot(all_summary_data, aes(fill = ct, y = adjusted_proportion, x = gene)) + 
+  geom_bar(position = "fill", stat = "identity", width = 0.7, color = "black", size = 0.3, alpha=0.9) +
+  scale_fill_manual(values = colours_cosmx6k_lvl1) +
+  labs(x = '', y = "Proportion", fill = "Cell Type") +
+  theme_classic() + 
+  RotatedAxis() + coord_flip()
+
+ggsave(filename = file.path(path, 'transcript_origin.pdf'), 
+       scale = 0.5, width = 22, height = 14, units='cm')
+
+
+# Figure 5f - Spatial plots of ligands and cell type markers
+# Myeloid Cells
+crop1 <- Crop(cosmx1k[["nephrectomy_1"]], x = c(140000, 141500), y = c((-5000), (-3500)))
+cosmx1k[["zoom3"]] <- crop1
+DefaultBoundary(cosmx1k[["zoom3"]]) <- "segmentation"
+
+# Image 1
+ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
+             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
+             cols=colours_cosmx1k_cell_state,
+             mols.cols = c('CCL2'='red', 'CCL20'='orange', 'CCL28'='lightgoldenrod1', 'CXCL1'='purple',
+                           'CSF1'='blue', 'IL34'='#74c476'),
+             molecules = rev(c('CCL2', 'CCL20', 'CCL28', 'CSF1', 'IL34', 'CXCL1')),
+             mols.alpha = 1, alpha=0.9, mols.size = 1.5, nmols = 1000, border.color = "grey10", border.size=0.1) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold")) + NoLegend() + NoAxes()
+
+ggsave(filename = file.path(path, 'spatial_plot_ligands.pdf'), 
+       scale = 0.5, width = 25, height = 25, units='cm')
+
+
+# Image 2
+ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
+             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
+             cols=colours_cosmx1k_cell_state,
+             mols.cols = c('CD163'='red', 'MRC1'='red', 
+                           'LYZ'='blue', 'S100A8' ='blue'),
+             molecules = rev(c('CD163', 'LYZ', 'MRC1', 'S100A8')),
+             mols.alpha = 0.9, alpha=0.9, mols.size = 2, nmols = 1000, border.color = "grey10", border.size=0.1) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold")) + NoLegend() + NoAxes()
+
+ggsave(filename = file.path(path, 'spatial_plot_markers.pdf'), 
+       scale = 0.5, width = 25, height = 25, units='cm')
+
+
+# Figure 5g - Density plot CCL2, FCN1 transcripts
+p0 <- ImageDimPlot(cosmx6k, fov = "UUO3", axes = TRUE, group.by = 'Niche',
+                   nmols=100000000, mols.size = 3,
+                   molecules = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CCR2'),
+                   cols = "glasbey", dark.background=F, size=1.2, boundaries='centroids') + 
+  scale_fill_manual(values =  colours_cosmx6k_niche) + theme_void() + NoLegend() 
+
+p_data <- p0[[1]][["data"]]
+p_data2 <- p0[[1]][["layers"]][[2]][["data"]]
+
+
+p1 <- ggplot(p_data, aes(x = y, y = x)) +
+  geom_point(size=0.01, aes(color=Niche)) +
+  scale_colour_manual(values =  colours_cosmx6k_niche) +
+  xlim(min(p_data$y), max(p_data$y)) +
+  ylim(min(p_data$x), max(p_data$x)) + 
+  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('CCL2', 'CCL20', 'CCL28', 'CXCL1')),
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.5) +
+  scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
+p1
+
+ggsave(filename = file.path(path, 'uuo3_ccl2.png'), 
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+
+p1 <- ggplot(p_data, aes(x = y, y = x)) +
+  geom_point(size=0.01, aes(color=Niche)) +
+  scale_colour_manual(values =  colours_cosmx6k_niche) +
+  xlim(min(p_data$y), max(p_data$y)) +
+  ylim(min(p_data$x), max(p_data$x)) + 
+  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('CCR2')),
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.4) +
+  scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
+p1
+ggsave(filename = file.path(path, 'uuo3_ccr2.png'), 
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+
+# Plot 2
+ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
+             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
+             cols=colours_cosmx1k_cell_state,
+             mols.cols = c('PDGFRA'='red', 'PDGFRB'='#2044e8'),
+             molecules = rev(c('PDGFRA', 'PDGFRB')),
+             mols.alpha = 1, alpha=0.9, mols.size = 3, nmols = 3000, border.color = "grey10", border.size=0.1) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold")) + NoLegend() + NoAxes()
+
+ggsave(filename = file.path(path, 'spatial_plot_pdgf_receptors.pdf'), 
+       scale = 0.5, width = 15.7767, height = 25, units='cm')
+
+
+# Figure 5i Density plot of fibroblast activation pathways
+p0 <- ImageDimPlot(cosmx6k, fov = "UUO3", axes = TRUE, group.by = 'Niche',
+                   nmols=100000000, mols.size = 3,
+                   molecules = c( 'COL1A1', 'COL3A1', 'PDGFRA', 'PDGFA'),
+                   cols = "glasbey", dark.background=F, size=1.2, boundaries='centroids') + 
+  scale_fill_manual(values =  colours_cosmx6k_niche) + theme_void() + NoLegend() 
+
+p_data <- p0[[1]][["data"]]
+p_data2 <- p0[[1]][["layers"]][[2]][["data"]]
+
+p1 <- ggplot(p_data, aes(x = y, y = x)) +
+  geom_point(size=0.01, aes(color=Niche)) +
+  scale_colour_manual(values =  colours_cosmx6k_niche) +
+  xlim(min(p_data$y), max(p_data$y)) +
+  ylim(min(p_data$x), max(p_data$x)) + 
+  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('COL1A1', 'COL3A1', 'PDGFA')),
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.8) +
+  scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
+p1
+ggsave(filename = file.path(path, 'uuo3_myofib.png'), 
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+p1 <- ggplot(p_data, aes(x = y, y = x)) +
+  geom_point(size=0.01, aes(color=Niche)) +
+  scale_colour_manual(values =  colours_cosmx6k_niche) +
+  xlim(min(p_data$y), max(p_data$y)) +
+  ylim(min(p_data$x), max(p_data$x)) + 
+  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('PDGFA')),
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.6) +
+  scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
+p1
+ggsave(filename = file.path(path, 'uuo3_pdgfa.png'), 
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+
+# Figure 5j - Spatial plots of ligands and cell type markers
+# Fibroblasts
+crop1 <- Crop(cosmx1k[["nephrectomy_1"]], x = c(140000, 141500), y = c((-5000), (-3500)))
+cosmx1k[["zoom3"]] <- crop1
+DefaultBoundary(cosmx1k[["zoom3"]]) <- "segmentation"
+
+# Plot 1
+ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
+             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
+             cols=colours_cosmx1k_cell_state,
+             mols.cols = c('PDGFA'='red', 'PDGFB'='#2044e8', 'PDGFD'='lightgoldenrod1'),
+             molecules = rev(c('PDGFA', 'PDGFB', 'PDGFD')),
+             mols.alpha = 1, alpha=0.9, mols.size = 3, nmols = 6000, border.color = "grey10", border.size=0.1) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold")) + NoLegend() + NoAxes()# + theme(legend.position="top") #+ NoLegend() + NoAxes()
+
+ggsave(filename = file.path(path, 'spatial_plot_pdgf_ligands.pdf'), 
+       scale = 0.5, width = 15.7767, height = 25, units='cm')
+
+
+# Figure 5k - Incoming interaction dot plots
+# Plots are generated similarly to 4a
 multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
-pseudotime <- read.csv(file.path(path, 'PT_pseudotime_values.csv'))
-multiome_pt$Pseudotime <- pseudotime$Pseudotime
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
+Idents(multiome_pt) <- factor(multiome_pt$Annotation.Lvl2, levels=c('PT Inflammatory', 'PT Injured', 'PT S3', 'PT S2', 'PT S1'))
+multiome_other <- subset(multiome, subset=Annotation.Lvl1%in%c('PT', 'T Cell', 'Myeloid Cell', 'B Cell', 'Interstitium'))
+multiome_other <- subset(multiome_other, subset=Annotation.Lvl2 %in% c('vSMC', 'Pericyte', 'JG Cell'), invert=T)
+Idents(multiome_other) <- factor(multiome_other$Annotation.Lvl2, levels=rev(c('PT S1', 'PT S2', 'PT S3', 'PT Injured', 'PT Inflammatory', 'Fibroblast', 'Myofibroblast', 'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated',
+                                                                              'Macrophage Resident', 'Macrophage HIF1A+', 'cDC1', 'cDC2', 'cDC CCR7+', 'pDC', 'Mast Cell', 'Naïve Th Cell', 'Effector Th Cell',
+                                                                              'Treg', 'Naïve Tc Cell', 'Effector Tc Cell', 'MAIT', 'NKT Cell', 'NK CD56dim',
+                                                                              'NK CD56bright', 'Naïve B Cell', 'Memory B Cell', 'Plasma Cell')))
 
-set1 <- c('CUX1', 'NFIB', 'PPARA', 'GLIS1', 'HNF4A', 'MAF', 'TFEC', 'HNF4G', 'HNF1A', 'MLXIPL')
-set2 <- c('PAX2', 'PAX8', 'PBX1', 'TEAD1', 'TFCP2L1', 'THRB', 'NR6A1', 'ESRRG', 'SOX6')
+DotPlot(multiome_pt, features=rev(c('MET')), cols=c('grey85', '#702963'), scale=F) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() + 
+  theme(axis.text.y = element_text(face="bold", size=12, hjust=1, vjust=0.5),
+        axis.text.x = element_blank())
 
-regulons <- regulons[regulons$TF %in% c(set1, set2),]
-regulon_genes <- split(regulons$Gene, regulons$TF)
-regulon_regions <- split(regulons$Region, regulons$TF)
+DotPlot(multiome_other, features=rev(c('HGF')), cols=c('grey85', 'dodgerblue4'), scale=F) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() +
+  theme(axis.text.y = element_text(face="bold", size=12, hjust=1, vjust=0.5),
+        axis.text.x = element_blank())
 
-DefaultAssay(multiome_pt) <- 'SCT'
-for (i in seq_along(regulon_genes)) {
-  regulon_name <- as.character(names(regulon_genes)[i])
-  gene_list <- list(regulon_genes[[i]])
-  print(regulon_name)
-  multiome_pt <- AddModuleScore_UCell(multiome_pt, features=gene_list, maxRank=50000, 
-                               chunk.size = 5000, ncores=5, 
-                               name=regulon_name)
-}
-gene_scores <- multiome_pt@meta.data[,21:39]
 
-DefaultAssay(multiome_pt) <- 'ATAC'
-for (i in seq_along(regulon_genes)) {
-  regulon_name <- as.character(names(regulon_regions)[i])
-  gene_list <- list(regulon_regions[[i]])
-  print(regulon_name)
-  multiome_pt <- AddModuleScore_UCell(multiome_pt, features=gene_list, maxRank=50000, 
-                                      chunk.size = 5000, ncores=5, 
-                                      name=regulon_name)
-}
-region_scores <- multiome_pt@meta.data[,21:39]
 
-colnames(gene_scores) <- gsub('signature_1', '', colnames(gene_scores))
-colnames(region_scores) <- gsub('signature_1', '', colnames(region_scores))
-
-
-# TF transcripts set 1
-counts <- as.matrix(multiome_pt@assays$SCT@data)
-counts <- as.data.frame(t(counts[rownames(counts) %in% set1,]))
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set1, 'Mean'))
-
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "top", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + guides(size="none") +
-  coord_cartesian(ylim = c(-1, 1)) 
-
-ggsave(filename = file.path(path, 'tf_expression_set1.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-# TF transcripts set 2
-counts <- as.matrix(multiome_pt@assays$SCT@data)
-counts <- as.data.frame(t(counts[rownames(counts) %in% set2,]))
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set2, 'Mean'))
-
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "top", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + guides(size="none") +
-  coord_cartesian(ylim = c(-1, 1)) 
-
-ggsave(filename = file.path(path, 'tf_expression_set2.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-
-# TF gene score set 1
-counts <- as.data.frame(gene_scores)
-counts <- as.data.frame(counts[colnames(counts) %in% set1])
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set1, 'Mean'))
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
-
-ggsave(filename = file.path(path, 'tf_gene_score_set1.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-
-# TF gene score set 2
-counts <- as.data.frame(gene_scores)
-counts <- as.data.frame(counts[colnames(counts) %in% set2])
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set2, 'Mean'))
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
-
-ggsave(filename = file.path(path, 'tf_gene_score_set2.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-
-# TF region score set 1
-counts <- as.data.frame(region_scores)
-counts <- as.data.frame(counts[colnames(counts) %in% set1])
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set1, 'Mean'))
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
-
-ggsave(filename = file.path(path, 'tf_region_score_set1.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-
-# TF gene score set 2
-counts <- as.data.frame(region_scores)
-counts <- as.data.frame(counts[colnames(counts) %in% set2])
-counts <- as.data.frame(scale(counts))
-counts$pseudotime <- multiome_pt$Pseudotime
-melted_df <- melt(counts, id.vars = "pseudotime", 
-                  variable.name = "Gene", 
-                  value.name = "Numeric_Value")
-
-melted_df2 <- melted_df
-melted_df2$Gene <- rep('Mean', nrow(melted_df2))
-melted_df <- rbind(melted_df, melted_df2)
-melted_df <- sample_n(melted_df, nrow(melted_df)/5)
-melted_df$Gene <- factor(melted_df$Gene, level=c(set2, 'Mean'))
-
-ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
-  geom_smooth(method=loess, se=F, span=20) +
-  theme_bw() +
-  labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
-  theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
-        panel.grid.minor = element_line(colour = "white", size = 0), 
-        panel.grid.major = element_line(colour = "white", size = 0),
-        legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
-  labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
-
-ggsave(filename = file.path(path, 'tf_region_score_set2.pdf'), 
-       scale = 0.5, width = 15, height = 12, units='cm')
-
-
-# Figure 5g - HNF4A regulation of co-TFs, network graph
-multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
-set1 <- c('CUX1', 'NFIB', 'PPARA', 'GLIS1', 'HNF4A', 'MAF', 'TFEC', 'HNF4G', 'HNF1A', 'MLXIPL')
-set2 <- c('PAX2', 'PAX8', 'PBX1', 'TEAD1', 'TFCP2L1', 'THRB', 'NR6A1', 'ESRRG', 'SOX6')
-
-regulons <- regulons[regulons$TF %in% 'HNF4A',]
-regulons <- regulons[regulons$Gene %in% c(set1, set2),]
-
-DefaultAssay(multiome_pt) <- 'ATAC'
-Idents(multiome_pt) <- multiome_pt$Annotation.Lvl2
-da_peaks <- RunPresto(
-  object = multiome_pt, features = unique(regulons$Region),
-  ident.1 = c('PT S1', 'PT S2', 'PT S3'), ident.2 = c('PT Injured', 'PT Inflammatory'),
-  logfc.threshold = 0, min.pct = 0
-)
-da_peaks$Region <- rownames(da_peaks)
-da_peaks <- da_peaks[,colnames(da_peaks) %in% c('avg_log2FC', 'Region')]
-regulons <- merge(regulons, da_peaks, by = "Region", all.x = TRUE)
-
-target_vec <- c()
-lfc_vec <- c()
-for (target in unique(regulons$Gene)){
-  regulons_ss_2 <- regulons[regulons$Gene==target,]
-  avg_log2FC <- mean(regulons_ss_2$avg_log2FC)
-  target_vec <- c(target_vec, target)
-  lfc_vec <- c(lfc_vec, -avg_log2FC)
-  print(target)
-  print(-avg_log2FC)
-}
-target_vec <- c(target_vec, c(set1, set2)[!c(set1, set2)%in%target_vec])
-lfc_vec <- c(lfc_vec, rep(0, length(target_vec)-length(lfc_vec)))
-
-res <- data.frame(target_vec, lfc_vec)
-df <- as.data.frame(cbind(1:nrow(res), lfc_vec))
-df$lfc_vec <- as.numeric(df$lfc_vec)
-
-# Get scaled colours
-p <- ggplot(df, aes(V1, lfc_vec, color=6^lfc_vec)) + geom_point() +
-  scale_color_gradientn(colours = colorspace::diverge_hcl(100, rev=T)) +
-  theme(legend.position = 'top',
-        legend.text = element_text(face = "bold", color='grey10'))
-
-cols <- ggplot_build(p)$data[[1]]$colour
-lfc_plot <- ggplot_build(p)$data[[1]]$y
-cols <- cols[match(ggplot_build(p)$data[[1]]$y, res$lfc_vec)]
-res$col <- cols
-
-# Construct dataframe for igraph
-plot_df <- as.data.frame(table(regulons$Gene))
-colnames(plot_df) <- c('Target', 'Freq')
-
-plot_df$Source <- rep('HNF4A', nrow(plot_df))
-plot_df$Color <- as.character(plot_df$Target)
-plot_df$Color[plot_df$Color%in%'HNF4A'] <- 'orange'
-plot_df$Color[plot_df$Color%in%set1] <- 'green'
-plot_df$Color[plot_df$Color%in%set2] <- 'red'
-
-nodes <- data.frame(name=c('HNF4A', "CUX1", "NFIB", "PPARA", "GLIS1", "MAF", "TFEC", "HNF4G", "HNF1A",  
-                           "MLXIPL", "PAX2", "PAX8", "PBX1", "TEAD1", "TFCP2L1", "THRB", "NR6A1",  
-                           "ESRRG", "SOX6"),
-                    group=c('source', rep('A', 9), rep('B', 9)),
-                    color=c('#5D3FD3', rep('#5D3FD3', 9), rep('#F08000', 9)))
-
-net <- graph_from_data_frame(d=plot_df[,c('Source', 'Target')], vertices=nodes, directed=T)
-E(net)$weight <- as.numeric(plot_df$Freq)
-E(net)$width <- (E(net)$weight)/4
-
-order <- c('HNF4A', "CUX1", "NFIB", "PPARA", "GLIS1", "MAF", "TFEC", "HNF4G", "HNF1A",  
-           "MLXIPL", "PAX2", "PAX8", "PBX1", "TEAD1", "TFCP2L1", "THRB", "NR6A1",  
-           "ESRRG", "SOX6")
-
-cols <- c('#8A92BE', '#DAC7CA', '#D8C1C5', '#9A2E4C', '#9E3A54', '#D2B0B6',
-          '#023FA5', '#E1DEDE', '#E0D9DA', '#8E063B', '#E1DFDF', '#D5B7BC',
-          '#9DA3C6', '#9DA3C6', '#9DA3C6', '#9DA3C6', '#9DA3C6', '#9DA3C6', '#9DA3C6')
-
-layout <- layout_randomly(net)
-
-# Plot graph
-plot(net, layout=layout, edge.arrow.size=1, edge.arrow.width=0.8,
-     vertex.size=15, 
-     vertex.label.font = 2, vertex.label.cex=0.8, edge.curved=0.1, frame=T,
-     vertex.label.dist=2, vertex.label.degree=4.5,
-     vertex.label.color= 'grey10',
-     edge.color=cols, col.main="grey10")
-
-
-# Figure 5h - HNF4A footprint plot
-multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
-multiome_pt$class <- multiome_pt$Annotation.Lvl2
-multiome_pt$class[multiome_pt$class %in% c('PT S1', 'PT S2', 'PT S3')] <- 'PT Healthy'
-Idents(multiome_pt) <- multiome_pt$class
-DefaultAssay(multiome_pt) <- 'ATAC'
-
-pwm <- getMatrixSet(
-  x = JASPAR2020,
-  opts = list(species = 9606, all_versions = FALSE)
-)
-multiome_pt <- AddMotifs(multiome_pt, genome = BSgenome.Hsapiens.UCSC.hg38, pfm = pwm)
-
-MotifPlot(
-  object = multiome_pt,
-  motifs = 'HNF4A',
-  assay = 'ATAC'
-)
-
-multiome_pt <- Footprint(
-  object = multiome_pt,
-  motif.name = c('HNF4A'),
-  genome = BSgenome.Hsapiens.UCSC.hg38
-)
-
-p <- PlotFootprint(multiome_pt, features = c('HNF4A'), show.expected = F, 
-                   idents=c('PT Healthy', 'PT Injured', 'PT Inflammatory')) + ylim(-0.5, 2.5) + geom_line(size = 1.2)  +
-  scale_color_manual(values=c("sandybrown", '#702963','cornflowerblue')) +
-  theme(axis.title.y = element_text(face = "bold", size=14, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=14, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face = "bold", size=12, color="grey10"))
-p[[1]][["layers"]][[2]] <- NULL
-p
-
-
-# Figure 5i - HNF4A target gene score in mouse IRI
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
-mouse_iri <- readRDS(file.path(path, 'mouse_iri_pt.rds'))
-hnf4a_genes <- unique(regulons[regulons$TF %in% 'HNF4A', 'Gene'])
-hnf4a_genes <- tolower(hnf4a_genes)
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
-hnf4a_genes <- firstup(hnf4a_genes)
-hnf4a_genes <- hnf4a_genes[hnf4a_genes%in%rownames(mouse_iri)]
-
-mouse_iri <- AddModuleScore_UCell(mouse_iri, features=list(targets=hnf4a_genes))
-
-plot_data <- as.data.frame(cbind(timepoint=mouse_iri$Group, expression=mouse_iri$targets_UCell, cluster=mouse_iri$Celltype_2))
-plot_data$expression <- as.numeric(plot_data$expression)
-
-plot_data$timepoint[plot_data$timepoint=='Control'] <- 'Baseline'
-plot_data$timepoint[plot_data$timepoint=='12hours'] <- '12 Hours'
-plot_data$timepoint[plot_data$timepoint=='14days'] <- '14 Days'
-plot_data$timepoint[plot_data$timepoint=='4hours'] <- '4 Hours'
-plot_data$timepoint[plot_data$timepoint=='2days'] <- '2 Days'
-plot_data$timepoint[plot_data$timepoint=='6weeks'] <- '6 Weeks'
-
-plot_data$cluster[plot_data$cluster=='PT S1'] <- 'PT Healthy'
-plot_data$cluster[plot_data$cluster=='PT S2'] <- 'PT Healthy'
-plot_data$cluster[plot_data$cluster=='PT S3'] <- 'PT Healthy'
-
-plot_data$timepoint <- factor(plot_data$timepoint, levels=c('Baseline', '4 Hours', '12 Hours', '2 Days', '14 Days', '6 Weeks'))
-
-Means <- plot_data %>% group_by(timepoint) %>% 
-  summarize(Avg = mean(expression))
-ggplot() + 
-  geom_jitter(data = plot_data, mapping = aes(x = timepoint, y = expression, group = timepoint, color=cluster), size=1, width = 0.25, alpha=0.5) +
-  geom_violin(data = plot_data, mapping = aes(x = timepoint, y = expression, group = timepoint, fill=timepoint), alpha=0.8) +
-  scale_color_manual(values=c('PT S1' = purples[2],
-                              'PT S2' = purples[4],
-                              'PT S3' = purples[6],
-                              'PT Healthy' = 'cornflowerblue',
-                              'PT Injured' = 'sandybrown',
-                              'PT Inflammatory' = '#702963')) +
-  scale_fill_brewer(palette = "Purples") +
-  geom_point(data = Means, mapping = aes(x = timepoint, y = Avg)) +
-  geom_line(data = Means, mapping = aes(x = timepoint, y = Avg, group = 1)) +
-  xlab("") + ylab("HNF4A target gene score") +
-  labs(color = "Cell annotation", fill='') + 
-  theme_classic() +
-  theme(axis.title.y = element_text(face = "bold", size=10, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=8, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=10, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=8, color = "grey10"),
-        legend.title = element_text(face = "bold", size=10, color="grey10", vjust=0.8),
-        legend.text = element_text(face='bold', size=8, color='grey10'),
-        legend.position = 'top') + RotatedAxis() + NoLegend()
-
-ggsave(filename = file.path(path, 'mouse_timecourse_hnf4a_score.png'),  
-       scale = 0.5, width = 32, height = 15, units='cm')
-
-
-# Figure 5j - HNF4A genome track
-levels <- rev(c('PT S1', 'PT S2', 'PT S3',
-                'cTAL1', 'cTAL2', 'mTAL', 'Macula Densa',
-                'DTL', 'ATL',
-                'DCT1', 'DCT2','CNT', 'cPC', 'mPC',
-                'cIC-A', 'mIC-A', 'IC-B',
-                'PT Injured', 'TAL Injured','DCT Injured', 'CNT Injured', 'PC Injured', 'IC-A Injured', 'PT Inflammatory',  'TAL Inflammatory', 
-                'PEC', 'Podocyte',
-                'Endothelia Glomerular', 'Descending Vasa Recta', 'Ascending Vasa Recta', 'Peritubular Capillary Endothelia',
-                'Pericyte', 'vSMC', 'JG Cell', 'Fibroblast', 'Myofibroblast',
-                'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated',
-                'Macrophage Resident', 'cDC1', 'cDC2', 'cDC CCR7+', 'pDC', 'Mast Cell',
-                'Treg', 'Naïve Th Cell', 'Effector Th Cell', 'Naïve Tc Cell', 'Effector Tc Cell', 'MAIT', 'γδ T Cell', 'NK CD56bright', 'NK CD56dim',
-                'Naïve B Cell', 'Memory B Cell', 'Plasma Cell'))
-Idents(multiome) <- factor(multiome$Annotation.Lvl2, levels=rev(levels))
-DefaultAssay(multiome) <- 'ATAC'
-
-palette <- c('PT S1' = purples[2],
-             'PT S2' = purples[4],
-             'PT S3' = purples[6],
-             'PT Injured' = 'sandybrown',
-             'PT Inflammatory' = '#702963')
-
-# ATAC track
-cov_plot <- CoveragePlot(
-  object = multiome,
-  region = "HNF4A", annotation = F, peaks = F, links=F,
-  idents=c('PT S1', 'PT S2', 'PT S3', 'PT Injured', 'PT Inflammatory'),
-  extend.upstream = 1000,
-  extend.downstream = 1000) +
-  scale_fill_manual(values = palette)
-
-# Location of HNF4A motifs
-regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
-regulons <- unique(regulons[regulons$TF=='HNF4A',])
-regulons <- unique(regulons[regulons$Gene=='HNF4A',])
-regulons <- regulons[!duplicated(regulons$Region), ]
-
-split_elements <- strsplit(regulons$Region, "-")
-vector1 <- sapply(split_elements, `[`, 1)
-vector2 <- sapply(split_elements, `[`, 2)
-vector3 <- sapply(split_elements, `[`, 3)
-df <- data.frame(seqnames=vector1,
-                 start=vector2,
-                 end=vector3, 
-                 color=rep('grey40', length(vector3)))
-
-# Remove peaks outside regions in plot
-df <- df[-17,]
-df <- df[-16,]
-df <- df[-4,]
-hnf4a_peaks_atac <- toGRanges(df)
-
-peak.df <- as.data.frame(x = hnf4a_peaks_atac)
-start.pos <- start(x = hnf4a_peaks_atac)
-end.pos <- end(x = hnf4a_peaks_atac)
-chromosome <- seqnames(x = hnf4a_peaks_atac)
-
-peak.df$start[peak.df$start < start.pos] <- start.pos
-peak.df$end[peak.df$end > end.pos] <- end.pos
-
-peak.plot <- ggplot(data = peak.df) +
-  geom_segment(aes(x = start, y = 0, xend = end, yend = 0),
-               size = 2,
-               data = peak.df) + 
-  theme_classic() +
-  ylab(label = "HNF4A Binding Sites") +
-  theme(axis.ticks.y = element_blank(),
-        axis.text.y = element_blank()) +
-  xlab(label = paste0(chromosome, " position (bp)")) +
-  xlim(c(min(start.pos), max(end.pos)))
-
-# CUT&RUN track
-cnr_plot <- CoveragePlot(multiome, 
-region = "HNF4A", annotation = F, peaks = F, links=F,
-idents=c('PT S1'),
-extend.upstream = 1000,
-extend.downstream = 1000,
-#region.highlight=hnf4a_peaks_atac,
-bigwig=list(HNF4A=file.path(path, 'GSM7074903_HAK_HNF4A.bw'),
-            IgG=file.path(path, 'GSM7074902_HAK_IgG.bw'))) + NoLegend()
-cnr_plot[[1]][[1]] <- NULL
-cnr_plot  <- cnr_plot[[1]][[2]] + NoLegend()
-
-# Gene annotation
-annotation <- AnnotationPlot(
-  object = multiome,
-  region = "HNF4A"
-)
-
-# Combined plots
-plots <- CombineTracks(
-  plotlist = list(cov_plot, peak.plot, cnr_plot, annotation),
-  heights = c(10, 1, 4, 4)
-)
-plots
-
-ggsave(filename = file.path(path, 'hnf4a_track.png'), 
-       scale = 0.5, width = 30, height = 15, units='cm')
-
-
-# Figure 5k - graphic
 
