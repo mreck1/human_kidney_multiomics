@@ -6,421 +6,454 @@ source(file.path(path, 'utils.R'))
 multiome <- readRDS(multiome_path)
 #-------------------------------------------------------------------------------
 
-# Figure S9a - RNA velocity UMAP of TAL subclusters
-# Export cell data and UMAP coordinates from Seurat
-subset_tal <- subset(multiome, subset=Annotation.Lvl2 %in% c('cTAL1', 'cTAL2', 'mTAL', 'TAL Injured', 'TAL Inflammatory'))
-export <- as.data.frame(cbind(colnames(subset_tal), subset_tal$Annotation.Lvl2, subset_tal$Condition, subset_tal@reductions[["umap_wnn"]]@cell.embeddings))
-write.csv(export, file.path(path, 'tal_cell_info.csv'))
+# Figure S9a - KPMP projection
+# Preparation - Projection of KPMP data
+# Load KPMP data (availible for download on KPMP website)
+kpmp <- LoadH5Seurat(kpmp_data)
+kpmp <- CreateSeuratObject(counts = kpmp@assays[["RNA"]]@counts, meta=kpmp@meta.data, min.cells = 30)
 
-# In python3 ------------------------
-import scanpy as sc
-import scvelo as scv
-import pandas as pd
-import numpy as np
+# Load Multiome data
+multiome <- readRDS(multiome_path)
+multiome@assays[["ATAC"]] <- NULL
+multiome@assays[["chromvar"]] <- NULL
+multiome@assays[["regulon_gene"]] <- NULL
+multiome@assays[["regulon_region"]] <- NULL
+multiome@assays[["regulon"]] <- NULL
+multiome@reductions[["lsi_atac"]] <- NULL
+multiome@reductions[["umap_atac"]] <- NULL
+multiome@graphs[["wknn"]] <- NULL
+multiome@graphs[["wsnn"]] <- NULL
 
-# Read velocyto loom files
-l1 = scv.read('./Library1/library1_velocyto.loom', cache=True)
-l1.obs.index = l1.obs.index.str.replace('possorted_genome_bam_HH9PH:', '').str.replace('x', '')+ '-1'
-l1.obs.index = 'l1_' + l1.obs.index
-l2 = scv.read('./Library2/library2_velocyto.loom', cache=True)
-l2.obs.index = l2.obs.index.str.replace('gex_possorted_bam_WPAZT:', '').str.replace('x', '')+ '-1'
-l2.obs.index = 'l2_' + l2.obs.index
-l3 = scv.read('./Library3/library3_velocyto.loom', cache=True)
-l3.obs.index = l3.obs.index.str.replace('gex_possorted_bam_RZMOF:', '').str.replace('x', '')+ '-1'
-l3.obs.index = 'l3_' + l3.obs.index
-l4 = scv.read('./Library4/library4_velocyto.loom', cache=True)
-l4.obs.index = l4.obs.index.str.replace('gex_possorted_bam_GBEXN:', '').str.replace('x', '')+ '-1'
-l4.obs.index = 'l4_' + l4.obs.index
-l5 = scv.read('./Library5/library5_velocyto.loom', cache=True)
-l5.obs.index = l5.obs.index.str.replace('gex_possorted_bam_TKTXF:', '').str.replace('x', '')+ '-1'
-l5.obs.index = 'l5_' + l5.obs.index
-l6 = scv.read('./Library6/library6_velocyto.loom', cache=True)
-l6.obs.index = l6.obs.index.str.replace('gex_possorted_bam_PLQ9M:', '').str.replace('x', '')+ '-1'
-l6.obs.index = 'l6_' + l6.obs.index
+# Data projection
+anchors <- FindTransferAnchors(
+  reference = multiome,
+  query = kpmp,
+  normalization.method = "SCT",
+  reference.reduction = "pca_gex",
+  dims = 1:50, 
+  reference.assay='SCT'
+)
 
-l1.obs_names_make_unique(), l2.obs_names_make_unique(), l3.obs_names_make_unique()
-l4.obs_names_make_unique(), l5.obs_names_make_unique(), l6.obs_names_make_unique()
-l1.var_names_make_unique(), l2.var_names_make_unique(), l3.var_names_make_unique()
-l4.var_names_make_unique(), l5.var_names_make_unique(), l6.var_names_make_unique()
+kpmp_transfered <- MapQuery(
+  anchorset = anchors,
+  query = kpmp,
+  reference = multiome,
+  refdata = list(
+    Annotation.Lvl1 = "Annotation.Lvl1", Annotation.Lvl2 = "Annotation.Lvl2", Condition="Condition"),
+  reference.reduction = "pca_gex", 
+  reduction.model = "umap_wnn"
+)
 
-# scVelo Analysis
-merged_adata = l1.concatenate(l2, l3, l4, l5, l6)
-merged_adata.obs.index = merged_adata.obs.index.str[:-2]
-cell_info = pd.read_csv('./tal_cell_info.csv')
-merged_adata.obs['retain'] = np.isin(merged_adata.obs.index, cell_info['V1'])
-merged_adata = merged_adata[merged_adata.obs['retain'],:]
-ordered_cell_info = cell_info[cell_info['V1'].isin(merged_adata.obs.index)].set_index('V1').loc[merged_adata.obs.index]
-merged_adata.obs['celltype'] = ordered_cell_info['V2']
-merged_adata.obs['condition'] = ordered_cell_info['V3']
-umap = ordered_cell_info[['wnnUMAP_1', 'wnnUMAP_2']].to_numpy()
-merged_adata.obsm['X_umap'] = umap
-sc.pl.umap(merged_adata, color="celltype")
+# Add transfered data to kpmp object
+kpmp@reductions[["umap_projected"]] <- kpmp_transfered@reductions[["ref.umap"]]
+kpmp$Annotation.Lvl1_projected <- kpmp_transfered$predicted.Annotation.Lvl1
+kpmp$Annotation.Lvl2_projected <- kpmp_transfered$predicted.Annotation.Lvl2
+kpmp$Condition_projected <- kpmp_transfered$predicted.Condition
+kpmp@reductions[["umap"]] <- kpmp@reductions[["umap_projected"]]
+coords <- cbind(kpmp$UMAP_1, kpmp$UMAP_2)
+colnames(coords) <- c('UMAP_1', 'UMAP_2')
+rownames(coords) <- rownames(kpmp@reductions[["umap"]]@cell.embeddings)
+kpmp@reductions[["umap"]]@cell.embeddings <- coords
+kpmp@reductions[["umap"]]@key <- 'UMAP_'
 
-scv.pp.filter_genes(merged_adata, min_shared_counts=3)
-scv.pp.normalize_per_cell(merged_adata)
-scv.pp.filter_genes_dispersion(merged_adata, n_top_genes=3000)
-scv.pp.log1p(merged_adata)
-scv.pp.moments(merged_adata, n_pcs=30, n_neighbors=40)
-
-scv.tl.velocity(merged_adata)
-scv.tl.velocity_graph(merged_adata, n_jobs=10)
-scv.pl.velocity_embedding_stream(merged_adata, basis='umap', color='celltype',
-                                 linewidth=2, arrow_size=1.7, density=1.5, legend_fontweight='bold',
-                                 legend_fontsize=20,
-                                 palette=('#702963', 'sandybrown', '#5B6BBF7F',
-                                          "#9FA7D97F", "#3F51B47F"),
-                                 save='./velocity_stream.png')
-# In python3 //end ------------------
+kpmp <- SCTransform(kpmp, vst.flavor = "v2", verbose = T)
 
 
-# Figure 2b - Barplot with proportions of TAL cell states
-subset_tal <- subset(multiome, subset=Annotation.Lvl2 %in% c('cTAL1', 'cTAL2', 'mTAL', 'TAL Injured', 'TAL Inflammatory'))
+# UMAP of projected KPMP PT cells
+kpmp_subset <- subset(kpmp, subset=subclass.l2 %in% c('dPT', 'aPT', 'PT-S1', 'PT-S2', 'PT-S3'))
 
-meta <- subset_tal@meta.data
-meta$combined_variables <- paste(meta$Sample, meta$Condition, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
+purples <- pal_material("deep-purple", alpha = 0.5)(10)
 
-plot_data <- meta %>% group_by(combined_variables, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
+p <- DimPlot(kpmp_subset, label=F, pt.size=0.1, cols=c("sandybrown", 'grey40', purples[2], purples[4], purples[6]), group.by = 'subclass.l2', reduction='umap_projected', order=F, raster=F, shuffle = F) + NoAxes() + ggtitle('')
+p + theme(legend.text = element_text(size=14, color='black'))
 
-split_vector <- strsplit(plot_data$combined_variables, "_")
-plot_data$var1 <- sapply(split_vector, "[", 1)
-plot_data$var2 <- sapply(split_vector, "[", 2)
-
-plot_data$cluster <- factor(plot_data$cluster, levels=c('cTAL1', 'cTAL2', 'mTAL', 'TAL Injured', 'TAL Inflammatory'))
-
-ggplot(plot_data, aes(cluster, percent, fill = var2)) +
-  geom_bar(position = 'dodge', stat = 'summary', fun.y = 'mean') +
-  scale_fill_manual(values = c('grey60', '#702963')) +
-  theme_classic() +
-  xlab("") + ylab("% of TAL cells") +
-  theme(axis.title.y = element_text(face = "bold", size=12, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=12, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))+
-  geom_errorbar(stat = 'summary', position = 'dodge', width = 0.9) +
-  labs(fill = "Group") +
-  geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 4.75), xmax = c(1.25, 2.25, 3.25, 4.25, 5.25),
-              y_position = c(50, 55, 45, 62, 50), 
-              annotation = c("**", "*", '*', '**', '**'),
-              tip_length = 0.01)
-
-ggsave(filename = file.path(path, 'tal_barplot.svg'),
-       scale = 0.5, width = 25, height = 20, units='cm')
-
-# Significance bars are added manually, p-value caluclated using wilcox.test:
-wilcox.test(plot_data$percent[plot_data$cluster=='cTAL1'&plot_data$var2=='Control'], 
-            plot_data$percent[plot_data$cluster=='cTAL1'&plot_data$var2=='UUO'], 
-            alternative = "two.sided")
+ggsave(filename = file.path(path, 'umap_kpmp_pt.png'), 
+       scale = 0.6, width = 45, height = 30, units='cm')
 
 
-# Figure 2c - TAL UMAP coloured by pseudotime
-subset_tal <- subset(multiome, subset=Annotation.Lvl2 %in% c('cTAL1', 'cTAL2', 'mTAL', 'TAL Injured', 'TAL Inflammatory'))
-pseudotime <- read.csv(file.path(path, 'TAL_pseudotime_values.csv'))
-subset_tal$Pseudotime <- pseudotime$Pseudotime
+# Figure S9b - Sankey plot of PT cell projections
+# Extract link data
+kpmp_subset <- subset(kpmp, subset=subclass.l2 %in% c('dPT', 'aPT', 'PT-S1', 'PT-S2', 'PT-S3'))
 
-FeaturePlot(subset_tal, features = 'Pseudotime', reduction = 'umap_wnn', pt.size = 1.3) +
-  scale_color_gradientn(colours = c(viridisLite::viridis(100, begin=0.15, end=0.55, option = 'B'),
-                                    viridisLite::viridis(35, begin=0.55, end=0.95, option = 'B')))
-NoLegend()+ ggtitle('') + NoAxes() +
-  theme(legend.text = element_text(colour="grey10", size=16, face="bold")) +
-  theme(legend.position='bottom') +
-  labs(colour="Latent time") +
-  theme(legend.key.width = unit(1.2, 'cm'),
-        legend.title = element_text(size=16, face='bold', vjust=0.85))
+purples <- pal_material("deep-purple", alpha = 0.5)(10)
 
-ggsave(filename = file.path(path, 'umap_pseudotime_tal.png'), 
-       scale = 0.5, width = 35, height = 25, units='cm')
+p <- DimPlot(kpmp_subset, label=F, pt.size=0.1, cols=c("sandybrown", 'grey40', purples[2], purples[4], purples[6]), group.by = 'subclass.l2', reduction='umap_projected', order=F, raster=F, shuffle = F) + NoAxes() + ggtitle('')
+p + theme(legend.text = element_text(size=14, face="bold"))
 
+ggsave(filename = file.path(path, 'kpmp_pt_umap.png'), 
+       scale = 0.5, width = 45, height = 30, units='cm')
 
-# Figure 2d - Heatmap of pseudotime gene expression dynamics in TAL cell states
-subset_tal <- subset(multiome, subset=Annotation.Lvl2 %in% c('cTAL1', 'cTAL2', 'mTAL', 'TAL Injured', 'TAL Inflammatory'))
-pseudotime <- read.csv(file.path(path, 'TAL_pseudotime_values.csv'))
-subset_tal$Pseudotime <- pseudotime$Pseudotime
-genes <- read.csv(file.path(path, 'TAL_pseudotime_genes.csv'))
+#-----Sankey plot
+link_lvl1 <- paste(kpmp_subset$subclass.l2, kpmp_subset$Annotation.Lvl2_projected, sep='&')
+link_lvl1 <- table(link_lvl1)
+split_strings <- strsplit(names(link_lvl1), "&")
+vector1 <- sapply(split_strings, `[`, 1)
+vector2 <- sapply(split_strings, `[`, 2)
 
-# Bin cells in pseudotime
-groups <- cut(subset_tal$Pseudotime,breaks = 500)
-Idents(subset_tal) <- groups
+links <- data.frame(cbind(
+  source=paste('KPMP', vector1, sep='-'),
+  target=paste('Multiome', vector2, sep='-'),
+  value=as.numeric(link_lvl1)
+))
+links$target <- gsub(' ', '_', links$target)
+links$value <- as.numeric(links$value)
+links <- links[links$value>10,]
+nodes <- data.frame(
+  name=c(as.character(links$source), 
+         as.character(links$target)) %>% unique()
+)
+links$IDsource <- match(links$source, nodes$name)-1 
+links$IDtarget <- match(links$target, nodes$name)-1
 
-# Generate column anaotations
-group_cts <- paste(groups, subset_tal$Annotation.Lvl2, sep='&')
-group_cts <- table(group_cts)
-
-names_vector <- names(group_cts)
-intervals <- sub("&.*", "", names_vector)
-cell_types <- sub(".*&", "", names_vector)
-count_df <- data.frame(Interval = intervals, CellType = cell_types, Count = unname(group_cts))
-result <- count_df %>%
-  group_by(Interval, CellType) %>%
-  summarize(TotalCount = sum(Count.Freq)) %>%
-  group_by(Interval) %>%
-  filter(TotalCount == max(TotalCount)) %>%
-  ungroup()
-result <- result %>%
-  arrange(Interval) %>%
-  mutate(
-    PrevInterval = lag(Interval),
-    NextInterval = lead(Interval)
-  ) %>%
-  filter(!is.na(PrevInterval) | !is.na(NextInterval)) %>%
-  group_by(Interval) %>%
-  summarise(
-    MostCommonCellType = CellType[which.max(TotalCount)],
-    TotalCount = max(TotalCount)
-  ) %>%
-  ungroup()
-col_anno <- as.data.frame(result$MostCommonCellType)
-colnames(col_anno) <- 'Group'
-
-avg_expr <- AverageExpression(subset_tal, assays = 'SCT', slot='data')
-avg_expr <- avg_expr[["SCT"]]
-avg_expr <- avg_expr[rownames(avg_expr) %in% genes$x, ]
-
-for (row in 1:nrow(avg_expr)){
-  avg_expr[row,] <- smoothing(avg_expr[row,], method = "loess", strength = 0.2)
-}
-row_anno <- rownames(avg_expr)
-row_anno[!row_anno %in% c('CP', 'TGM2', 'CLDN1', 'SLC34A2', 'COL7A1', 'TNC', 'MMP7', 'C3', 'CCL2', 'LIF', 'ADAMTS1','FHL2',
-                          'SOX9', 'VCAN', 'ITGB8', 'ITGB6', 'EGF', 'UMOD', 'ESRRB', 'SLC12A1')] <- ""
-rownames(col_anno) <- colnames(avg_expr)
-
-# Plot Heatmap
-heat <- pheatmap(avg_expr, cluster_cols=F, scale='row',
-                 treeheight_row=0, 
-                 clustering_method='ward.D', 
-                 labels_col = rep('', ncol(avg_expr)),
-                 labels_row = row_anno,
-                 color=c(viridis(1300, option='C', begin=0, end=0.25),
-                         viridis(1200, option='B', begin=0.25, end=0.7),
-                         viridis(1000, option='B', begin=0.7, end=1)),
-                 annotation_colors = list('Group'=c('cTAL2' = indigos[2] , 'cTAL1' = indigos[4],
-                                                    'mTAL' = indigos[6], 'TAL Injured' = 'sandybrown',
-                                                    'TAL Inflammatory' = '#702963')),
-                 annotation_col = col_anno)
-add.flag(heat,
-         kept.labels = row_anno,
-         repel.degree = 0.2)
+color_scale <- "d3.scaleOrdinal()
+     .domain(['KPMP-aPT', 'KPMP-dPT', 'KPMP-PT-S1', 'KPMP-PT-S2', 'KPMP-PT-S3',
+     'Multiome-ATL', 'Multiome-DTL', 'Multiome-MAIT', 
+     'Multiome-Myofibroblast', 'Multiome-PEC', 
+     'Multiome-TAL_Inflammatory', 'Multiome-TAL_Injured', 'Multiome-CNT', 
+     'Multiome-CNT_Injured', 'Multiome-DCT_Injured', 'Multiome-Memory_B_Cell', 
+     'Multiome-mTAL', 'Multiome-Naïve_Th_Cell', 'Multiome-Pericyte', 
+     'Multiome-Peritubular_Capillary_Endothelia',
+     'Multiome-PT_Inflammatory', 'Multiome-PT_Injured', 'Multiome-PT_S1', 'Multiome-PT_S2', 'Multiome-PT_S3'])
+     .range(['sandybrown', 'tan', '#D1C4E97F', '#9474CC7F', '#6639B77F', 
+     'NA', 'NA', 'NA', 
+     'NA', 'NA',
+     'NA', 'NA', 'NA', 'NA', 'NA',
+     'NA', 'NA', 'NA', 'NA', 'NA',
+     '#702963', 'sandybrown', '#D1C4E97F', '#9474CC7F', '#6639B77F']);
+"
+p <- sankeyNetwork(Links = links, Nodes = nodes,
+                   Source = "IDsource", Target = "IDtarget",
+                   Value = "value", NodeID = "name", 
+                   sinksRight=FALSE, colourScale = color_scale, fontSize = 12)
+p
 
 
-# Figure S9e - RNA velocity UMAP of other epithelial subclusters
-# Export cell data and UMAP coordinates from Seurat
-subset_epithelia <- subset(x = multiome, idents = c('DCT1', 'DCT2', 'DCT Injured', 'CNT', 'CNT Injured', 'cPC', 'mPC', 'PC Injured'))
-export <- as.data.frame(cbind(colnames(subset_epithelia), subset_epithelia$Annotation.Lvl2, subset_epithelia$Condition, subset_epithelia@reductions[["umap_wnn"]]@cell.embeddings))
-write.csv(export, file.path(path, 'tal_cell_info.csv'))
-
-# In python3 ------------------------
-import scanpy as sc
-import scvelo as scv
-import pandas as pd
-import numpy as np
-
-# Read velocyto loom files
-l1 = scv.read('./Library1/library1_velocyto.loom', cache=True)
-l1.obs.index = l1.obs.index.str.replace('possorted_genome_bam_HH9PH:', '').str.replace('x', '')+ '-1'
-l1.obs.index = 'l1_' + l1.obs.index
-l2 = scv.read('./Library2/library2_velocyto.loom', cache=True)
-l2.obs.index = l2.obs.index.str.replace('gex_possorted_bam_WPAZT:', '').str.replace('x', '')+ '-1'
-l2.obs.index = 'l2_' + l2.obs.index
-l3 = scv.read('./Library3/library3_velocyto.loom', cache=True)
-l3.obs.index = l3.obs.index.str.replace('gex_possorted_bam_RZMOF:', '').str.replace('x', '')+ '-1'
-l3.obs.index = 'l3_' + l3.obs.index
-l4 = scv.read('./Library4/library4_velocyto.loom', cache=True)
-l4.obs.index = l4.obs.index.str.replace('gex_possorted_bam_GBEXN:', '').str.replace('x', '')+ '-1'
-l4.obs.index = 'l4_' + l4.obs.index
-l5 = scv.read('./Library5/library5_velocyto.loom', cache=True)
-l5.obs.index = l5.obs.index.str.replace('gex_possorted_bam_TKTXF:', '').str.replace('x', '')+ '-1'
-l5.obs.index = 'l5_' + l5.obs.index
-l6 = scv.read('./Library6/library6_velocyto.loom', cache=True)
-l6.obs.index = l6.obs.index.str.replace('gex_possorted_bam_PLQ9M:', '').str.replace('x', '')+ '-1'
-l6.obs.index = 'l6_' + l6.obs.index
-
-l1.obs_names_make_unique(), l2.obs_names_make_unique(), l3.obs_names_make_unique()
-l4.obs_names_make_unique(), l5.obs_names_make_unique(), l6.obs_names_make_unique()
-l1.var_names_make_unique(), l2.var_names_make_unique(), l3.var_names_make_unique()
-l4.var_names_make_unique(), l5.var_names_make_unique(), l6.var_names_make_unique()
-
-# scVelo Analysis
-merged_adata = l1.concatenate(l2, l3, l4, l5, l6)
-merged_adata.obs.index = merged_adata.obs.index.str[:-2]
-cell_info = pd.read_csv('./pt_cell_info.csv')
-merged_adata.obs['retain'] = np.isin(merged_adata.obs.index, cell_info['V1'])
-merged_adata = merged_adata[merged_adata.obs['retain'],:]
-ordered_cell_info = cell_info[cell_info['V1'].isin(merged_adata.obs.index)].set_index('V1').loc[merged_adata.obs.index]
-merged_adata.obs['celltype'] = ordered_cell_info['V2']
-merged_adata.obs['condition'] = ordered_cell_info['V3']
-umap = ordered_cell_info[['wnnUMAP_1', 'wnnUMAP_2']].to_numpy()
-merged_adata.obsm['X_umap'] = umap
-sc.pl.umap(merged_adata, color="celltype")
-
-scv.pp.filter_genes(merged_adata, min_shared_counts=3)
-scv.pp.normalize_per_cell(merged_adata)
-scv.pp.filter_genes_dispersion(merged_adata, n_top_genes=3000)
-scv.pp.log1p(merged_adata)
-scv.pp.moments(merged_adata, n_pcs=80, n_neighbors=10)
-
-scv.tl.velocity(merged_adata)
-scv.tl.velocity_graph(merged_adata, n_jobs=10)
-
-scv.pl.velocity_embedding_stream(merged_adata, basis='umap', color='celltype',
-                                 linewidth=2, arrow_size=1.7, density=1.2, legend_fontweight='bold',
-                                 legend_fontsize=15,
-                                 palette=('#4AA8F2', "sandybrown",
-                                          "#2A58A0", "#3E88D2", "darkorange", 'lightsalmon',
-                                          '#C7E4FA', "#81C1F6"),
-                                 save='./velocity_stream.svg')
-# In python3 //end ------------------
 
 
-# Figure 2f - Barplot with proportions of TAL cell states
-# DCT
-subset_dct <- subset(multiome, subset=Annotation.Lvl2 %in% c('DCT1', 'DCT2', 'DCT Injured'))
-
-meta <- subset_dct@meta.data
-meta$combined_variables <- paste(meta$Sample, meta$Condition, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-
-plot_data <- meta %>% group_by(combined_variables, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-split_vector <- strsplit(plot_data$combined_variables, "_")
-plot_data$var1 <- sapply(split_vector, "[", 1)
-plot_data$var2 <- sapply(split_vector, "[", 2)
-
-plot_data$cluster <- factor(plot_data$cluster, levels=c('DCT1', 'DCT2', 'DCT Injured'))
-plot_data1 <- plot_data
-
-# CNT
-subset_cnt <- subset(multiome, subset=Annotation.Lvl2 %in% c('CNT', 'CNT Injured'))
-
-meta <- subset_cnt@meta.data
-meta$combined_variables <- paste(meta$Sample, meta$Condition, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-
-plot_data <- meta %>% group_by(combined_variables, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-split_vector <- strsplit(plot_data$combined_variables, "_")
-plot_data$var1 <- sapply(split_vector, "[", 1)
-plot_data$var2 <- sapply(split_vector, "[", 2)
-
-plot_data$cluster <- factor(plot_data$cluster, levels=c('CNT', 'CNT Injured'))
-plot_data2 <- plot_data
-
-# PC
-subset_pc <- subset(multiome, subset=Annotation.Lvl2 %in% c('cPC', 'mPC', 'PC Injured'))
-
-meta <- subset_pc@meta.data
-meta$combined_variables <- paste(meta$Sample, meta$Condition, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-
-plot_data <- meta %>% group_by(combined_variables, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-split_vector <- strsplit(plot_data$combined_variables, "_")
-plot_data$var1 <- sapply(split_vector, "[", 1)
-plot_data$var2 <- sapply(split_vector, "[", 2)
-
-plot_data$cluster <- factor(plot_data$cluster, levels=c('cPC', 'mPC', 'PC Injured'))
-plot_data3 <- plot_data
+# Figure S9c - Dotplot of injury/inflammatory PT markers
+# Plot1
+kpmp_pt <- subset(kpmp, subset=subclass.l2 %in% c('dPT', 'aPT', 'PT-S1', 'PT-S2', 'PT-S3'))
+kpmp_pt <- subset(kpmp_pt, subset= (Annotation.Lvl2_projected %in% c('PT Injured', 'PT Inflammatory', 'PT S1') & Annotation.Lvl1_projected %in% c('PT')))
+kpmp_pt$class <- paste('projected', kpmp_pt$Annotation.Lvl2_projected, sep=' - ')
+Idents(kpmp_pt) <- factor(kpmp_pt$class, levels=c('projected - PT Inflammatory', 'projected - PT Injured', 'projected - PT S3', 'projected - PT S2', 'projected - PT S1'))
 
 
-plot_data1 <- as.data.frame(plot_data1)
-plot_data1 <- plot_data1 %>% add_row(combined_variables='Control3_Control', cluster='DCT Injured', 
-                                     Nb=1, C=1, percent=0.03, var1='Control3', var2='Control')
-plot_data1 <- plot_data1 %>% add_row(combined_variables='Control5_Control', cluster='DCT Injured', 
-                                     Nb=1, C=1, percent=0.05, var1='Control5', var2='Control')
-plot_data1 <- plot_data1 %>% add_row(combined_variables='UUO2_UUO', cluster='DCT1', 
-                                     Nb=1, C=1, percent=0.05, var1='UUO2', var2='UUO')
+DotPlot(kpmp_pt, features = c('VCAM1', 'HAVCR1', 'SOX9', 'ITGB8', 'LINC02511'), 
+        cols=c('grey85', 'skyblue4'), scale=T) + NoLegend() +   theme_bw() +
+  theme(axis.text.x = element_text(color="black", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
+
+ggsave(filename = file.path(path, 'dotplot1.png'), 
+       scale = 0.5, width = 36, height = 16, units='cm')
+
+# Plot2
+DotPlot(kpmp_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'CXCL16', 'TNF', 'LIF', 'TNFSF14', 'LINC02511'), 
+        cols=c('grey85', 'red4'), scale=T) + NoLegend() +   theme_bw() +
+  theme(axis.text.x = element_text(color="black", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
+
+ggsave(filename = file.path(path, 'dotplot2.png'), 
+       scale = 0.5, width = 36, height = 16, units='cm')
+
+# Plot3
+DotPlot(kpmp_pt, features = c('IL18', 'IL32', 'C3', 'TGFB2', 'TGM2', 'PDGFB', 'PDGFD', 'TNC', 'MMP7', 'LINC02511'), 
+        cols=c('grey85', 'darkgreen'), scale=T) + NoLegend() +   theme_bw() +
+  theme(axis.text.x = element_text(color="black", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
+
+ggsave(filename = file.path(path, 'dotplot3.png'), 
+       scale = 0.5, width = 36, height = 16, units='cm')
+
+# Plot4
+DotPlot(kpmp_pt, features = c('ICAM1', 'CLDN1', 'CD44', 'CDKN1A', 'HDAC9', 'BIRC3', 'FAS', 'LINC02511'), 
+        cols=c('grey85', 'purple4'), scale=T) + NoLegend() +   theme_bw() +
+  theme(axis.text.x = element_text(color="black", size=14, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
+           alpha = .1,fill = "white") + 
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + NoLegend()
+
+ggsave(filename = file.path(path, 'dotplot4.png'), 
+       scale = 0.5, width = 36, height = 16, units='cm')
 
 
-plot_data2 <- as.data.frame(plot_data2)
-plot_data2 <- plot_data2 %>% add_row(combined_variables='Control1_Control', cluster='CNT Injured', 
-                                     Nb=1, C=1, percent=0.01, var1='Control1', var2='Control')
-plot_data2 <- plot_data2 %>% add_row(combined_variables='Control3_Control', cluster='CNT Injured', 
-                                     Nb=1, C=1, percent=0.03, var1='Control3', var2='Control')
-plot_data2 <- plot_data2 %>% add_row(combined_variables='Control5_Control', cluster='CNT Injured', 
-                                     Nb=1, C=1, percent=0.05, var1='Control5', var2='Control')
-plot_data2 <- plot_data2 %>% add_row(combined_variables='Control6_Control', cluster='CNT Injured', 
-                                     Nb=1, C=1, percent=0.06, var1='Control6', var2='Control')
 
-plot_data3 <- as.data.frame(plot_data3)
-plot_data3 <- plot_data3 %>% add_row(combined_variables='Control1_Control', cluster='PC Injured', 
-                                     Nb=1, C=1, percent=0.01, var1='Control1', var2='Control')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='Control3_Control', cluster='PC Injured', 
-                                     Nb=1, C=1, percent=0.03, var1='Control3', var2='Control')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='Control4_Control', cluster='PC Injured', 
-                                     Nb=1, C=1, percent=0.04, var1='Control4', var2='Control')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='Control5_Control', cluster='PC Injured', 
-                                     Nb=1, C=1, percent=0.05, var1='Control5', var2='Control')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='Control6_Control', cluster='PC Injured', 
-                                     Nb=1, C=1, percent=0.06, var1='Control6', var2='Control')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='UUO1_UUO', cluster='mPC', 
-                                     Nb=1, C=1, percent=0.01, var1='UUO1', var2='UUO')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='UUO1_UUO', cluster='cPC', 
-                                     Nb=1, C=1, percent=0.01, var1='UUO1', var2='UUO')
-plot_data3 <- plot_data3 %>% add_row(combined_variables='UUO2_UUO', cluster='cPC', 
-                                     Nb=1, C=1, percent=0.02, var1='UUO2', var2='UUO')
-plot_data <- rbind(plot_data1, plot_data2, plot_data3)
-plot_data$cluster <- factor(plot_data$cluster, levels=c('DCT1', 'DCT2', 'DCT Injured', 'CNT', 'CNT Injured', 'cPC', 'mPC', 'PC Injured'))
+# Figure S9d - Co-expression HAVCR1/VCAM1, CCL2/CXCL1 in multiome dataset
+# Plot1
+p <- plot_density(multiome, c("HAVCR1", "VCAM1"), joint = TRUE, combine = FALSE, adjust=8, method='wkde', reduction='umap_wnn')
+p[["HAVCR1+ VCAM1+"]] +
+  ggtitle('HAVCR1/VCAM1 co-expression') +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = element_text(size = 12),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=12)
+  )
 
-plot_data2$percent[plot_data2$combined_variables=='Control1_Control' & plot_data2$cluster=='CNT'] <- 99.99
-plot_data2$percent[plot_data2$combined_variables=='Control3_Control' & plot_data2$cluster=='CNT'] <- 99.98
-plot_data2$percent[plot_data2$combined_variables=='Control5_Control' & plot_data2$cluster=='CNT'] <- 99.97
-plot_data2$percent[plot_data2$combined_variables=='Control6_Control' & plot_data2$cluster=='CNT'] <- 99.96
-
-# Plot Barplot
-ggplot(plot_data, aes(cluster, percent, fill = var2)) +
-  geom_bar(position = 'dodge', stat = 'summary', fun.y = 'mean') +
-  scale_fill_manual(values = c('grey60', '#702963')) +
-  theme_classic() +
-  xlab("") + ylab("% of cell type") +
-  theme(axis.title.y = element_text(face = "bold", size=12, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
-        panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=12, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))+
-  geom_errorbar(stat = 'summary', position = 'dodge', width = 0.9) +
-  labs(fill = "Group") +
-  geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 4.75, 5.75, 6.75, 7.75), 
-              xmax = c(1.25, 2.25, 3.25, 4.25, 5.25, 6.25, 7.25, 8.25),
-              y_position = c(82, 60, 105, 105, 95, 85, 52, 95), 
-              annotation = c("**", "*", '**', '**', '**', '*', '*',  '**'),
-              tip_length = 0.01)
-
-ggsave(filename = file.path(path, 'epithelia_barplot.svg'),
+ggsave(filename = file.path(path, 'umap_havcr1_vcam1_multiome.png'), 
        scale = 0.5, width = 30, height = 20, units='cm')
 
-# Significance bars are added manually, p-value caluclated using wilcox.test:
-wilcox.test(plot_data1$percent[plot_data1$cluster=='DCT1'&plot_data1$var2=='Control'], 
-            plot_data1$percent[plot_data1$cluster=='DCT1'&plot_data1$var2=='UUO'], 
-            alternative = "two.sided")
+# Plot2
+p <- plot_density(multiome, c("CCL2", "CXCL1"), joint = TRUE, combine = FALSE, adjust=4, method='wkde', reduction='umap_wnn')
+p[["CCL2+ CXCL1+"]] +
+  ggtitle('CCL2/CXCL1 co-expression') +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank(),
+        plot.title = element_text(size = 12),
+        legend.title=element_text(size=12), 
+        legend.text=element_text(size=12)
+  )
+
+ggsave(filename = file.path(path, 'umap_ccl2_cxcl1_multiome.png'), 
+       scale = 0.5, width = 30, height = 20, units='cm')
 
 
-# Figure 2g - UMAP plots showing expression of injury genes
-subset_epithelia <- subset(x = multiome, idents = c('DCT1', 'DCT2', 'DCT Injured', 'CNT', 'CNT Injured', 'cPC', 'mPC', 'PC Injured'))
+# Figure S9e - Correlation of proportions, original aPT or projected infl.PT with Myofibroblasts/Activated Macrophages
+# Prepare inflammatory cell proportions (% of PT cells)
+meta <- subset_pt@meta.data
+meta$SampleXCondition <- paste(meta$specimen_id, meta$condition, sep='_')
 
-# Example plot for MMP7, the other plots were generated in the same way
-FeaturePlot(subset_epithelia, features = c('MMP7'), cols=c('grey80', 'navy'), order=T, reduction='umap_wnn') +
-  xlab("") + ylab("") +
-  theme(axis.text.x = element_text(face = "bold", size=0, angle = 45, hjust = 1, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=0, color = "grey10"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))
+plot_data <- meta %>% group_by(SampleXCondition, Annotation.Lvl2_projected) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
 
-ggsave(filename = file.path(path, 'epithelia_featureplot_1.pdf'),
-       scale = 0.5, width = 15, height = 10, units='cm')
+split_vector <- strsplit(plot_data$SampleXCondition, "_")
+plot_data$Sample <- sapply(split_vector, "[", 1)
+plot_data$Condition <- sapply(split_vector, "[", 2)
+
+ckd_samples <- unique(meta$specimen_id[meta$condition%in%c('CKD')])
+plot_data <- plot_data[plot_data$Sample%in%ckd_samples,]
+
+plot_data_infl <- plot_data[plot_data$Annotation.Lvl2_projected=='PT Inflammatory',]
+plot_data_infl_merge <- plot_data_infl[,colnames(plot_data_infl)%in%c('SampleXCondition', 'percent')]
+colnames(plot_data_infl_merge) <- c('SampleXCondition', 'percent_infl')
+
+# Prepare non-PT cell proportions (% of total cells)
+meta <- kpmp@meta.data
+meta$SampleXCondition <- paste(meta$specimen_id, meta$condition, sep='_')
+meta$celltype <- meta$Annotation.Lvl2_projected
+
+plot_data <- meta %>% group_by(SampleXCondition, celltype) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$SampleXCondition, "_")
+plot_data$Sample <- sapply(split_vector, "[", 1)
+plot_data$Condition <- sapply(split_vector, "[", 2)
+
+ckd_samples <- unique(meta$specimen_id[meta$condition%in%c('CKD')])
+plot_data <- plot_data[plot_data$Sample%in%ckd_samples,]
+
+# Get correlations
+corr_vec <- c()
+ct_vec <- c()
+count_df <- plot_data_infl_merge
+for (ct in unique(plot_data$celltype)){
+  print(ct)
+  plot_data_subset <- plot_data[plot_data$celltype==ct,]
+  plot_data_subset_merge <- plot_data_subset[,colnames(plot_data_subset)%in%c('SampleXCondition', 'percent')]
+  colnames(plot_data_subset_merge) <- c('SampleXCondition', 'percent_ct')
+  
+  merged_df <- merge(plot_data_infl_merge, plot_data_subset_merge, by.x = "SampleXCondition", by.y = "SampleXCondition", all = TRUE)
+  merged_df[is.na(merged_df)] <- 0
+  merged_df$percent_infl <- as.numeric(merged_df$percent_infl)
+  merged_df$percent_ct <- as.numeric(merged_df$percent_ct)
+  
+  correlation <- cor(merged_df$percent_infl, merged_df$percent_ct,  method = "pearson")
+  corr_vec <- c(corr_vec, correlation)
+  ct_vec <- c(ct_vec, ct)
+  
+  to_merge <- plot_data_subset[,colnames(plot_data_subset)%in%c('SampleXCondition', 'percent')]
+  colnames(to_merge) <- c('SampleXCondition', ct)
+  count_df <- merge(count_df, to_merge, by.x = "SampleXCondition", by.y = "SampleXCondition", all = TRUE)
+  count_df[is.na(count_df)] <- 0
+}
+
+results <- data.frame(celltype=ct_vec, correlation=corr_vec)
 
 
+p1 <- ggscatter(count_df, x='percent_infl', y='Myofibroblast', add = "reg.line",
+                add.params = list(color = "#682E60", fill = "lightgray"),
+                conf.int = TRUE) +
+  stat_cor(aes(label = after_stat(r.label)), method = "pearson", label.x = 1, label.y = 10, size=4, cor.coef.name = "R",) +
+  stat_cor(aes(label = after_stat(p.label)), method = "pearson", label.x = 1, label.y = 9.2, size=4, cor.coef.name = "p",) +
+  geom_point(pch=21, size=2, colour="grey10") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=12, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
+        legend.title = element_text(size=12, color="black"),
+        legend.text = element_text(size=12, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) + ggtitle('Myofibroblast')
 
+p2 <- ggscatter(count_df, x='percent_infl', y='Macrophage Activated', add = "reg.line",
+                add.params = list(color = "#682E60", fill = "lightgray"),
+                conf.int = TRUE) +
+  stat_cor(aes(label = after_stat(r.label)), method = "pearson", label.x = 1, label.y = 1.5, size=4, cor.coef.name = "R",) +
+  stat_cor(aes(label = after_stat(p.label)), method = "pearson", label.x = 1, label.y = 1.35, size=4, cor.coef.name = "p",) +
+  geom_point(pch=21, size=2, colour="grey10") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=12, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
+        legend.title = element_text(size=12, color="black"),
+        legend.text = element_text(size=12, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) + ggtitle('Macrophage Activated')
+
+
+# Prepare aPT proportions (% of PT cells)
+meta <- subset_pt@meta.data
+meta$SampleXCondition <- paste(meta$specimen_id, meta$condition, sep='_')
+
+plot_data <- meta %>% group_by(SampleXCondition, subclass.l2) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$SampleXCondition, "_")
+plot_data$Sample <- sapply(split_vector, "[", 1)
+plot_data$Condition <- sapply(split_vector, "[", 2)
+
+ckd_samples <- unique(meta$specimen_id[meta$condition%in%c('CKD')])
+plot_data <- plot_data[plot_data$Sample%in%ckd_samples,]
+
+plot_data_infl <- plot_data[plot_data$subclass.l2=='aPT',]
+plot_data_infl_merge <- plot_data_infl[,colnames(plot_data_infl)%in%c('SampleXCondition', 'percent')]
+colnames(plot_data_infl_merge) <- c('SampleXCondition', 'percent_infl')
+
+# Prepare non-PT cell proportions (% of total cells)
+meta <- kpmp@meta.data
+meta$SampleXCondition <- paste(meta$specimen_id, meta$condition, sep='_')
+meta$celltype <- meta$Annotation.Lvl2_projected
+
+plot_data <- meta %>% group_by(SampleXCondition, celltype) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$SampleXCondition, "_")
+plot_data$Sample <- sapply(split_vector, "[", 1)
+plot_data$Condition <- sapply(split_vector, "[", 2)
+
+ckd_samples <- unique(meta$specimen_id[meta$condition%in%c('CKD')])
+plot_data <- plot_data[plot_data$Sample%in%ckd_samples,]
+
+# Get all correlations
+corr_vec <- c()
+ct_vec <- c()
+count_df <- plot_data_infl_merge
+for (ct in unique(plot_data$celltype)){
+  print(ct)
+  plot_data_subset <- plot_data[plot_data$celltype==ct,]
+  plot_data_subset_merge <- plot_data_subset[,colnames(plot_data_subset)%in%c('SampleXCondition', 'percent')]
+  colnames(plot_data_subset_merge) <- c('SampleXCondition', 'percent_ct')
+  
+  merged_df <- merge(plot_data_infl_merge, plot_data_subset_merge, by.x = "SampleXCondition", by.y = "SampleXCondition", all = TRUE)
+  merged_df[is.na(merged_df)] <- 0
+  merged_df$percent_infl <- as.numeric(merged_df$percent_infl)
+  merged_df$percent_ct <- as.numeric(merged_df$percent_ct)
+  
+  correlation <- cor(merged_df$percent_infl, merged_df$percent_ct,  method = "pearson")
+  corr_vec <- c(corr_vec, correlation)
+  ct_vec <- c(ct_vec, ct)
+  
+  to_merge <- plot_data_subset[,colnames(plot_data_subset)%in%c('SampleXCondition', 'percent')]
+  colnames(to_merge) <- c('SampleXCondition', ct)
+  count_df <- merge(count_df, to_merge, by.x = "SampleXCondition", by.y = "SampleXCondition", all = TRUE)
+  count_df[is.na(count_df)] <- 0
+}
+
+results <- data.frame(celltype=ct_vec, correlation=corr_vec)
+
+
+p3 <- ggscatter(count_df, x='percent_infl', y='Myofibroblast', add = "reg.line",
+                add.params = list(color = "#00007B", fill = "lightgray"),
+                conf.int = TRUE) +
+  stat_cor(aes(label = after_stat(r.label)), method = "pearson", label.x = 1, label.y = 10, size=4, cor.coef.name = "R",) +
+  stat_cor(aes(label = after_stat(p.label)), method = "pearson", label.x = 1, label.y = 9, size=4, cor.coef.name = "p",) +
+  geom_point(pch=21, size=2, colour="grey10") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=12, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
+        legend.title = element_text(size=12, color="black"),
+        legend.text = element_text(size=12, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) + ggtitle('Myofibroblast')
+
+p4 <- ggscatter(count_df, x='percent_infl', y='Macrophage Activated', add = "reg.line",
+                add.params = list(color = "#00007B", fill = "lightgray"),
+                conf.int = TRUE) +
+  stat_cor(aes(label = after_stat(r.label)), method = "pearson", label.x = 1, label.y = 1.5, size=4, cor.coef.name = "R",) +
+  stat_cor(aes(label = after_stat(p.label)), method = "pearson", label.x = 1, label.y = 1.28, size=4, cor.coef.name = "p",) +
+  geom_point(pch=21, size=2, colour="grey10") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=12, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
+        legend.title = element_text(size=12, color="black"),
+        legend.text = element_text(size=12, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) + ggtitle('Macrophage Activated')
+
+figure <- ggarrange(p1, p2, ncol = 2, nrow = 1)
+figure
+annotate_figure(figure, left = textGrob("Cell type [% of total cells]", rot = 90, vjust = 1, gp = gpar(cex = 1.3)),
+                bottom = textGrob("PT Inflammatory [% of PT cells]", gp = gpar(cex = 1.3)))
+
+ggsave(filename = file.path(path, 'corrplots_infl_pt.pdf'), 
+       scale = 0.5, width = 30, height = 15, units='cm')
+
+
+figure <- ggarrange(p3, p4, ncol = 2, nrow = 1)
+figure
+annotate_figure(figure, left = textGrob("Cell type [% of total cells]", rot = 90, vjust = 1, gp = gpar(cex = 1.3)),
+                bottom = textGrob("aPT [% of PT cells]", gp = gpar(cex = 1.3)))
+
+ggsave(filename = file.path(path, 'corrplots_aPT.pdf'), 
+       scale = 0.5, width = 30, height = 15, units='cm')

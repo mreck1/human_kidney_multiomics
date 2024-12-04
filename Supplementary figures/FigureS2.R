@@ -15,16 +15,15 @@ ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
   geom_bar(stat="identity", alpha=1, width=.6) +
   theme_bw() +
   scale_fill_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=16),
-        axis.text.y = element_text(face='bold', color="grey10", size=14),
-        axis.text.x = element_text(face="bold", color="grey10", size=14, angle=90, vjust=0.5),
+  theme(axis.title.y = element_text(color="black", size=16),
+        axis.text.y = element_text(color="black", size=14),
+        axis.text.x = element_text(color="black", size=14, angle=90, vjust=0.5),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of nuclei') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=14, 
-                                   face="bold"),
+        legend.text = element_text(colour="black", size=14),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85))
 
 ggsave(filename = file.path(path, 'barplot_nuclei_library.svg'), 
@@ -47,25 +46,25 @@ p <- ggplot(plot_data, aes(x = V1, y = V2)) +
   scale_x_continuous(trans = 'log10', limits=c(100, max(plot_data$V1))) +
   scale_y_continuous(trans = 'log10', limits=c(100, max(plot_data$V2))) +
   scale_fill_viridis_c() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold", vjust=2), 
-        title = element_text(colour="grey10", size=14, face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=1.5)) + 
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14, vjust=2), 
+        title = element_text(colour="black", size=14),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) + 
   labs(fill='Density', vjust=0) + rremove("legend")
 
 xplot <- ggboxplot(plot_data, x = "V3", y = "V1_log", 
                    color = "V3", fill = "V3", 
                    palette = c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A'),
-                   alpha = 0.7, ggtheme = theme_bw()) + theme(panel.border = element_rect(colour = "grey10", fill=NA, size=1.5)) +
+                   alpha = 0.7, ggtheme = theme_bw()) + theme(panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   rotate() + clean_theme() + rremove("legend")
 
 yplot <- ggboxplot(plot_data, x = "V3", y = "V2_log", 
                    color = "V3", fill = "V3", 
                    palette = c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A'),
-                   alpha = 0.7, ggtheme = theme_bw() + theme(panel.border = element_rect(colour = "grey10", fill=NA, size=1.5))) + 
+                   alpha = 0.7, ggtheme = theme_bw() + theme(panel.border = element_rect(colour = "black", fill=NA, size=1))) + 
   clean_theme() + rremove("legend")
 
 plot_grid(xplot, NULL, p, yplot, ncol = 2, align = "hv", 
@@ -87,13 +86,13 @@ ggplot(plot_data, aes(x = length, y = group, fill = group, alpha=1)) +
   theme_bw() +
   labs(x = 'Insert Length (bp)', y = '') +
   scale_fill_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
         legend.title = element_blank(), 
-        title = element_text(colour="grey10", size=14, face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=2))
+        title = element_text(colour="black", size=14),
+        panel.border = element_rect(colour = "black", fill=NA, size=1))
 
 ggsave(filename = file.path(path, 'nucleosomal_signal.svg'), 
        scale = 0.5, width = 32, height = 22, units='cm')
@@ -109,16 +108,16 @@ ggplot(plot_data, aes(x = position, y = norm.value, colour=group, alpha=1)) +
   theme_bw() +
   labs(x = 'Position from TSS (bp)', y = 'Mean TSS enrichment score') +
   scale_color_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
         legend.title = element_blank(), 
-        title = element_text(colour="grey10", size=14, face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=2))
+        title = element_text(colour="black", size=14),
+        panel.border = element_rect(colour = "black", fill=NA, size=2)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tss_enrichment.svg'), 
-       scale = 0.5, width = 20, height = 25, units='cm')
+       scale = 0.5, width = 25, height = 25, units='cm')
 
 
 # Figure 2g - This figure requires the combined raw count matrix of all samples which is not shared 
@@ -165,14 +164,14 @@ conf_mat$GEX[conf_mat$GEX=='Library1_Donor2'] <- 'Library1_Control1'
 conf_mat$GEX[conf_mat$GEX=='Library1_Donor3'] <- 'Library1_Control4'
 
 # Sankey plot
-SankeyDiagram(conf_mat[,1:2],
-              link.color = "Source", 
-              weights = conf_mat$Freq, 
-              node.position.automatic=F, 
-              label.show.percentages=T,
-              font.size = 10,
-              font.family='Arial Black',
-              colors = c(brewer.pal(length(unique(conf_mat$ATAC))-1, 'Blues')[-1], 'grey60', 'grey40', brewer.pal(length(unique(conf_mat$ATAC))-1, 'Blues')[-1], 'grey60', 'grey40'))
+networkD3::SankeyDiagram(conf_mat[,1:2],
+                         link.color = "Source", 
+                         weights = conf_mat$Freq, 
+                         node.position.automatic=F, 
+                         label.show.percentages=T,
+                         font.size = 10,
+                         font.family='Arial Black',
+                         colors = c(brewer.pal(length(unique(conf_mat$ATAC))-1, 'Blues')[-1], 'grey60', 'grey40', brewer.pal(length(unique(conf_mat$ATAC))-1, 'Blues')[-1], 'grey60', 'grey40'))
 
 
 # Library 2 donor assignments
@@ -448,8 +447,8 @@ pool <- read.csv(file.path(path, 'multiome_sample_pool_matrix.csv'))
 rownames(pool) <- pool$X; pool$X <- NULL
 
 pheatmap(pool, color = c(brewer.pal(n = 8, name = "Purples")[1], '#702963'),
-             show_colnames=T,  treeheight_row=0,
-             cluster_cols=F, cluster_rows=F, fontsize = 16)
+         show_colnames=T,  treeheight_row=0,
+         cluster_cols=F, cluster_rows=F, fontsize = 16)
 
 
 # Figure 2j - Heatmap of predicted genotypes and SNP array genotype
@@ -1214,10 +1213,3 @@ distances_scaled <- apply(distances_mean, MARGIN = 2, FUN = function(X) (X - min
 corrplot(distances_mean, is.corr = FALSE, type='full', order='original', method='color',
          col = rev(COL1('Purples', 5)), tl.col = 'black', tl.cex=1, cl.cex=1, addgrid.col = 'grey70')  %>%
   corrRect(c(1, 4, 9, 13, 18, 22, 26), lwd=4)
-
-
-
-
-
-
-

@@ -3,181 +3,351 @@ path <- "path/to/files"
 # Load utilities
 source(file.path(path, 'utils.R'))
 # Load the data
-multiome <- readRDS(multiome_path)
+cosmx <- readRDS(cosmx_path)
 #-------------------------------------------------------------------------------
 
-# Figure S16 - Dotplot of TF activity in all cell types
-DefaultAssay(multiome) <- 'regulon'
-Idents(multiome) <- multiome$Annotation.Lvl2
+# Figure S16a - Dotplot of gene expression in the fibrotic niche
+cosmx$Niche <- factor(cosmx$Niche, levels=c('Fibrotic', 'Tubular injury', 'PT',
+                                          'LOH', 'CD', 'Glomerular', 'Endothelia'))
 
-# Get the top TFs per cell type by TF activity
-markers <- RunPrestoAll(multiome, assay='regulon', test.use='wilcox', logfc.threshold = 0.5, 
-                          min.pct = 0, slot='scale.data', only.pos = T)
-markers$gene <- sub("\\..*", "", rownames(markers))
+DotPlot(cosmx, features = rev(c('CCL2', 'CXCL1', 'MMP7', 'COL1A1', 'COL3A1', 'CD163', 'LYZ')), 
+        group.by = 'Niche', scale=T, cols=c('grey90', 'navy')) + RotatedAxis() + coord_flip() +
+  theme_bw() +
+  theme(axis.text.x = element_text(face="bold", color="grey10", size=10, angle=90, hjust=1, vjust=0.5),
+        axis.text.y = element_text(face="bold", color="grey10", size=10),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = "", y = "") +
+  theme(legend.position = "none", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=12, 
+                                   face="bold"),
+        legend.title = element_text(colour="grey10", size=12, 
+                                    face="bold"),
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression")
 
-markers %>%
-  group_by(cluster) %>%
-  dplyr::filter(avg_diff > 1) %>%
-  slice_head(n = 10) %>%
-  ungroup() -> top_tfs
-top_tfs <- unique(top_tfs$gene)
-top_tfs <- data.frame(TF=top_tfs)
+ggsave(filename = file.path(path, 'dotplot_niche_gene_expression.svg'),
+       scale = 0.5, width = 14, height = 24, units='cm')
 
-regulons <- read.csv(file.path(path_data, 'regulons_all.csv'))
-regulons$X <- NULL
 
-tf_list <- c()
-n_targets_list <- c()
-for (tf in unique(regulons$TF)){
-  print(tf)
-  regulons_ss2 <- regulons[regulons$TF==tf,]
-  n_targets <- length(unique(regulons_ss2$Gene))
-  tf_list <- c(tf_list, tf)
-  n_targets_list <- c(n_targets_list, n_targets)
+# Figure S16b - Spatial plots coloured by niche
+# Nephrectomy 3
+ImageDimPlot(cosmx, fov = "nephrectomy_3", group.by = 'Niche', cols=colours_cosmx_niche, 
+             size = 1, axes=T, dark.background = F) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold"))
+
+ggsave(filename = file.path(path, 'spatial_niche_nephr3.png'),
+       scale = 0.5, width = 35, height = 35, units='cm')
+
+# Nephrectomy 4
+ImageDimPlot(cosmx, fov = "nephrectomy_3", group.by = 'Niche', cols=colours_cosmx_niche, 
+             size = 1, axes=T, dark.background = F) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold"))
+
+ggsave(filename = file.path(path, 'spatial_niche_nephr4.png'),
+       scale = 0.5, width = 35, height = 35, units='cm')
+
+# Biopsy 6
+crop1 <- Crop(cosmx[["biopsy_2"]], x = c((0), (100000)), y = c(100000, 200000))
+cosmx[["zoom1"]] <- crop1
+DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
+
+ImageDimPlot(cosmx, fov = "zoom1", group.by = 'Niche', cols=colours_cosmx_niche, 
+             size = 1, axes=T, dark.background = F, border.color=NA) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold"))
+
+ggsave(filename = file.path(path, 'spatial_niche_biopsy6.png'),
+       scale = 0.5, width = 100, height = 300, units='cm', limitsize = FALSE)
+
+
+# Figure S16c - Cell type enrichment in niches
+colours_cosmx_lvl2_modified <- c('PT'=pastellize(indigos[6], 0.7),
+                'Epithelia Injured'='sandybrown',
+                'LOH-DCT'=pastellize(indigos[6], 0.7),
+                'Epithelia Inflammatory'='#702963',
+                'PC'=pastellize(indigos[6], 0.7),
+                'IC'=pastellize(indigos[6], 0.7),
+                'Monocyte'=pastellize(oranges[2], 0.6),
+                'Macrophage'=pastellize(oranges[2], 0.6),
+                'cDC'=pastellize(oranges[2], 0.6),
+                'Mast Cell'=pastellize(oranges[2], 0.6),
+                'T Cell'=pastellize(oranges[2], 0.6),
+                'NK'=pastellize(oranges[2], 0.6),
+                'B Cell'=pastellize(oranges[2], 0.6),
+                'Plasma Cell'=pastellize(oranges[2], 0.6),
+                'Fibroblast'=pastellize(greens[4], 0.6),
+                'Myofibroblast'=pastellize(greens[4], 0.6),
+                'Podocyte'=pastellize('grey20', 1),
+                'Endothelia Glomerular'=pastellize('grey20', 1),
+                'PEC'=pastellize('grey20', 1),
+                'Mesangial Cell'=pastellize('grey20', 1),
+                'Endothelia'=pastellize(reds[7], 0.8),
+                'SMC'=pastellize(reds[7], 0.8))
+
+meta <- cosmx@meta.data
+meta$group <- as.character(meta$Annotation.Lvl2)
+# Simplify epithelial clusters
+meta$group[meta$group %in% c('PT Inflammatory', 'LOH-DCT Inflammatory')] <- 'Epithelia Inflammatory'
+meta$group[meta$group %in% c('PT Injured', 'LOH-DCT Injured', 'CD Injured')] <- 'Epithelia Injured'
+
+# Generate counts per niche and cell type
+plot_data <- meta %>% group_by(Niche, group) %>% 
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+ct_vec <- c()
+fibrotic_vec <- c()
+inj_vec <- c()
+healthy_vec <- c()
+for (ct in unique(plot_data$group)){
+  fibrotic <- plot_data$Nb[plot_data$Niche=='Fibrotic' & plot_data$group==ct]
+  inj <- plot_data$Nb[plot_data$Niche=='Tubular injury' & plot_data$group==ct]
+  healthy <- plot_data$Nb[plot_data$Niche!='Tubular injury' & plot_data$Niche!='Fibrotic' & plot_data$group==ct]
+  healthy <- sum(healthy)
+  
+  ct_vec <- c(ct_vec, ct)
+  fibrotic_vec <- c(fibrotic_vec, fibrotic)
+  inj_vec <- c(inj_vec, inj)
+  healthy_vec <- c(healthy_vec, healthy)
 }
-n_targets_df <- data.frame(TF=tf_list, n_targets=n_targets_list)
 
-top_tfs <- merge(top_tfs, n_targets_df, by = "TF", all.x = TRUE)
-top_tfs <- top_tfs[top_tfs$n_targets>15,]
+df_prop <- data.frame(ct=ct_vec, fibrotic_count=fibrotic_vec, inj_count = inj_vec, healthy_count = healthy_vec)
+ct_counts <- df_prop$fibrotic_count+df_prop$inj_count+df_prop$healthy_count
+ct_counts <- ct_counts/sum(ct_counts)
+
+# Generate expected cell counts by chance based on proportions of cell types in the dataset
+df_prop$fibrotic_chance <- 43429*ct_counts
+df_prop$injured_chance <- 51909*ct_counts
+df_prop$healthy_chance <- 150717*ct_counts
+
+# Calculate observed vs expected ratio, log2+1, centred on 0
+df_prop$fibrotic_ratio <- log2((df_prop$fibrotic_count/df_prop$fibrotic_chance)+1)-1
+df_prop$inj_ratio <- log2((df_prop$inj_count/df_prop$injured_chance)+1)-1
+df_prop$healthy_ratio <- log2((df_prop$healthy_count/df_prop$healthy_chance)+1)-1
+
+# Plot fibrotic niche
+ggplot(data=df_prop, aes(reorder(ct, fibrotic_ratio), y=fibrotic_ratio, fill=ct)) +
+  geom_bar(stat="identity", color='grey10', width=.8) + 
+  theme_minimal() + theme_bw() +
+  scale_fill_manual(values=colours_cosmx_lvl2_modified) +
+  theme(axis.text.x = element_text(color="black", size=10),
+        axis.text.y = element_text(color="black", size=10)) + 
+  labs(x = "", y = "") +
+  theme(legend.position = "none", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=12),
+        legend.title = element_text(colour="black", size=12),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + ylim(c(-1,1)) + 
+  geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
+
+ggsave(filename = file.path(path, 'cell_type_enrichment_fibrotic_niche.svg'),  
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+# Plot injury niche
+ggplot(data=df_prop, aes(reorder(ct, inj_ratio), y=inj_ratio, fill=ct)) +
+  geom_bar(stat="identity", color='black', width=.8) + 
+  theme_minimal() + theme_bw() +
+  scale_fill_manual(values=colours_cosmx_lvl2_modified) +
+  theme(axis.text.x = element_text(color="black", size=10),
+        axis.text.y = element_text(color="black", size=10)) + 
+  labs(x = "", y = "") +
+  theme(legend.position = "none", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=12),
+        legend.title = element_text(colour="black", size=12),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + ylim(c(-1,1)) + 
+  geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
+
+ggsave(filename = file.path(path, 'cell_type_enrichment_injury_niche.svg'),  
+       scale = 0.5, width = 20, height = 20, units='cm')
+
+# Plot healthy niche
+ggplot(data=df_prop, aes(reorder(ct, healthy_ratio), y=healthy_ratio, fill=ct)) +
+  geom_bar(stat="identity", color='black', width=.8) + 
+  theme_minimal() + theme_bw() +
+  scale_fill_manual(values=colours_cosmx_lvl2_modified) +
+  theme(axis.text.x = element_text(color="black", size=10),
+        axis.text.y = element_text(color="black", size=10)) + 
+  labs(x = "", y = "") +
+  theme(legend.position = "none", legend.box = "horizontal",
+        legend.text = element_text(colour="black", size=12),
+        legend.title = element_text(colour="black", size=12),
+        panel.border = element_rect(colour = "black", fill=NA, size=0.5)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) +
+  labs(colour = "Average Expression") + ylim(c(-1,1)) + 
+  geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
+
+ggsave(filename = file.path(path, 'cell_type_enrichment_healthy_niche.svg'),  
+       scale = 0.5, width = 20, height = 20, units='cm')
 
 
-matrix <- multiome@assays[["SCT"]]@data[top_tfs$TF,]
-meta <- multiome@meta.data %>% dplyr::select(Annotation.Lvl2)
-meta <- bind_cols(meta, as.data.frame(t(as.matrix(matrix)))) %>%
-  pivot_longer(-Annotation.Lvl2, names_to="Gene", values_to="Expression") %>%
-  group_by(Annotation.Lvl2, Gene) %>%
-  dplyr::summarize(Avg_RNA = mean(Expression),
-                   Pct_RNA = sum(Expression > 0) / length(Expression) * 100)
+# Figure S16d - Correlation of abundance of fibrotic niche with clinical parameters
+# Fibrotic niche vs. eGFR
+meta <- cosmx@meta.data
+meta$eGFR_Sensor_ID <- paste(meta$eGFR, meta$Sensor_ID, sep='_')
+meta$cluster <- meta$Niche
+# Remove nephrectomy samples as not relevant
+meta <- meta[meta$Slide_ID!='Nephrectomy',]
+
+plot_data <- meta %>% group_by(eGFR_Sensor_ID, cluster) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$eGFR_Sensor_ID, "_")
+plot_data$eGFR <- sapply(split_vector, "[", 1)
+plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
+
+plot_data$eGFR <- as.numeric(plot_data$eGFR)
+plot_data$percent <- as.numeric(plot_data$percent)
+
+# subset data for fibrotic niche
+plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
+
+#Plot
+ggscatter(plot_data, x='eGFR', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+  stat_cor(label.x = 70, label.y = 60, size=4) +
+  geom_point(pch=21, size=2, colour="black") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=9, color = "black"),
+        axis.text.y = element_text(size=9, color = "black"),
+        legend.title = element_text(size=9, color="black"),
+        legend.text = element_text(size=8, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
+  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_egfr.svg'),  
+       scale = 0.6, width = 15, height = 9, units='cm')
 
 
-matrix <- multiome@assays[["regulon"]]@scale.data[paste(top_tfs$TF, '.rg', sep=''),]
-rownames(matrix) <- gsub('.rg', '', rownames(matrix))
-meta_regulon <- multiome@meta.data %>% dplyr::select(Annotation.Lvl2)
-meta_regulon <- bind_cols(meta_regulon, as.data.frame(t(matrix))) %>%
-  pivot_longer(-Annotation.Lvl2, names_to="Gene", values_to="Expression") %>%
-  group_by(Annotation.Lvl2, Gene) %>%
-  dplyr::summarize(Avg_regulon = mean(Expression),
-                   Pct_regulon = sum(Expression > 0) / length(Expression) * 100)
-meta_regulon <- meta_regulon[,3:4]
-meta <- cbind(meta, meta_regulon)
+# Fibrotic niche vs. Fibrosis area%
+meta <- cosmx@meta.data
+meta$Fibrosis_percentage_Sensor_ID <- paste(meta$Fibrosis_percentage, meta$Sensor_ID, sep='_')
+meta$cluster <- meta$Niche
+# Remove nephrectomy samples as not relevant
+meta <- meta[meta$Slide_ID!='Nephrectomy',]
 
-meta$Annotation.Lvl2 <- factor(meta$Annotation.Lvl2, 
-                               levels=c('PT S1', 'PT S2', 'PT S3',
-                                        'cTAL1', 'cTAL2', 'mTAL', 'Macula Densa',
-                                        'DTL', 'ATL',
-                                        'DCT1', 'DCT2','CNT', 'cPC', 'mPC',
-                                        'cIC-A', 'mIC-A', 'IC-B',
-                                        'PT Injured', 'TAL Injured','DCT Injured', 'CNT Injured', 'PC Injured', 'IC-A Injured', 'PT Inflammatory',  'TAL Inflammatory', 
-                                        'PEC', 'Podocyte',
-                                        'Endothelia Glomerular', 'Descending Vasa Recta', 'Ascending Vasa Recta', 'Peritubular Capillary Endothelia',
-                                        'Pericyte', 'vSMC', 'JG Cell', 'Fibroblast', 'Myofibroblast',
-                                        'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated',
-                                        'Macrophage Resident','Macrophage HIF1A+', 'cDC1', 'cDC2', 'cDC CCR7+', 'pDC', 'Mast Cell',
-                                        'Treg', 'Naïve Th Cell', 'Effector Th Cell', 'Naïve Tc Cell', 'Effector Tc Cell', 'MAIT', 'NKT Cell', 'NK CD56bright', 'NK CD56dim',
-                                        'Naïve B Cell', 'Memory B Cell', 'Plasma Cell'))
+plot_data <- meta %>% group_by(Fibrosis_percentage_Sensor_ID, cluster) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
 
-avg_change <- meta %>%
-  group_by(Gene) %>%
-  summarise(Avg_RNA = mean(Avg_RNA))
-avg_change <- avg_change[order(avg_change$Avg_RNA, decreasing = TRUE), ]
+split_vector <- strsplit(plot_data$Fibrosis_percentage_Sensor_ID, "_")
+plot_data$Fibrosis_percentage <- sapply(split_vector, "[", 1)
+plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
 
-# Create gene order by clustering
-matrix <- meta %>% 
-  dplyr::select(-Pct_RNA, -Avg_RNA, -Pct_regulon) %>%
-  pivot_wider(names_from = Annotation.Lvl2, values_from = Avg_regulon) %>% 
-  data.frame()
-row.names(matrix) <- matrix$Gene
-matrix <- matrix[,-1]
-clust <- hclust(dist(matrix %>% as.matrix()), method='ward.D2')
+plot_data$Fibrosis_percentage <- as.numeric(plot_data$Fibrosis_percentage)
+plot_data$percent <- as.numeric(plot_data$percent)
 
-ddgram <- as.dendrogram(clust)
-ggtree_plot <- ggtree::ggtree(ddgram)
+# subset data for fibrotic niche
+plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
 
 # Plot
-dotplot <- meta %>% mutate(Gene = factor(Gene, levels = clust$labels[clust$order])) %>% 
-  ggplot(aes(x=Annotation.Lvl2, y = Gene)) + 
-  geom_point(aes(size = Pct_RNA, fill = Avg_regulon), color="black", shape=21) +
-  scale_size("% expressed", range = c(0,6), limits = c(0,100)) +
-  cowplot::theme_cowplot() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
-        axis.text.y = element_text(size=12, color="black"),
-        axis.title = element_text(size=14)) +
+ggscatter(plot_data, x='Fibrosis_percentage', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+  stat_cor(label.x = 2, label.y = 60, size=4) +
+  geom_point(pch=21, size=2, colour="black") + 
+  xlab('') +
   ylab('') +
-  theme(axis.ticks = element_blank()) +
-  scale_y_discrete(position = "right") +
-  scale_fill_gradientn(colours = viridisLite::viridis(100),
-                       limits=c(0.5,3),
-                       oob=squish,
-                       guide = guide_colorbar(ticks.colour = "black",
-                                              frame.colour = "black"),
-                       name = "TF score")
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=9, color = "black"),
+        axis.text.y = element_text(size=9, color = "black"),
+        legend.title = element_text(size=9, color="black"),
+        legend.text = element_text(size=8, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
+  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
 
-dotplot <- dotplot + theme(axis.title.y = element_text(face = "bold", size=10, margin = margin(r = 15)),
-                           axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-                           axis.text.y = element_text(face = "bold", size=8, color = "grey10"),
-                           legend.title = element_text(face = "bold", size=10, color="grey10"),
-                           legend.text = element_text(face='bold', size=10, color='grey10')) 
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_fibrosis.svg'),  
+       scale = 0.6, width = 15, height = 9, units='cm')
 
-dotplot + geom_vline(xintercept = 3.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 7.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 9.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 14.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 17.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 23.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 25.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 27.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 31.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 34.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 36.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 39.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 42.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 47.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 54.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 56.5, color = "grey10", size=1) +
-  geom_hline(yintercept = 5, color = "grey10", size=0.2) +
-  geom_hline(yintercept = 10, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 15, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 20, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 25, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 30, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 35, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 40, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 45, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 50, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 55, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 60, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 65, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 70, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 75, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 80, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 85, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 90, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 95, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 100, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 105, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 110, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 115, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 120, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 125, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 130, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 135, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 140, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 145, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 150, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 155, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 160, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 165, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 170, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 175, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 180, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 185, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 190, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 195, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 200, color = "grey10", size=0.2)
 
-ggsave(filename = file.path(path, 'dotplot_tfs_all.svg'),  
-       scale = 0.5, width = 80, height = 100, units='cm')
+# Fibrotic niche vs. %Inflammatory PT
+# Calculate %Inflammatory PT
+meta <- cosmx@meta.data
+meta$eGFR_Sensor_ID <- paste(meta$eGFR, meta$Sensor_ID, sep='_')
+meta$cluster <- meta$Annotation.Lvl2
+meta <- meta[meta$Slide_ID!='Nephrectomy',]
 
+plot_data <- meta %>% group_by(eGFR_Sensor_ID, cluster) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$eGFR_Sensor_ID, "_")
+plot_data$eGFR <- sapply(split_vector, "[", 1)
+plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
+
+plot_data$eGFR <- as.numeric(plot_data$eGFR)
+plot_data$percent <- as.numeric(plot_data$percent)
+
+
+percentage_vec_pt <- c()
+biopsy_vec <- c()
+fibrosis_vec <- c()
+for (biopsy in unique(plot_data$eGFR_Sensor_ID)){
+  print(biopsy)
+  ss <- plot_data[plot_data$eGFR_Sensor_ID==biopsy,]
+  percentage <- ss$Nb[ss$cluster=='PT Inflammatory']/(ss$Nb[ss$cluster=='PT']+ss$Nb[ss$cluster=='PT Injured']+ss$Nb[ss$cluster=='PT Inflammatory'])
+  print(percentage)
+  percentage_vec_pt <- c(percentage_vec_pt, percentage)
+  biopsy_vec <- c(biopsy_vec, biopsy)
+  fibrosis_vec <- c(fibrosis_vec, unique(ss$eGFR))
+}
+
+pct_infl_pt_df <- as.data.frame(cbind(biopsy_vec, percentage_vec_pt, fibrosis_vec))
+pct_infl_pt_df$percentage_vec_pt <- as.numeric(pct_infl_pt_df$percentage_vec_pt)
+pct_infl_pt_df$fibrosis_vec <- as.numeric(pct_infl_pt_df$fibrosis_vec)
+pct_infl_pt_df$percentage_vec_pt <- pct_infl_pt_df$percentage_vec_pt*100
+
+# Calculate % cells in inflammatory niche
+meta <- cosmx@meta.data
+meta$eGFR_Sensor_ID <- paste(meta$eGFR, meta$Sensor_ID, sep='_')
+meta$cluster <- meta$Niche
+meta <- meta[meta$Slide_ID!='Nephrectomy',]
+
+plot_data <- meta %>% group_by(eGFR_Sensor_ID, cluster) %>%
+  summarise(Nb = n()) %>%
+  mutate(C = sum(Nb)) %>%
+  mutate(percent = Nb/C*100)
+
+split_vector <- strsplit(plot_data$eGFR_Sensor_ID, "_")
+plot_data$eGFR <- sapply(split_vector, "[", 1)
+plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
+
+plot_data$eGFR <- as.numeric(plot_data$eGFR)
+plot_data$percent <- as.numeric(plot_data$percent)
+
+# Subset to fibrotic niche
+plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
+
+plot_data_combined <- data.frame(niche=plot_data$percent, infl=pct_infl_pt_df$percentage_vec_pt)
+ggscatter(plot_data_combined, x='infl', y='niche', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+  stat_cor(label.x = 5, label.y = 60, size=4) +
+  geom_point(pch=21, size=2, color='black') + 
+  scale_color_viridis() +
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text( size=9, color = "black"),
+        axis.text.y = element_text(, size=9, color = "black"),
+        legend.title = element_text(, size=9, color="black"),
+        legend.text = element_text(size=8, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) 
+
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_infl_pt.svg'),  
+       scale = 0.6, width = 15, height = 9, units='cm')
 
 

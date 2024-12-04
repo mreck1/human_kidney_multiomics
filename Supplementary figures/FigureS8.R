@@ -2,92 +2,63 @@
 path <- "path/to/files"
 # Load utilities
 source(file.path(path, 'utils.R'))
+# Load the data
+cosmx <- readRDS(cosmx6k_path)
 #-------------------------------------------------------------------------------
+levels  <- c('PT', 'LOH', 'DCT/CNT', 'PC', 'IC', 
+             'PT Injured', 'LOH Injured', 'DCT/CNT Injured', 'PC Injured', 'IC Injured' ,
+             'PT Inflammatory', 'LOH Inflammatory',
+             'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage', 'cDC', 'pDC', 'Mast Cell',
+             'T Cell', 'Treg', 'NK Cell', 'B Cell', 'Plasma Cell', 
+             'Fibroblast', 'Myofibroblast', 'PEC', 'Podocyte', 'Endothelia Glomerular', 'Mesangial Cell', 'JG Cell',
+             'Endothelia', 'SMC/Pericyte')
 
-# Figure S8c - PCA plot of bulk RNA-seq profiles
-counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
-rownames(counts) <- counts$X; counts$X <- NULL
-counts <- counts[rowSums(counts)>0,]
-
-rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
-meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
-                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
-                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
-
-dds <- DESeqDataSetFromMatrix(countData = counts,
-                                colData = meta,
-                                design = ~ Condition+Replicate)
-dds <- dds[rowSums(counts(dds)) >= 100,]
-dds <- DESeq(dds)
-normalized_counts <- vst(dds, blind=FALSE)
-
-# Plot
-plotPCA(normalized_counts, intgroup=c("Condition"))
-
-ggsave(filename = file.path(path, 'rptec_pca.svg'),
-       scale = 0.5, width = 25, height = 30, units='cm')
+# Figure S8a - Dotplot of marker genes
+cosmx_subset <- subset(cosmx, subset=Annotation.Lvl1%in%c('Border Region', 'Capsule'), invert=T)
+cosmx_subset$Annotation.Lvl2 <- factor(cosmx_subset$Annotation.Lvl2, levels=levels)
+Idents(cosmx_subset) <- cosmx_subset$Annotation.Lvl2
+cosmx_subset <- NormalizeData(cosmx_subset)
 
 
-# Figure S8d - Volcano plot
-counts <- read.csv(file.path(path, 'rptec_raw_counts.csv'))
-rownames(counts) <- counts$X; counts$X <- NULL
-counts <- counts[rowSums(counts)>0,]
 
-rownames(counts) <- make.unique(gsub("\\..*","",rownames(counts)))
-meta <- data.frame(names = c('B1-NR', 'B1-IR', 'B3-NR', 'B3-IR', 'B4-NR', 'B4-IR', 'B5-NR', 'B5-IR', 'B6-NR', 'B6-IR'),
-                   Replicate = c('B1', 'B1', 'B3', 'B3', 'B4', 'B4', 'B5', 'B5', 'B6', 'B6'),
-                   Condition = c('NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR', 'NR', 'IR'))
+genes <- rev(c('HNF4A', 'MME', 'ASS1', 
+               'KNG1', 'CASR',
+               'SLC12A3', 'SLC8A1', 
+               'AQP3', 'SPINK1',
+               'VCAM1', 'ITGB6',  'ITGB8', 'VIM', 'TPM1', 
+               'CCL2', 'CXCL1', 'CLDN1', 'MMP7',
+               'FCN1', 'LYZ', 'FCGR3A', 'CD14',
+               'C1QA', 'SELENOP',
+               'HLA-DRA', 'IRF8', 'CLEC4C',
+               'CPA3',
+               'IL7R', 'CCL5', 'FOXP3',
+               'GNLY', 'NKG7', 
+               'CD19', 'JCHAIN',
+               'LUM', 'DCN',
+               'COL1A1', 'COL3A1',
+               'CCN2', 'PODXL', 'WT1', 'REN',
+               'RAMP3', 'FLT1',
+               'PDGFRB', 'RGS5', 'MYH11'))
 
-dds <- DESeqDataSetFromMatrix(countData = counts,
-                              colData = meta,
-                              design = ~ Condition+Replicate)
-dds <- dds[rowSums(counts(dds)) >= 100,]
-dds <- DESeq(dds)
-res <- results(dds)
 
-resLFC <- lfcShrink(dds, coef=resultsNames(dds)[2], type="apeglm")
-resLFC <- as.data.frame(resLFC)
-resLFC$gene_id <- rownames(resLFC)
-
-ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-genemap <- getBM(attributes = c("ensembl_gene_id", "hgnc_symbol"), filters = "ensembl_gene_id", 
-                 values = rownames(resLFC), mart = ensembl) 
-resLFC <- merge(resLFC, genemap, by.x="gene_id", by.y="ensembl_gene_id")
-resLFC$Symbol <- resLFC$hgnc_symbol
-resLFC$hgnc_symbol <- NULL
-
-#Swap up/downregulated
-resLFC$log2FoldChange <- resLFC$log2FoldChange * (-1)
-
-p <- EnhancedVolcano(as.data.frame(resLFC),
-                     lab = resLFC$Symbol,
-                     x = 'log2FoldChange',
-                     y = 'pvalue',
-                     pCutoff = 0.00000000001,
-                     FCcutoff = 1,
-                     col=c('grey60', 'grey60', 'grey60', 'red3'),
-                     colAlpha = 0.7, 
-                     selectLab=c('CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 
-                                 'TNF', 'CDKN1A', 'FAS', 'HDAC9', 'BIRC3', 
-                                 'ICAM1', 'CLDN1', 'TGM2', 
-                                 'IL18', 'IL32', 'C3'),
-                     pointSize = 0.5,
-                     labSize = 4.0,
-                     labCol = 'grey10',
-                     labFace = 'bold',
-                     drawConnectors = TRUE,
-                     widthConnectors = 0.75)
-
-p + labs(x = 'L2FC', y = "-log10 p-value") + ggtitle('') +
+plot <- DotPlot(cosmx_subset, features = genes, cols=c('grey85', 'navy'), dot.scale=3, scale.min=1, scale.max=30, scale=T) + NoLegend() + 
+  cowplot::theme_cowplot() + RotatedAxis() + theme_bw() +
+  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
+        axis.text.y = element_text(size=12, color="black"),
+        axis.title = element_text(size=14))
+plot + coord_flip() +
   theme_bw() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=10),
-        axis.text.y = element_text(face="bold", color="grey10", size=10),
-        axis.title.x = element_text(colour="grey10", size=14, face="bold"),
-        axis.title.y = element_text(colour="grey10", size=14, face="bold"),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold")) +
-  NoLegend()
-
-ggsave(filename = file.path(path, 'rptec_volcano_plot.svg'),
-       scale = 0.5, width = 22, height = 20, units='cm')
-
+  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
+        axis.text.y = element_text(size=12, color="black"),
+        axis.title = element_text(size=14)) +
+  ylab('') +
+  theme(axis.ticks = element_blank()) +
+  scale_color_gradient(low = "grey85", high = "navy",
+                       guide = guide_colorbar(ticks.colour = "black",
+                                              frame.colour = "black")) + theme(axis.title.y = element_text(size=10, margin = margin(r = 15)),
+                                                                               axis.text.x = element_text(size=12, angle = 60, hjust = 1, color = "black"),
+                                                                               axis.text.y = element_text(size=10, color = "black"),
+                                                                               legend.title = element_text(size=10, color="black"),
+                                                                               legend.text = element_text(size=10, color='black')) 
+ggsave(filename = file.path(path, 'cosmx_dotplot.svg'), 
+       scale = 0.6, width = 60, height = 60, units='cm')

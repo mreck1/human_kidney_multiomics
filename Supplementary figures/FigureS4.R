@@ -80,57 +80,57 @@ dotplot <- p_data %>%
                       name = "Average expression")
 dotplot
 
-dotplot <- dotplot + theme(axis.title.y = element_text(face = "bold", size=10, margin = margin(r = 15)),
-                           axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-                           axis.text.y = element_text(face = "bold", size=10, color = "grey10"),
-                           legend.title = element_text(face = "bold", size=10, color="grey10"),
-                           legend.text = element_text(face='bold', size=10, color='grey10')) 
+dotplot <- dotplot + theme(axis.title.y = element_text(size=10, margin = margin(r = 15)),
+                           axis.text.x = element_text(size=12, angle = 60, hjust = 1, color = "black"),
+                           axis.text.y = element_text(size=10, color = "black"),
+                           legend.title = element_text(size=10, color="black"),
+                           legend.text = element_text(size=10, color='black')) 
 
-dotplot + geom_vline(xintercept = 3.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 7.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 9.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 14.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 17.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 23.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 25.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 27.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 31.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 34.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 36.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 39.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 42.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 47.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 54.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 56.5, color = "grey10", size=1) +
-  geom_hline(yintercept = 5, color = "grey10", size=0.2) +
-  geom_hline(yintercept = 10, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 15, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 20, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 25, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 30, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 35, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 40, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 45, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 50, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 55, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 60, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 65, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 70, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 75, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 80, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 85, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 90, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 95, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 100, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 105, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 110, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 115, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 120, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 125, color = "grey10", size=0.2) + 
+dotplot + geom_vline(xintercept = 3.5, color = "black", size=1) + 
+  geom_vline(xintercept = 7.5, color = "black", size=1) + 
+  geom_vline(xintercept = 9.5, color = "black", size=1) + 
+  geom_vline(xintercept = 14.5, color = "black", size=1) + 
+  geom_vline(xintercept = 17.5, color = "black", size=1) + 
+  geom_vline(xintercept = 23.5, color = "black", size=1) + 
+  geom_vline(xintercept = 25.5, color = "black", size=1) +
+  geom_vline(xintercept = 27.5, color = "black", size=1) +
+  geom_vline(xintercept = 31.5, color = "black", size=1) +
+  geom_vline(xintercept = 34.5, color = "black", size=1) +
+  geom_vline(xintercept = 36.5, color = "black", size=1) +
+  geom_vline(xintercept = 39.5, color = "black", size=1) +
+  geom_vline(xintercept = 42.5, color = "black", size=1) +
+  geom_vline(xintercept = 47.5, color = "black", size=1) +
+  geom_vline(xintercept = 54.5, color = "black", size=1) +
+  geom_vline(xintercept = 56.5, color = "black", size=1) +
+  geom_hline(yintercept = 5, color = "black", size=0.2) +
+  geom_hline(yintercept = 10, color = "black", size=0.2)+
+  geom_hline(yintercept = 15, color = "black", size=0.2)+
+  geom_hline(yintercept = 20, color = "black", size=0.2)+
+  geom_hline(yintercept = 25, color = "black", size=0.2)+
+  geom_hline(yintercept = 30, color = "black", size=0.2)+
+  geom_hline(yintercept = 35, color = "black", size=0.2)+
+  geom_hline(yintercept = 40, color = "black", size=0.2)+
+  geom_hline(yintercept = 45, color = "black", size=0.2)+
+  geom_hline(yintercept = 50, color = "black", size=0.2)+
+  geom_hline(yintercept = 55, color = "black", size=0.2)+
+  geom_hline(yintercept = 60, color = "black", size=0.2)+
+  geom_hline(yintercept = 65, color = "black", size=0.2)+
+  geom_hline(yintercept = 70, color = "black", size=0.2)+
+  geom_hline(yintercept = 75, color = "black", size=0.2)+
+  geom_hline(yintercept = 80, color = "black", size=0.2)+
+  geom_hline(yintercept = 85, color = "black", size=0.2)+
+  geom_hline(yintercept = 90, color = "black", size=0.2)+
+  geom_hline(yintercept = 95, color = "black", size=0.2)+
+  geom_hline(yintercept = 100, color = "black", size=0.2)+
+  geom_hline(yintercept = 105, color = "black", size=0.2)+
+  geom_hline(yintercept = 110, color = "black", size=0.2)+
+  geom_hline(yintercept = 115, color = "black", size=0.2)+
+  geom_hline(yintercept = 120, color = "black", size=0.2)+
+  geom_hline(yintercept = 125, color = "black", size=0.2) + 
   NoLegend() + 
   theme_light() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=6, angle=45, hjust=1),
-        axis.text.y = element_text(face="bold", color="grey10", size=8),
+  theme(axis.text.x = element_text(face="bold", color="black", size=8, angle=45, hjust=1),
+        axis.text.y = element_text(face="bold", color="black", size=8),
         axis.line = element_line(colour = "grey15", size = 1, linetype = "solid"),
         panel.grid.minor = element_line(colour = "white", size = 0.5), panel.grid.major = element_line(colour = "white", size = 0.1)) + 
   labs(x = "", y = "")

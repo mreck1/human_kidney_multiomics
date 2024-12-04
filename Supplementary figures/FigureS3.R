@@ -15,80 +15,75 @@ p1 <- ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
   geom_bar(stat="identity", alpha=.9, width=.6) +
   theme_bw() +
   scale_fill_brewer(palette = "Paired") +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face='bold', color="grey10", size=12),
+  theme(axis.title.y = element_text(color="black", size=12),
+        axis.text.y = element_text(color="black", size=12),
         axis.text.x = element_blank(),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of Nuclei') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28, 
-                                   face="bold"),
+        legend.text = element_text(colour="black", size=28),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
 p2 <- VlnPlot(multiome, features = 'nCount_RNA', pt.size = 0, group.by = 'Sample') + NoLegend() +
   scale_fill_brewer(palette = "Paired") +
   xlab('') + ylab('N Transcripts') + ggtitle('') +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face='bold', color="grey10", size=12),
+  theme(axis.title.y = element_text(color="black", size=12),
+        axis.text.y = element_text(color="black", size=12),
         axis.text.x = element_blank(),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of UMIs') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28, 
-                                   face="bold"),
+        legend.text = element_text(colour="black", size=28),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
 p3 <- VlnPlot(multiome, features = 'nFeature_RNA', pt.size = 0, group.by = 'Sample') + NoLegend() +
   scale_fill_brewer(palette = "Paired") +
   xlab('') + ylab('N Transcripts') + ggtitle('') +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face='bold', color="grey10", size=12),
+  theme(axis.title.y = element_text(color="black", size=12),
+        axis.text.y = element_text(color="black", size=12),
         axis.text.x = element_blank(),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of Genes') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28, 
-                                   face="bold"),
+        legend.text = element_text(colour="black", size=28),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
 p4 <- VlnPlot(multiome, features = 'nCount_ATAC', pt.size = 0, group.by = 'Sample') + NoLegend() +
   scale_fill_brewer(palette = "Paired") +
   xlab('') + ylab('N Transcripts') + ggtitle('') +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face='bold', color="grey10", size=12),
+  theme(axis.title.y = element_text(color="black", size=12),
+        axis.text.y = element_text(color="black", size=12),
         axis.text.x = element_blank(),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of Fragments') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28, 
-                                   face="bold"),
+        legend.text = element_text(colour="grey10", size=28),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
 p5 <- VlnPlot(multiome, features = 'nFeature_ATAC', pt.size = 0, group.by = 'Sample') + NoLegend() +
   scale_fill_brewer(palette = "Paired") +
   xlab('') + ylab('N Transcripts') + ggtitle('') +
-  theme(axis.title.y = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face='bold', color="grey10", size=12),
+  theme(axis.title.y = element_text(color="black", size=12),
+        axis.text.y = element_text(color="black", size=12),
         axis.text.x = element_blank(),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of Peaks') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28, 
-                                   face="bold"),
+        legend.text = element_text(colour="black", size=28),
         legend.title = element_blank(),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
@@ -166,18 +161,18 @@ levels <- c('PT S1', 'PT S2', 'PT S3',
 Idents(multiome) <- factor(multiome$Annotation.Lvl2, levels=levels)
 multiome$label <- paste(paste(as.numeric(Idents(multiome)), ': ', sep=''), Idents(multiome), sep='')
 multiome$label <- factor(multiome$label, levels= c('1: PT S1', '2: PT S2', '3: PT S3',
-                                           '4: cTAL1', '5: cTAL2', '6: mTAL', '7: Macula Densa',
-                                           '8: DTL', '9: ATL',
-                                           '10: DCT1', '11: DCT2','12: CNT', '13: cPC', '14: mPC',
-                                           '15: cIC-A', '16: mIC-A', '17: IC-B',
-                                           '18: PT Injured', '19: TAL Injured','20: DCT Injured', '21: CNT Injured', '22: PC Injured', '23: IC-A Injured', '24: PT Inflammatory',  '25: TAL Inflammatory', 
-                                           '26: PEC', '27: Podocyte',
-                                           '28: Endothelia Glomerular', '29: Descending Vasa Recta', '30: Ascending Vasa Recta', '31: Peritubular Capillary Endothelia',
-                                           '32: Pericyte', '33: vSMC', '34: JG Cell', '35: Fibroblast', '36: Myofibroblast',
-                                           '37: CD16 Monocyte', '38: CD14 Monocyte', '39: Monocyte Transitioning', '40: Macrophage Activated',
-                                           '41: Macrophage Resident', '42: Macrophage HIF1A+', '43: cDC1', '44: cDC2', '45: cDC CCR7+', '46: pDC', '47: Mast Cell',
-                                           '48: Treg', '49: Naïve Th Cell', '50: Effector Th Cell', '51: Naïve Tc Cell', '52: Effector Tc Cell', '53: MAIT', '54: NKT Cell', '55: NK CD56bright', '56: NK CD56dim',
-                                           '57: Naïve B Cell', '58: Memory B Cell', '59: Plasma Cell'))
+                                                   '4: cTAL1', '5: cTAL2', '6: mTAL', '7: Macula Densa',
+                                                   '8: DTL', '9: ATL',
+                                                   '10: DCT1', '11: DCT2','12: CNT', '13: cPC', '14: mPC',
+                                                   '15: cIC-A', '16: mIC-A', '17: IC-B',
+                                                   '18: PT Injured', '19: TAL Injured','20: DCT Injured', '21: CNT Injured', '22: PC Injured', '23: IC-A Injured', '24: PT Inflammatory',  '25: TAL Inflammatory', 
+                                                   '26: PEC', '27: Podocyte',
+                                                   '28: Endothelia Glomerular', '29: Descending Vasa Recta', '30: Ascending Vasa Recta', '31: Peritubular Capillary Endothelia',
+                                                   '32: Pericyte', '33: vSMC', '34: JG Cell', '35: Fibroblast', '36: Myofibroblast',
+                                                   '37: CD16 Monocyte', '38: CD14 Monocyte', '39: Monocyte Transitioning', '40: Macrophage Activated',
+                                                   '41: Macrophage Resident', '42: Macrophage HIF1A+', '43: cDC1', '44: cDC2', '45: cDC CCR7+', '46: pDC', '47: Mast Cell',
+                                                   '48: Treg', '49: Naïve Th Cell', '50: Effector Th Cell', '51: Naïve Tc Cell', '52: Effector Tc Cell', '53: MAIT', '54: NKT Cell', '55: NK CD56bright', '56: NK CD56dim',
+                                                   '57: Naïve B Cell', '58: Memory B Cell', '59: Plasma Cell'))
 
 
 plot_data <- table(multiome$label)
@@ -354,5 +349,3 @@ VlnPlot(multiome, features = 'nFeature_ATAC', pt.size = 0, group.by = 'label', c
 
 ggsave(filename = file.path(path, 'qc_plots_5.svg'),
        scale = 0.5, width = 70, height = 10, units='cm')
-
-

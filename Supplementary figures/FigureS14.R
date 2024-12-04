@@ -6,676 +6,311 @@ source(file.path(path, 'utils.R'))
 cosmx <- readRDS(cosmx_path)
 #-------------------------------------------------------------------------------
 
-# Figure S14b - Supplementary spatial plots showing injured and inflammatory epithelia
-# Plot 1
-crop1 <- Crop(cosmx[["nephrectomy_2"]], x = c(164500, 166000), y = c((-28000), (-26500)))
-cosmx[["zoom1"]] <- crop1
-DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
-
-ImageDimPlot(cosmx, fov = "zoom1", group.by = 'InjuryState',
-             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx_cell_state,
-             mols.cols = colours_transcripts,
-             molecules = rev(c('CCL2', 'CXCL1', 'ICAM1', 'MMP7', 'ITGB6', 'SPP1', 'VCAM1')),
-             mols.alpha = 0.8, alpha=1, mols.size = 1, nmols = 3000, border.color = "grey10", border.size=0.1) + 
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold")) + NoLegend()
-
-ggsave(filename = file.path(path, 'cosmx_spatial_plot_1.png'),  
-       scale = 0.5, width = 35, height = 35, units='cm')
-
-# Plot 2
-crop1 <- Crop(cosmx[["nephrectomy_3"]], x = c(138200, 139700), y = c((-44000), (-42500)))
-cosmx[["zoom2"]] <- crop1
-DefaultBoundary(cosmx[["zoom2"]]) <- "segmentation"
-
-ImageDimPlot(cosmx, fov = "zoom2", group.by = 'InjuryState',
-             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx_cell_state,
-             mols.cols = colours_transcripts,
-             molecules = rev(c('CCL2', 'CXCL1', 'ICAM1', 'MMP7', 'ITGB6', 'SPP1', 'VCAM1')),
-             mols.alpha = 0.8, alpha=1, mols.size = 1, nmols = 3000, border.color = "grey10", border.size=0.1) + 
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold")) + NoLegend()
-
-ggsave(filename = file.path(path, 'cosmx_spatial_plot_2.png'),  
-       scale = 0.5, width = 35, height = 35, units='cm')
-
-# Plot 3
-crop1 <- Crop(cosmx[["nephrectomy_4"]], x = c(167700, 169300), y = c((-65700), (-64100)))
-cosmx[["zoom3"]] <- crop1
-DefaultBoundary(cosmx[["zoom3"]]) <- "segmentation"
-
-ImageDimPlot(cosmx, fov = "zoom3", group.by = 'InjuryState',
-             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx_cell_state,
-             mols.cols = colours_transcripts,
-             molecules = rev(c('CCL2', 'CXCL1', 'ICAM1', 'MMP7', 'ITGB6', 'SPP1', 'VCAM1')),
-             mols.alpha = 0.8, alpha=1, mols.size = 1, nmols = 3000, border.color = "grey10", border.size=0.1) + 
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold")) + NoLegend()
-
-ggsave(filename = file.path(path, 'cosmx_spatial_plot_3.png'),  
-       scale = 0.5, width = 35, height = 35, units='cm')
-
-# Plot 4
-crop1 <- Crop(cosmx[["nephrectomy_4"]], x = c(168500, 170000), y = c((-59500), (-58000)))
-cosmx[["zoom4"]] <- crop1
-DefaultBoundary(cosmx[["zoom4"]]) <- "segmentation"
-
-ImageDimPlot(cosmx, fov = "zoom4", group.by = 'InjuryState',
-             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx_cell_state,
-             mols.cols = colours_transcripts,
-             molecules = rev(c('CCL2', 'CXCL1', 'ICAM1', 'MMP7', 'ITGB6', 'SPP1', 'VCAM1')),
-             mols.alpha = 0.8, alpha=1, mols.size = 1, nmols = 3000, border.color = "grey10", border.size=0.1) + 
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold")) + NoLegend()
-
-ggsave(filename = file.path(path, 'cosmx_spatial_plot_4.png'),  
-       scale = 0.5, width = 35, height = 35, units='cm')
-
-
-# Figure S14c - Supplementary transcript proximity plots
-purples <- pal_material("deep-purple", alpha = 1)(10)
-set.seed(1)
-cosmx$random <- colnames(cosmx) %in% colnames(cosmx)[sample(1:ncol(cosmx), size=50000)]
-cosmx$random <- as.character(cosmx$random)
-
-# T Cell
-il7r <- get_molecule_counts(cosmx, 'IL7R')
-CD2 <- get_molecule_counts(cosmx, 'CD2')
-CD3D <- get_molecule_counts(cosmx, 'CD3D')
-# NK Cell
-GNLY <- get_molecule_counts(cosmx, 'GNLY')
-NKG7 <- get_molecule_counts(cosmx, 'NKG7')
-GZMB <- get_molecule_counts(cosmx, 'GZMB')
-# B/Plasma Cell
-CD19 <- get_molecule_counts(cosmx, 'CD19')
-IGKC <- get_molecule_counts(cosmx, 'IGKC')
-IGHG1 <- get_molecule_counts(cosmx, 'IGHG1')
-# Endothelia
-FLT1 <- get_molecule_counts(cosmx, 'FLT1')
-CD34 <- get_molecule_counts(cosmx, 'CD34')
-RAMP3 <- get_molecule_counts(cosmx, 'RAMP3')
-
-# Calculate mean enrichment between transcripts
-t_cell <- il7r
-t_cell$count <- (il7r$count + CD2$count + CD3D$count)/3
-t_cell_1 <- t_cell[t_cell$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
-t_cell_2 <- t_cell[t_cell$CellType%in%c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory'),]
-t_cell_1$count <- (as.numeric(t_cell_1$count)+as.numeric(t_cell_2$count))/2
-t_cell_1$CellType <- as.character(t_cell_1$CellType)
-t_cell_1$CellType[t_cell_1$CellType == 'PT'] <- 'Healthy Epithelia'
-t_cell_1$CellType[t_cell_1$CellType == 'PT Injured'] <- 'Injured Epithelia'
-t_cell_1$CellType[t_cell_1$CellType == 'PT Inflammatory'] <- 'Inflammatory Epithelia'
-
-NK_cell <- GNLY
-NK_cell$count <- (GNLY$count + NKG7$count + GZMB$count)/3
-NK_cell_1 <- NK_cell[NK_cell$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
-NK_cell_2 <- NK_cell[NK_cell$CellType%in%c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory'),]
-NK_cell_1$count <- (NK_cell_1$count+NK_cell_2$count)/2
-NK_cell_1$CellType <- as.character(NK_cell_1$CellType)
-NK_cell_1$CellType[NK_cell_1$CellType == 'PT'] <- 'Healthy Epithelia'
-NK_cell_1$CellType[NK_cell_1$CellType == 'PT Injured'] <- 'Injured Epithelia'
-NK_cell_1$CellType[NK_cell_1$CellType == 'PT Inflammatory'] <- 'Inflammatory Epithelia'
-
-B_cell <- CD19
-B_cell$count <- (CD19$count + IGKC$count + IGHG1$count) /3
-B_cell_1 <- B_cell[B_cell$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
-B_cell_2 <- B_cell[B_cell$CellType%in%c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory'),]
-B_cell_1$count <- (B_cell_1$count+B_cell_2$count)/2
-B_cell_1$CellType <- as.character(B_cell_1$CellType)
-B_cell_1$CellType[B_cell_1$CellType == 'PT'] <- 'Healthy Epithelia'
-B_cell_1$CellType[B_cell_1$CellType == 'PT Injured'] <- 'Injured Epithelia'
-B_cell_1$CellType[B_cell_1$CellType == 'PT Inflammatory'] <- 'Inflammatory Epithelia'
-
-endothelia <- FLT1
-endothelia$count <- (FLT1$count + CD34$count)/2
-endothelia_1 <- endothelia[endothelia$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
-endothelia_2 <- endothelia[endothelia$CellType%in%c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory'),]
-endothelia_1$count <- (endothelia_1$count+endothelia_2$count)/2
-endothelia_1$CellType <- as.character(endothelia_1$CellType)
-endothelia_1$CellType[endothelia_1$CellType == 'PT'] <- 'Healthy Epithelia'
-endothelia_1$CellType[endothelia_1$CellType == 'PT Injured'] <- 'Injured Epithelia'
-endothelia_1$CellType[endothelia_1$CellType == 'PT Inflammatory'] <- 'Inflammatory Epithelia'
-
-# Order
-t_cell_1$CellType <- factor(t_cell_1$CellType, level=c('Inflammatory Epithelia', 
-                                                   'Injured Epithelia', 
-                                                   'Healthy Epithelia'))
-NK_cell_1$CellType <- factor(NK_cell_1$CellType, level=c('Inflammatory Epithelia', 
-                                                       'Injured Epithelia', 
-                                                       'Healthy Epithelia'))
-B_cell_1$CellType <- factor(B_cell_1$CellType, level=c('Inflammatory Epithelia', 
-                                                       'Injured Epithelia', 
-                                                       'Healthy Epithelia'))
-endothelia_1$CellType <- factor(endothelia_1$CellType, level=c('Inflammatory Epithelia', 
-                                                       'Injured Epithelia', 
-                                                       'Healthy Epithelia'))
-
-# Plot, change data input for different target cell type
-ggplot(t_cell_1, aes(x = Distance,  y = count, colour=CellType)) +
-  geom_point(size=1) + 
-  geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=0.2, span = 1, size=1.5) +
-  geom_vline(xintercept = 5, linetype="dashed", 
-             color = "grey20", size=1) +
-  theme_bw() +
-  theme(axis.title.x = element_text(size=14, face = "bold", hjust=0.9, color='grey10')) +
-  theme(axis.title.y = element_text(size=14, face = "bold", hjust=0.9, color='grey10')) +
-  theme(legend.title = element_text(face = "bold", color='grey10'),
-        legend.text = element_text(face = "bold", color='grey10'),
-        plot.title = element_text(size=14, face="bold", hjust = 0.07, color='grey10')) +
-  theme(legend.position="right",
-        axis.text.x = element_text(face="bold", color="grey10", size=12),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) +
-  labs(x = "", y = '') +
-  scale_colour_manual(values=  c('Inflammatory Epithelia'='#702963', 
-                                 'Injured Epithelia'="sandybrown", 
-                                 'Healthy Epithelia'=purples[4])) +
-  NoLegend() + coord_cartesian(ylim = c(0, 3.5)) +
-  guides(colour = guide_legend(override.aes = list(size=5)))
-
-ggsave(filename = file.path(path, 'supplementary_transcript_plot_1.svg'),  
-       scale = 0.5, width = 20, height = 10, units='cm')  
-
-
-# Figure S14d - Supplementary scatterplots showing correlation with clinical parameters
-# Scatterplot % Infl PT vs. Fibrosis area %
-meta <- cosmx@meta.data
-meta$Fibrosis_percentage_Sensor <- paste(meta$Fibrosis_percentage, meta$Sensor_ID, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-plot_data <- meta %>% group_by(Fibrosis_percentage_Sensor, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-
-split_vector <- strsplit(plot_data$Fibrosis_percentage_Sensor, "_")
-plot_data$Fibrosis_percentage <- sapply(split_vector, "[", 1)
-plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
-
-plot_data$Fibrosis_percentage <- as.numeric(plot_data$Fibrosis_percentage)
-plot_data$percent <- as.numeric(plot_data$percent)
-
-percentage_vec_pt <- c()
-biopsy_vec <- c()
-fibrosis_vec <- c()
-for (biopsy in unique(plot_data$Sensor_ID)){
-  print(biopsy)
-  ss <- plot_data[plot_data$Sensor_ID==biopsy,]
-  percentage <- ss$Nb[ss$cluster=='PT Inflammatory']/(ss$Nb[ss$cluster=='PT']+ss$Nb[ss$cluster=='PT Injured']+ss$Nb[ss$cluster=='PT Inflammatory'])
-  print(percentage)
-  percentage_vec_pt <- c(percentage_vec_pt, percentage)
-  biopsy_vec <- c(biopsy_vec, biopsy)
-  fibrosis_vec <- c(fibrosis_vec, unique(ss$Fibrosis_percentage))
-}
-
-results <- as.data.frame(cbind(biopsy_vec, percentage_vec_pt, fibrosis_vec))
-results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
-results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
-results$percentage_vec_pt <- results$percentage_vec_pt*100
-
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line") +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
-  geom_point(pch=21, size=2, colour="grey10") + 
-  xlab('') +
-  ylab('') +
-  labs(fill = "") +
-  theme(axis.text.x = element_text(face = "bold", size=9, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=9, color = "grey10"),
-        legend.title = element_text(face = "bold", size=9, color="grey10"),
-        legend.text = element_text(size=8, face = "bold", color="grey10")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
-
-ggsave(filename = file.path(path, 'correlation_infl_pt_vs_fibrosis.svg'), 
-       scale = 0.6, width = 15, height = 9, units='cm')
-
-
-# Scatterplot % Infl TAL vs. eGFR
-meta <- cosmx@meta.data
-meta$eGFR_Sensor_ID <- paste(meta$eGFR, meta$Sensor_ID, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-plot_data <- meta %>% group_by(eGFR_Sensor_ID, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-
-split_vector <- strsplit(plot_data$eGFR_Sensor_ID, "_")
-plot_data$eGFR <- sapply(split_vector, "[", 1)
-plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
-
-plot_data$eGFR <- as.numeric(plot_data$eGFR)
-plot_data$percent <- as.numeric(plot_data$percent)
-
-percentage_vec_pt <- c()
-biopsy_vec <- c()
-fibrosis_vec <- c()
-for (biopsy in unique(plot_data$Sensor_ID)){
-  print(biopsy)
-  ss <- plot_data[plot_data$Sensor_ID==biopsy,]
-  percentage <- ss$Nb[ss$cluster=='LOH-DCT Inflammatory']/(ss$Nb[ss$cluster=='LOH-DCT']+ss$Nb[ss$cluster=='LOH-DCT Injured']+ss$Nb[ss$cluster=='LOH-DCT Inflammatory'])
-  print(percentage)
-  percentage_vec_pt <- c(percentage_vec_pt, percentage)
-  biopsy_vec <- c(biopsy_vec, biopsy)
-  fibrosis_vec <- c(fibrosis_vec, unique(ss$eGFR))
-}
-
-results <- as.data.frame(cbind(biopsy_vec, percentage_vec_pt, fibrosis_vec))
-results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
-results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
-results$percentage_vec_pt <- results$percentage_vec_pt*100
-
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line") +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
-  geom_point(pch=21, size=2, colour="grey10") + 
-  xlab('') +
-  ylab('') +
-  labs(fill = "") +
-  theme(axis.text.x = element_text(face = "bold", size=9, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=9, color = "grey10"),
-        legend.title = element_text(face = "bold", size=9, color="grey10"),
-        legend.text = element_text(size=8, face = "bold", color="grey10")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
-
-ggsave(filename = file.path(path, 'correlation_infl_tal_vs_egfr.svg'), 
-       scale = 0.6, width = 15, height = 9, units='cm')
-
-
-# Scatterplot % Infl TAL vs. Fibrosis area %
-meta <- cosmx@meta.data
-meta$Fibrosis_percentage_Sensor_ID <- paste(meta$Fibrosis_percentage, meta$Sensor_ID, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-plot_data <- meta %>% group_by(Fibrosis_percentage_Sensor_ID, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-
-split_vector <- strsplit(plot_data$Fibrosis_percentage_Sensor_ID, "_")
-plot_data$Fibrosis_percentage <- sapply(split_vector, "[", 1)
-plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
-
-plot_data$Fibrosis_percentage <- as.numeric(plot_data$Fibrosis_percentage)
-plot_data$percent <- as.numeric(plot_data$percent)
-
-percentage_vec_pt <- c()
-biopsy_vec <- c()
-fibrosis_vec <- c()
-for (biopsy in unique(plot_data$Sensor_ID)){
-  print(biopsy)
-  ss <- plot_data[plot_data$Sensor_ID==biopsy,]
-  percentage <- ss$Nb[ss$cluster=='LOH-DCT Inflammatory']/(ss$Nb[ss$cluster=='LOH-DCT']+ss$Nb[ss$cluster=='LOH-DCT Injured']+ss$Nb[ss$cluster=='LOH-DCT Inflammatory'])
-  print(percentage)
-  percentage_vec_pt <- c(percentage_vec_pt, percentage)
-  biopsy_vec <- c(biopsy_vec, biopsy)
-  fibrosis_vec <- c(fibrosis_vec, unique(ss$Fibrosis_percentage))
-}
-
-results <- as.data.frame(cbind(biopsy_vec, percentage_vec_pt, fibrosis_vec))
-results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
-results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
-results$percentage_vec_pt <- results$percentage_vec_pt*100
-
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line") +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
-  geom_point(pch=21, size=2, colour="grey10") + 
-  xlab('') +
-  ylab('') +
-  labs(fill = "") +
-  theme(axis.text.x = element_text(face = "bold", size=9, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=9, color = "grey10"),
-        legend.title = element_text(face = "bold", size=9, color="grey10"),
-        legend.text = element_text(size=8, face = "bold", color="grey10")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
-
-ggsave(filename = file.path(path, 'correlation_infl_tal_vs_fibrosis.svg'), 
-       scale = 0.6, width = 15, height = 9, units='cm')
-
-
-#-----------------Fibrosis vs eGFR
-meta <- cosmx@meta.data
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-egfr <- unique(paste(meta$eGFR, meta$Specimen, sep='_'))
-fibrosis <- unique(paste(meta$Fibrosis_percentage, meta$eGFR, sep='_'))
-
-split_vector_egfr <- strsplit(egfr, "_")
-egfr <- sapply(split_vector_egfr, "[", 1)
-split_vector_fibrosis <- strsplit(fibrosis, "_")
-fibrosis <- sapply(split_vector_fibrosis, "[", 1)
-
-plot_data <- as.data.frame(cbind(egfr, fibrosis))
-plot_data$egfr <- as.numeric(plot_data$egfr)
-plot_data$fibrosis <- as.numeric(plot_data$fibrosis)
-
-ggscatter(plot_data, x='egfr', y='fibrosis', add = "reg.line") +
-  stat_cor(label.x = 55, label.y = 55, size=4) +
-  geom_point(pch=21, size=2, colour="grey10") + 
-  xlab('') +
-  ylab('') +
-  labs(fill = "") +
-  theme(axis.text.x = element_text(face = "bold", size=9, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=9, color = "grey10"),
-        legend.title = element_text(face = "bold", size=9, color="grey10"),
-        legend.text = element_text(size=8, face = "bold", color="grey10")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
-
-ggsave(filename = file.path(path, 'egfr_vs_fibrosis.svg'),
-       scale = 0.6, width = 15, height = 9, units='cm')
-
-
-# Figure S14e - Heatmaps showing correlations of all cell types with clinical parameters
-# Heatmap for eGFR correlation
-breaks_p <- seq(0, 3, by=0.01)
-breaks_r <- seq(-0.9, 0.9, by=0.01)
-
-col.order <- c("PT", "LOH-DCT", "PC", "IC", 
-               "PT Injured", "LOH-DCT Injured", "CD Injured",
-               "PT Inflammatory", "LOH-DCT Inflammatory",
-               "Monocyte", "Macrophage", "cDC", "Mast Cell",
-               'T Cell', 'NK', 'B Cell', 'Plasma Cell',
-               "Fibroblast", "Myofibroblast",
-               "Podocyte", "Endothelia Glomerular", "PEC", 'Mesangial Cell', "Leukocyte Glomerular",
-               "Endothelia", "SMC")
-
-meta <- cosmx@meta.data
-meta$eGFR_Sensor_ID<- paste(meta$eGFR, meta$Sensor_ID, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-plot_data <- meta %>% group_by(eGFR_Sensor_ID, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-
-split_vector <- strsplit(plot_data$eGFR_Sensor_ID, "_")
-plot_data$eGFR <- sapply(split_vector, "[", 1)
-plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
-
-plot_data$eGFR <- as.numeric(plot_data$eGFR)
-plot_data$percent <- as.numeric(plot_data$percent)
-
-
-cts_pt <- c('PT', 'PT Injured', 'PT Inflammatory')
-cts_loh <- c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory')
-cts_cd <- c('PC', 'IC', 'CD Injured')
-
-# Calculate correlations for PT clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_pt <- plot_data[plot_data$cluster%in%cts_pt,]
-for (ct in cts_pt){
-  ss <- plot_data_pt[plot_data_pt$cluster==ct,]
-  percentage <- plot_data_pt$Nb[plot_data_pt$cluster==ct]/(plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[1]]+plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[2]]+plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[3]])
-  summary <- cor.test(ss$eGFR, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_pt <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_pt$R_vec <- as.numeric(results_pt$R_vec)
-results_pt$p_vec <- as.numeric(results_pt$p_vec)
-rownames(results_pt) <- results_pt$ct_vec
-
-# Calculate correlations for LOH clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_loh <- plot_data[plot_data$cluster%in%cts_loh,]
-for (ct in cts_loh){
-  ss <- plot_data_loh[plot_data_loh$cluster==ct,]
-  percentage <- plot_data_loh$Nb[plot_data_loh$cluster==ct]/(plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[1]]+plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[2]]+plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[3]])
-  summary <- cor.test(ss$eGFR, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_loh <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_loh$R_vec <- as.numeric(results_loh$R_vec)
-results_loh$p_vec <- as.numeric(results_loh$p_vec)
-rownames(results_loh) <- results_loh$ct_vec
-
-# Calculate correlations for CD clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_cd <- plot_data[plot_data$cluster%in%cts_cd,]
-for (ct in cts_cd){
-  ss <- plot_data_cd[plot_data_cd$cluster==ct,]
-  percentage <- plot_data_cd$Nb[plot_data_cd$cluster==ct]/(plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[1]]+plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[2]]+plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[3]])
-  summary <- cor.test(ss$eGFR, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_cd <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_cd$R_vec <- as.numeric(results_cd$R_vec)
-results_cd$p_vec <- as.numeric(results_cd$p_vec)
-rownames(results_cd) <- results_cd$ct_vec
-
-# Calculate correlations for non-epithelia clusters
-cts <- unique(plot_data$cluster)
-cts <- cts[!cts %in% c('PT', 'PT Injured', 'PT Inflammatory', 
-                       'LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory',
-                       'PC', 'IC', 'CD Injured')]
-
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-for (ct in cts){
-  plot_data_non_epithelia <- plot_data[plot_data$cluster==ct,]
-  summary <- cor.test(plot_data_non_epithelia$eGFR, plot_data_non_epithelia$percent,  method = "pearson")
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-df_non_epithelia <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-df_non_epithelia$R_vec <- as.numeric(df_non_epithelia$R_vec)
-df_non_epithelia$p_vec <- as.numeric(df_non_epithelia$p_vec)
-rownames(df_non_epithelia) <- df_non_epithelia$ct_vec
-
-results_df <- rbind(results_pt, results_loh, results_cd, df_non_epithelia)
-# -log10 pvalue
-results_df$p_vec <- -log10(results_df$p_vec)
-results_df$summary <- results_df$R_vec*results_df$p_vec
-
-
-# Heatmap of R values
-results_df$ct_vec <- NULL
-R <- as.data.frame(results_df[,1])
-rownames(R) <- rownames(results_df)
-R <- R[order(match(rownames(R), col.order)), , drop = FALSE]
+# Figure S14a - Violin plot of per sample quality metrics
+# Rename samples for full names
+cosmx$Specimen_ID <- gsub('Nephr', 'Nephrectomy ', cosmx$Specimen_ID)
+cosmx$Specimen_ID <- gsub('Biopsy', 'Biopsy ', cosmx$Specimen_ID)
+
+plot_data <- (table(cosmx$Specimen_ID))
+plot_data <- as.data.frame(cbind(names(plot_data), as.character(plot_data)))
+plot_data$V2 <- as.numeric(plot_data$V2)
 
 # Plot
-pheatmap(R, cluster_rows=F, cluster_cols=F, color = colorRampPalette(c('#702963', 'grey90', 'darkgreen'))(181),
-         gaps_row=c(4, 7, 9, 17, 19, 23), breaks=breaks_r)
+p1 <- ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
+  geom_bar(stat="identity", alpha=.9, width=.6) +
+  theme_bw() +
+  scale_fill_manual(values=DiscretePalette_scCustomize('stepped', n=13)) +
+  theme(axis.title.y = element_text(face="bold", color="grey10", size=9),
+        axis.text.y = element_text(face='bold', color="grey10", size=9),
+        axis.text.x = element_blank(),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = '', y = 'Number of cells') +
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=28, 
+                                   face="bold"),
+        legend.title = element_blank(),
+        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
 
-# Heatmap of -log10 p-values
-results_df$ct_vec <- NULL
-R <- as.data.frame(results_df[,2])
-rownames(R) <- rownames(results_df)
-R <- R[order(match(rownames(R), col.order)), , drop = FALSE]
+p2 <- VlnPlot(cosmx, features = 'nCount_Nanostring', pt.size = 0, group.by = 'Specimen_ID', raster=F) + NoLegend() +
+  scale_fill_manual(values=DiscretePalette_scCustomize('stepped', n=13)) +
+  xlab('') + ylab('N Transcripts') + ggtitle('') +
+  theme(axis.title.y = element_text(face="bold", color="grey10", size=9),
+        axis.text.y = element_text(face='bold', color="grey10", size=9),
+        axis.text.x = element_blank(),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = '', y = 'Number of transcripts') +
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=28, 
+                                   face="bold"),
+        legend.title = element_blank(),
+        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() 
 
-# Plot
-pheatmap(R, cluster_rows=F, cluster_cols=F, color = colorRampPalette(c('grey90', 'navy'))(301),
-         gaps_row=c(4, 7, 9, 17, 19, 23), breaks=breaks_p)
+p3 <- VlnPlot(cosmx, features = 'nFeature_Nanostring', pt.size = 0, group.by = 'Specimen_ID', raster=F) + NoLegend() +
+  scale_fill_manual(values=DiscretePalette_scCustomize('stepped', n=13)) +
+  xlab('') + ylab('N Transcripts') + ggtitle('') +
+  theme(axis.title.y = element_text(face="bold", color="grey10", size=9),
+        axis.text.y = element_text(face='bold', color="grey10", size=9),
+        axis.text.x = element_blank(),
+        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
+  labs(x = '', y = 'Number of genes') +
+  theme(legend.position = "bottom", legend.box = "horizontal",
+        legend.text = element_text(colour="grey10", size=28, 
+                                   face="bold"),
+        legend.title = element_blank(),
+        panel.border = element_rect(colour = "grey10", fill=NA, size=2)) +
+  guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend()
 
+arrange <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3)
+arrange
 
-# Heatmap for fibrosis area % correlation
-meta <- cosmx@meta.data
-meta$Fibrosis_percentage_Sensor <- paste(meta$Fibrosis_percentage, meta$Sensor_ID, sep='_')
-meta$cluster <- meta$Annotation.Lvl2
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-plot_data <- meta %>% group_by(Fibrosis_percentage_Sensor, cluster) %>%
-  summarise(Nb = n()) %>%
-  mutate(C = sum(Nb)) %>%
-  mutate(percent = Nb/C*100)
-
-
-split_vector <- strsplit(plot_data$Fibrosis_percentage_Sensor, "_")
-plot_data$Fibrosis_percentage <- sapply(split_vector, "[", 1)
-plot_data$Sensor_ID <- sapply(split_vector, "[", 2)
-
-plot_data$Fibrosis_percentage <- as.numeric(plot_data$Fibrosis_percentage)
-plot_data$percent <- as.numeric(plot_data$percent)
-
-
-cts_pt <- c('PT', 'PT Injured', 'PT Inflammatory')
-cts_loh <- c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory')
-cts_cd <- c('PC', 'IC', 'CD Injured')
-
-# Calculate correlations for PT clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_pt <- plot_data[plot_data$cluster%in%cts_pt,]
-for (ct in cts_pt){
-  ss <- plot_data_pt[plot_data_pt$cluster==ct,]
-  percentage <- plot_data_pt$Nb[plot_data_pt$cluster==ct]/(plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[1]]+plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[2]]+plot_data_pt$Nb[plot_data_pt$cluster==cts_pt[3]])
-  summary <- cor.test(ss$Fibrosis_percentage, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_pt <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_pt$R_vec <- as.numeric(results_pt$R_vec)
-results_pt$p_vec <- as.numeric(results_pt$p_vec)
-rownames(results_pt) <- results_pt$ct_vec
-
-# Calculate correlations for LOH clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_loh <- plot_data[plot_data$cluster%in%cts_loh,]
-for (ct in cts_loh){
-  ss <- plot_data_loh[plot_data_loh$cluster==ct,]
-  percentage <- plot_data_loh$Nb[plot_data_loh$cluster==ct]/(plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[1]]+plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[2]]+plot_data_loh$Nb[plot_data_loh$cluster==cts_loh[3]])
-  summary <- cor.test(ss$Fibrosis_percentage, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_loh <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_loh$R_vec <- as.numeric(results_loh$R_vec)
-results_loh$p_vec <- as.numeric(results_loh$p_vec)
-rownames(results_loh) <- results_loh$ct_vec
-
-# Calculate correlations for CD clusters
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-plot_data_cd <- plot_data[plot_data$cluster%in%cts_cd,]
-for (ct in cts_cd){
-  ss <- plot_data_cd[plot_data_cd$cluster==ct,]
-  percentage <- plot_data_cd$Nb[plot_data_cd$cluster==ct]/(plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[1]]+plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[2]]+plot_data_cd$Nb[plot_data_cd$cluster==cts_cd[3]])
-  summary <- cor.test(ss$Fibrosis_percentage, percentage,  method = "pearson", alternative = "two.sided", exact = T)
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-results_cd <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-results_cd$R_vec <- as.numeric(results_cd$R_vec)
-results_cd$p_vec <- as.numeric(results_cd$p_vec)
-rownames(results_cd) <- results_cd$ct_vec
-
-# Calculate correlations for non-epithelia clusters
-cts <- unique(plot_data$cluster)
-cts <- cts[!cts %in% c('PT', 'PT Injured', 'PT Inflammatory', 
-                       'LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory',
-                       'PC', 'IC', 'CD Injured')]
-
-ct_vec <- c()
-R_vec <- c()
-p_vec <- c()
-for (ct in cts){
-  plot_data_non_epithelia <- plot_data[plot_data$cluster==ct,]
-  summary <- cor.test(plot_data_non_epithelia$Fibrosis_percentage, plot_data_non_epithelia$percent,  method = "pearson")
-  R <- as.numeric(summary[["estimate"]])
-  p <- as.numeric(summary[["p.value"]])
-  
-  ct_vec <- c(ct_vec, ct)
-  R_vec <- c(R_vec, R)
-  p_vec <- c(p_vec, p)
-}
-
-df_non_epithelia <- as.data.frame(cbind(ct_vec, R_vec, p_vec))
-df_non_epithelia$R_vec <- as.numeric(df_non_epithelia$R_vec)
-df_non_epithelia$p_vec <- as.numeric(df_non_epithelia$p_vec)
-rownames(df_non_epithelia) <- df_non_epithelia$ct_vec
-
-results_df <- rbind(results_pt, results_loh, results_cd, df_non_epithelia)
-# -log10 pvalue
-results_df$p_vec <- -log10(results_df$p_vec)
-results_df$summary <- results_df$R_vec*results_df$p_vec
+ggsave(filename = file.path(path, 'per_sample_metrics.svg'), arrange,
+       scale = 0.5, width = 20, height = 30, units='cm')
 
 
-# Heatmap of R values
-results_df$ct_vec <- NULL
-R <- as.data.frame(results_df[,1])
-rownames(R) <- rownames(results_df)
-R <- R[order(match(rownames(R), col.order)), , drop = FALSE]
+# Figure S14b - Violin plot of per sample cell type quality metrics
+# Add numbers to cell type names
+cosmx$label <- as.character(cosmx$Annotation.Lvl2)
+cosmx$label[cosmx$label=='PT'] <- '1: PT'
+cosmx$label[cosmx$label=='LOH-DCT'] <- '2: LOH-DCT'
+cosmx$label[cosmx$label=='PC'] <- '3: PC'
+cosmx$label[cosmx$label=='IC'] <- '4: IC'
+cosmx$label[cosmx$label=='PT Injured'] <- '5: PT Injured'
+cosmx$label[cosmx$label=='LOH-DCT Injured'] <- '6: LOH-DCT Injured'
+cosmx$label[cosmx$label=='CD Injured'] <- '7: CD Injured'
+cosmx$label[cosmx$label=='PT Inflammatory'] <- '8: PT Inflammatory'
+cosmx$label[cosmx$label=='LOH-DCT Inflammatory'] <- '9: LOH-DCT Inflammatory'
+cosmx$label[cosmx$label=='Monocyte'] <- '10: Monocyte'
+cosmx$label[cosmx$label=='Macrophage'] <- '11: Macrophage'
+cosmx$label[cosmx$label=='cDC'] <- '12: cDC'
+cosmx$label[cosmx$label=='Mast Cell'] <- '13: Mast Cell'
+cosmx$label[cosmx$label=='T Cell'] <- '14: T Cell'
+cosmx$label[cosmx$label=='NK'] <- '16: NK'
+cosmx$label[cosmx$label=='B Cell'] <- '16: B Cell'
+cosmx$label[cosmx$label=='Plasma Cell'] <- '17: Plasma Cell'
+cosmx$label[cosmx$label=='Fibroblast'] <- '18: Fibroblast'
+cosmx$label[cosmx$label=='Myofibroblast'] <- '19: Myofibroblast'
+cosmx$label[cosmx$label=='Podocyte'] <- '20: Podocyte'
+cosmx$label[cosmx$label=='Endothelia Glomerular'] <- '21: Endothelia Glomerular'
+cosmx$label[cosmx$label=='PEC'] <- '22: PEC'
+cosmx$label[cosmx$label=='Mesangial Cell'] <- '23: Mesangial Cell'
+cosmx$label[cosmx$label=='Endothelia'] <- '24: Endothelia'
+cosmx$label[cosmx$label=='SMC'] <- '25: SMC'
+
+order <- c('1: PT', '2: LOH-DCT', '3: PC', '4: IC', 
+           '5: PT Injured', '6: LOH-DCT Injured', '7: CD Injured',
+           '8: PT Inflammatory', '9: LOH-DCT Inflammatory',
+           '10: Monocyte', '11: Macrophage','12: cDC', '13: Mast Cell', 
+           '14: T Cell', '15: NK', '16: B Cell', '17: Plasma Cell',
+           '18: Fibroblast', '19: Myofibroblast',
+           '20: Podocyte', '21: Endothelia Glomerular', '22: PEC', '23: Mesangial Cell',
+           '24: Endothelia', '25: SMC')
+cosmx$label <- factor(cosmx$label, levels=order)
+
+plot_data <- table(cosmx$label)
+plot_data <- as.data.frame(cbind(names(plot_data), as.character(plot_data)))
+plot_data$V2 <- as.numeric(plot_data$V2)
+plot_data$V1 <- factor(plot_data$V1, levels=order)
+
+colours_cosmx_lvl2_modified <- c('1: PT'=pastellize(purples[3], 0.8),
+                '5: PT Injured'=pastellize(purples[5], 0.8),
+                '8: PT Inflammatory'=pastellize(purples[8], 0.8),
+                '2: LOH-DCT'=pastellize(indigos[4], 0.8),
+                '6: LOH-DCT Injured'=pastellize(indigos[5], 0.8),
+                '9: LOH-DCT Inflammatory'=pastellize(indigos[8], 0.8),
+                '3: PC'=pastellize(blues[5], 0.8),
+                '4: IC'=pastellize(greens[5], 0.8),
+                '7: CD Injured'=pastellize(blues[8], 0.8),
+                '10: Monocyte'=pastellize(oranges[3], 0.8),
+                '11: Macrophage'=pastellize(oranges[5], 0.8),
+                '12: cDC'=pastellize(oranges[7], 0.8),
+                '13: Mast Cell'=pastellize(oranges[9], 0.8),
+                '14: T Cell'=pastellize(browns[5], 0.8),
+                '15: NK'=pastellize(browns[8], 0.8),
+                '16: B Cell'=pastellize(pinks[5], 0.5),
+                '17: Plasma Cell'=pastellize(pinks[8], 0.5),
+                '18: Fibroblast'=pastellize(light_blues[7], 0.3),
+                '19: Myofibroblast'=pastellize(browns[10], 0.3),
+                '20: Podocyte'=pastellize(greys[8], 0.3),
+                '21: Endothelia Glomerular'=pastellize(reds[5], 0.8),
+                '22: PEC'=pastellize(greys[6], 0.3),
+                '23: Mesangial Cell'=pastellize(light_blues[5], 0.3),
+                '24: Endothelia'=pastellize(reds[6], 0.8),
+                '25: SMC'=pastellize(light_blues[3], 0.3))
 
 # Plot
-pheatmap(R, cluster_rows=F, cluster_cols=F, color = colorRampPalette(c('#702963', 'grey90', 'darkgreen'))(181),
-         gaps_row=c(4, 7, 9, 17, 19, 23), breaks=breaks_r)
+ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
+  geom_bar(stat="identity", alpha=.9, width=.6) +
+  theme_bw() + ggtitle('Number of cells') + xlab('') + ylab('') +
+  scale_fill_manual(values=colours_cosmx_lvl2_modified) +
+  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(face="bold", color="grey10", size=14),
+        axis.title.y = element_text(face="bold", color="grey10", size=16),
+        title = element_text(colour="grey10", size=14, face="bold", hjust = 0.5),
+        panel.grid.minor = element_line(colour = "white", size = 0), 
+        panel.grid.major = element_line(colour = "white", size = 0), 
+        panel.border = element_rect(colour = "grey10", fill=NA, size=0)) + 
+  NoLegend() + 
+  scale_x_discrete(labels = seq(1, 26)) +
+  theme(plot.title = element_text(hjust = 0.5))
 
-# Heatmap of -log10 p-values
-results_df$ct_vec <- NULL
-R <- as.data.frame(results_df[,2])
-rownames(R) <- rownames(results_df)
-R <- R[order(match(rownames(R), col.order)), , drop = FALSE]
+ggsave(filename = file.path(path, 'cell_type_qc_plots_1.svg'),
+       scale = 0.5, width = 35, height = 10, units='cm')
+
+
+VlnPlot(cosmx, features = 'nCount_Nanostring', pt.size = 0, group.by = 'label', col=colours_cosmx_lvl2_modified, raster=F) + NoLegend() +
+  scale_x_discrete(labels = seq(1, 58)) + xlab('') + ylab('') + ggtitle('Transcripts per cell') +
+  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(face="bold", color="grey10", size=14),
+        axis.title.y = element_text(face="bold", color="grey10", size=16),
+        legend.text = element_text(colour="grey10", size=14, face="bold"),
+        legend.title = element_text(colour="grey10", size=14, face="bold"), 
+        title = element_text(colour="grey10", size=14, face="bold")) +
+  guides(color = guide_legend(override.aes = list(size = 3)))
+
+ggsave(filename = file.path(path, 'cell_type_qc_plots_2.svg'),
+       scale = 0.5, width = 35, height = 10, units='cm')
+
+
+VlnPlot(cosmx, features = 'nFeature_Nanostring', pt.size = 0, group.by = 'label', col=colours_cosmx_lvl2_modified, raster=F) + NoLegend() +
+  scale_x_discrete(labels = seq(1, 58)) + xlab('') + ylab('') + ggtitle('Genes per cell') +
+  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(face="bold", color="grey10", size=14),
+        axis.title.y = element_text(face="bold", color="grey10", size=16),
+        legend.text = element_text(colour="grey10", size=14, face="bold"),
+        legend.title = element_text(colour="grey10", size=14, face="bold"), 
+        title = element_text(colour="grey10", size=14, face="bold")) +
+  guides(color = guide_legend(override.aes = list(size = 3)))
+
+ggsave(filename = file.path(path, 'cell_type_qc_plots_3.svg'),
+       scale = 0.5, width = 35, height = 10, units='cm')
+
+
+# Figure S14c - UMAP plots showing meta data variables
+# Create column showing if origin is nephrectomy or biopsy
+cosmx$SampleType <- cosmx$Specimen_ID
+cosmx$SampleType <- gsub(' 1', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 2', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 3', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 4', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 5', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 6', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 7', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 8', '', cosmx$SampleType)
+cosmx$SampleType <- gsub(' 9', '', cosmx$SampleType)
+
+# Plot Annotation.Lvl1
+p <- DimPlot(cosmx, label=F, pt.size=0.01, cols=colours_cosmx_lvl1, group.by = 'Annotation.Lvl1', order=F, raster=F) + NoLegend() + NoAxes() + ggtitle('')
+LabelClusters(p, id = "Annotation.Lvl1", size=5, fontface = "bold", color = "grey10", box=F, repel=T, force = 5)
+
+ggsave(filename = file.path(path, 'cosmx_umap_lvl1.png'), 
+       scale = 0.5, width = 35, height = 27, units='cm')
+
+
+# Plot Annotation.Lvl2
+p <- DimPlot(cosmx, label=F, pt.size=0.01, cols=colours_cosmx_lvl2, group.by = 'Annotation.Lvl2', order=F, raster=F) + NoLegend() + NoAxes() + ggtitle('')
+LabelClusters(p, id = "Annotation.Lvl2", size=5, fontface = "bold", color = "grey10", box=F, repel=T, force = 5)
+
+ggsave(filename = file.path(path, 'cosmx_umap_lvl2.png'), 
+       scale = 0.5, width = 35, height = 27, units='cm')
+
+
+# Plot Sample
+DimPlot(cosmx, label=F, pt.size=0.1, group.by = 'Specimen_ID', order=F, shuffle=T, raster=F) + NoAxes() + ggtitle('') +
+  scale_color_manual(values=DiscretePalette_scCustomize('stepped', n=13)) + theme(legend.text = element_text(size=14, face="bold"))
+
+ggsave(filename = file.path(path, 'cosmx_umap_sample.png'), 
+       scale = 0.5, width = 35, height = 27, units='cm')
+
+
+# Plot SampleType
+DimPlot(cosmx, label=F, pt.size=0.1, group.by = 'SampleType', order=F, shuffle=T, raster=F) + NoAxes() + ggtitle('') +
+  scale_color_manual(values=DiscretePalette_scCustomize(num_colors = 24, palette = "stepped", shuffle_pal = T)) + theme(legend.text = element_text(size=14, face="bold"))
+
+ggsave(filename = file.path(path, 'cosmx_umap_sample_type.png'), 
+       scale = 0.5, width = 35, height = 27, units='cm')
+
+
+# Figure S14d - Sankey plot showing relationships between cell type annotations
+# Prepare data
+link_lvl1 <- paste(cosmx$Annotation.Lvl1, cosmx$Annotation.Lvl2, sep='&')
+link_lvl1 <- table(link_lvl1)
+split_strings <- strsplit(names(link_lvl1), "&")
+vector1 <- sapply(split_strings, `[`, 1)
+vector2 <- sapply(split_strings, `[`, 2)
+
+links1 <- data.frame(cbind(
+  source=paste('Lvl1', vector1, sep='-'),
+  target=paste('Lvl2', vector2, sep='-'),
+  value=as.numeric(link_lvl1)
+))
+
+links1$source <- gsub(' ', '_', links1$source)
+links1$target <- gsub(' ', '_', links1$target)
+links1$value <- as.numeric(links1$value)
+
+
+#----------------
+link_lvl2 <- paste(cosmx$Annotation.Lvl2, cosmx$InjuryState, sep='&')
+link_lvl2 <- table(link_lvl2)
+split_strings <- strsplit(names(link_lvl2), "&")
+vector1 <- sapply(split_strings, `[`, 1)
+vector2 <- sapply(split_strings, `[`, 2)
+
+links2 <- data.frame(cbind(
+  source=paste('Lvl2', vector1, sep='-'),
+  target=paste('Activation', vector2, sep='-'),
+  value=as.numeric(link_lvl2)
+))
+
+links2$source <- gsub(' ', '_', links2$source)
+links2$target <- gsub(' ', '_', links2$target)
+links2$value <- as.numeric(links2$value)
+
+links <- rbind(links1, links2)
+links$target <- gsub(' ', '_', links$target)
+links$value <- as.numeric(links$value)
+
+nodes <- data.frame(
+  name=c(as.character(links$source), 
+         as.character(links$target)) %>% unique()
+)
+
+links$IDsource <- match(links$source, nodes$name)-1 
+links$IDtarget <- match(links$target, nodes$name)-1
+
+# Add colors
+color_scale <- "d3.scaleOrdinal()
+     .domain(['Lvl1-PT', 'Lvl1-LOH-DCT', 'Lvl1-CD', 'Lvl1-PEC', 'Lvl1-Podocyte', 
+     'Lvl1-Endothelia_Glomerular', 'Lvl1-Mesangial_Cell', 'Lvl1-Leukocyte_Glomerular', 'Lvl1-Fibroblast', 'Lvl1-Endothelia', 
+     'Lvl1-SMC', 'Lvl1-Myeloid_Cell', 'Lvl1-T_Cell', 'Lvl1-B_Cell',
+     'Lvl2-PT', 'Lvl2-LOH-DCT', 'Lvl2-PC', 'Lvl2-IC', 'Lvl2-PT_Injured', 
+     'Lvl2-LOH-DCT_Injured', 'Lvl2-CD_Injured', 'Lvl2-PT_Inflammatory', 'Lvl2-LOH-DCT_Inflammatory', 'Lvl2-Monocyte', 
+     'Lvl2-Macrophage', 'Lvl2-cDC', 'Lvl2-Mast_Cell', 'Lvl2-T_Cell', 'Lvl2-NK', 
+     'Lvl2-B_Cell', 'Lvl2-Plasma_Cell', 'Lvl2-Fibroblast', 'Lvl2-Myofibroblast', 'Lvl2-Podocyte', 
+     'Lvl2-Endothelia_Glomerular', 'Lvl2-PEC', 'Lvl2-Mesangial_Cell', 'Lvl2-Leukocyte_Glomerular', 'Lvl2-Endothelia', 'Lvl2-SMC',
+     'Activation-Leukocyte', 'Activation-Glomeruli', 'Activation-Other', 'Activation-Fibroblast', 'Activation-Epithelia_Healthy',
+     'Activation-Epithelia_Injured', 'Activation-Epithelia_Inflammatory'])
+     .range(['#8B6CC1', '#5665B4', '#60AE63', '#9E9E9E', '#606060',
+     '#EE7170', '#B8E3F6', '#BBADA9', '#A1CFE5', '#F3665B', 
+     '#D5EEF9', '#FFB851', '#8C736B', '#EB95B2', 
+     '#BAA9DA', '#8993CB', '#65B5F4', '#77BA7A', '#8B6CC1', 
+     '#6F7CBF', '#3E88D2', '#6245A7', '#46529F', '#FFD699', 
+     '#FFB851', '#FAA232', '#EE8630', '#8C736B', '#5D453F', 
+     '#EB95B2', '#C16D8D', '#A1CFE5', '#6C869A', '#606060', 
+     '#EE7170', '#9E9E9E', '#B8E3F6', '#BBADA9', '#F3665B', '#D5EEF9', 
+     '#FFECD1', '#333333', '#7F7F7F', '#9CC69E', '#626FB4', 
+     '#F4A460', '#702963']);
+"
 
 # Plot
-pheatmap(R, cluster_rows=F, cluster_cols=F, color = colorRampPalette(c('grey90', 'navy'))(301),
-         gaps_row=c(4, 7, 9, 17, 19, 23), breaks=breaks_p)
+p <- sankeyNetwork(Links = links, Nodes = nodes,
+                   Source = "IDsource", Target = "IDtarget",
+                   Value = "value", NodeID = "name", 
+                   sinksRight=FALSE, fontSize = 12, colourScale = color_scale)
+p
+
+
+
