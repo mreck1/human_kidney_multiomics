@@ -213,6 +213,3 @@ plots
 
 ggsave(filename = file.path(path, 'atac_track_tcell_1.png'),
        scale = 0.5, width = 30, height = 15, units='cm')
-
-
-
