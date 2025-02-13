@@ -10,8 +10,7 @@ multiome <- readRDS(multiome_path)
 # The original data is found on GSE226441 (from the publication DOI: 10.1681/ASN.0000000000000197)
 
 # Load counts and get differentially expressed genes using DESeq2
-counts_save <- read.table(file = '/Users/maximilianreck/Downloads/GSE226439_all.gene_counts.tsv', sep = '\t', header = TRUE)
-counts <- read.table(file = '/Users/maximilianreck/Downloads/GSE226439_all.gene_counts.tsv', sep = '\t', header = TRUE)
+counts <- read.table(file = file.path(path, 'GSE226439_all.gene_counts.tsv'), sep = '\t', header = TRUE)
 counts <- counts[,colnames(counts)%in%c('external_gene_name', 
                                         'sample.an1_1', 'sample.an1_2', 'sample.an1_3', 
                                         'sample.an1_4', 'sample.an1_5', 'sample.an1_6', 
@@ -44,7 +43,7 @@ resLFC <- resLFC[rownames(resLFC) %in% rownames(multiome),]
 
 # Figure 20a - Enrichment of HNF4A target genes in KO signature
 # Load predicted HNF4A target genes
-regulons <- read.csv('/Users/maximilianreck/Drive/Paper/Text_and_Figures/paper_github/Supplementary data/Regulons/regulons_pt_expressed.csv')
+regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
 regulons <- regulons[regulons$TF=='HNF4A',]
 hnf4a_targets <- unique(regulons$Gene)
 
