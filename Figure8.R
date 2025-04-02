@@ -18,7 +18,7 @@ summary_weight <- T5524_data_subset %>%
     sem = sd(kidney_weight, na.rm = TRUE) / sqrt(n())
   )
 
-stats::t.test(x=T5524_data_subset$kidney_weight[T5524_data_subset$group=='IRI + Vehicle'],
+stats::wilcox.test(x=T5524_data_subset$kidney_weight[T5524_data_subset$group=='IRI + Vehicle'],
               y=T5524_data_subset$kidney_weight[T5524_data_subset$group=='IRI + T5224'])
 
 
@@ -38,12 +38,12 @@ ggplot(summary_weight, aes(fill = group, y = mean, x = group)) +
   ylim(0,0.2) +
   scale_color_manual(values=c("#faa76c", "#7366bd", '#ffbd88', '#a2a2d0')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 0.19, xmin = 1, xmax = 2, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0280', textsize = 2.65,
+    y_position = 0.19, xmin = 1, xmax = 2, size = 0.5,
+    tip_length = c(0.05, 0.05)
   )
 
-ggsave(filename = file.path(path, 'weight.svg'), 
+ggsave(filename = file.path(path, 'weight.pdf'), 
        scale = 0.5, width = 10, height = 18, units='cm')
 
 
@@ -59,7 +59,7 @@ summary_psr <- T5524_data_subset %>%
     sem = sd(psr, na.rm = TRUE) / sqrt(n())
   )
 
-stats::t.test(x=T5524_data_subset$psr[T5524_data_subset$group=='IRI + Vehicle'],
+stats::wilcox.test(x=T5524_data_subset$psr[T5524_data_subset$group=='IRI + Vehicle'],
               y=T5524_data_subset$psr[T5524_data_subset$group=='IRI + T5224'])
 
 # Plot
@@ -78,12 +78,12 @@ ggplot(summary_psr, aes(fill = group, y = mean, x = group)) +
   ylim(0,80) +
   scale_color_manual(values=c("#faa76c", "#7366bd", '#ffbd88', '#a2a2d0')) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 75, xmin = 1, xmax = 2, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0199', textsize = 3,
+    y_position = 75, xmin = 1, xmax = 2, size = 0.5,
+    tip_length = c(0.03, 0.03)
   )
 
-ggsave(filename = file.path(path, 'psr.svg'), 
+ggsave(filename = file.path(path, 'psr.pdf'), 
        scale = 0.5, width = 7, height = 18, units='cm')
 
 
@@ -98,7 +98,7 @@ summary_weight <- T5524_data_subset %>%
     sem = sd(IBA1, na.rm = TRUE) / sqrt(n())
   )
 
-stats::t.test(x=T5524_data_subset$IBA1[T5524_data_subset$group=='IRI + Vehicle'],
+stats::wilcox.test(x=T5524_data_subset$IBA1[T5524_data_subset$group=='IRI + Vehicle'],
               y=T5524_data_subset$IBA1[T5524_data_subset$group=='IRI + T5224'])
 
 # Plot
@@ -117,12 +117,12 @@ ggplot(summary_weight, aes(fill = group, y = mean, x = group)) +
   ylim(0,4) +
   scale_color_manual(values=c("#faa76c", "#7366bd", '#ffbd88', '#a2a2d0')) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 3.5, xmin = 1, xmax = 2, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0013', textsize = 3,
+    y_position = 3.5, xmin = 1, xmax = 2, size = 0.5,
+    tip_length = c(0.05, 0.05)
   )
 
-ggsave(filename = file.path(path, 'iba1.svg'), 
+ggsave(filename = file.path(path, 'iba1.pdf'), 
        scale = 0.5, width = 7, height = 18, units='cm')
 
 
@@ -132,6 +132,8 @@ T5524_data_subset <- T5524_data[!T5524_data$ID%in%c('IRI V 1', 'IRI V 2', 'IRI V
 T5524_data_subset_qpcr_4 <- T5524_data_subset[,colnames(T5524_data_subset)%in%c('group', 'qpcr_col1a1', 'qpcr_cd68', 'qpcr_arg1')]
 T5524_data_subset_qpcr_4_melted <- melt(T5524_data_subset_qpcr_4, id='group')   
 
+stats::wilcox.test(x=T5524_data_subset_qpcr_4$qpcr_col1a1[T5524_data_subset$group=='IRI + Vehicle'],
+              y=T5524_data_subset_qpcr_4$qpcr_col1a1[T5524_data_subset$group=='IRI + T5224'])
 
 
 p4 <- ggboxplot(T5524_data_subset_qpcr_4_melted, x = "variable", y = "value",
@@ -142,33 +144,33 @@ p4 <- ggboxplot(T5524_data_subset_qpcr_4_melted, x = "variable", y = "value",
   theme_classic() +
   NoLegend() + RotatedAxis() +
   xlab('') + ylab('') + 
-  ylim(0, 75) +
+  ylim(0, 60) +
   geom_vline(xintercept = 1.5, linetype='dashed') +
   geom_vline(xintercept = 2.5, linetype='dashed') +
   scale_x_discrete(labels= c('*Col1a1*', '*Cd68*', '*Arg1*')) +
   theme(axis.title.y = element_markdown(size=12, color='black'),
         axis.text.x = element_markdown(size=12, color='black')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 55, xmin = 0.65, xmax = 0.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0282', textsize = 2,
+    y_position = 55, xmin = 0.65, xmax = 0.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 55, xmin = 1.65, xmax = 1.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0040', textsize = 2,
+    y_position = 55, xmin = 1.65, xmax = 1.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 55, xmin = 2.65, xmax = 2.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0282', textsize = 2,
+    y_position = 55, xmin = 2.65, xmax = 2.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) 
 
 ggarrange(p4, widths = c(14),
           ncol = 4, nrow = 1, align = "h")
 
-ggsave(filename = file.path(path, 'qpcr1.svg'), 
-       scale = 0.5, width = 44, height = 18, units='cm')
+ggsave(filename = file.path(path, 'qpcr1.pdf'), 
+       scale = 0.5, width = 50, height = 18, units='cm')
 
 
 # Figure 8f - Havcr1+Vcam1+ proportions
@@ -177,8 +179,8 @@ T5524_data_subset <- T5524_data_subset[!T5524_data_subset$group%in%c('Sham + Veh
 
 T5524_data_subset_dual <- T5524_data_subset[,colnames(T5524_data_subset)%in%c('group', 'kim1_vcam1_ratio')]
 
-stats::t.test(x=T5524_data_subset$kidney_weight[T5524_data_subset$group=='IRI + Vehicle'],
-              y=T5524_data_subset$kidney_weight[T5524_data_subset$group=='IRI + T5224'])
+stats::wilcox.test(x=T5524_data_subset$kim1_vcam1_ratio[T5524_data_subset$group=='IRI + Vehicle'],
+              y=T5524_data_subset$kim1_vcam1_ratio[T5524_data_subset$group=='IRI + T5224'])
 
 summary_if <- T5524_data_subset_dual %>%
   group_by(group) %>%
@@ -203,12 +205,12 @@ ggplot(summary_if, aes(fill = group, y = mean, x = group)) +
   ylim(0,15) +
   scale_color_manual(values=c("#faa76c", "#7366bd", '#ffbd88', '#a2a2d0')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 14, xmin = 1, xmax = 2, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0161', textsize = 3,
+    y_position = 14, xmin = 1, xmax = 2, size = 0.5,
+    tip_length = c(0.03, 0.03)
   )
 
-ggsave(filename = file.path(path, 'if_stain.svg'), 
+ggsave(filename = file.path(path, 'if_stain.pdf'), 
        scale = 0.5, width = 8, height = 20, units='cm')
 
 
@@ -225,6 +227,11 @@ T5524_data_subset_qpcr_3 <- T5524_data_subset[,colnames(T5524_data_subset)%in%c(
 T5524_data_subset_qpcr_3_melted <- melt(T5524_data_subset_qpcr_3, id='group')
 
 
+stats::wilcox.test(x=T5524_data_subset_qpcr_3_melted$value[T5524_data_subset_qpcr_3_melted$group=='IRI + Vehicle' & T5524_data_subset_qpcr_3_melted$variable=='qpcr_tgfb1'],
+                   y=T5524_data_subset_qpcr_3_melted$value[T5524_data_subset_qpcr_3_melted$group=='IRI + T5224'& T5524_data_subset_qpcr_3_melted$variable=='qpcr_tgfb1'])
+
+
+
 p1 <- ggboxplot(T5524_data_subset_qpcr_1_melted, x = "variable", y = "value",
                 color = "black", fill = "group", outlier.shape=NA) +
   scale_color_manual(values = c(V = "black", Z = "black")) +
@@ -238,9 +245,9 @@ p1 <- ggboxplot(T5524_data_subset_qpcr_1_melted, x = "variable", y = "value",
   theme(axis.title.y = element_markdown(size=12, color='black'),
         axis.text.x = element_markdown(size=12, color='black')) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 150, xmin = 0.65, xmax = 0.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0282', textsize = 2,
+    y_position = 150, xmin = 0.65, xmax = 0.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   )
 
 p2 <- ggboxplot(T5524_data_subset_qpcr_2_melted, x = "variable", y = "value",
@@ -257,14 +264,14 @@ p2 <- ggboxplot(T5524_data_subset_qpcr_2_melted, x = "variable", y = "value",
   theme(axis.title.y = element_markdown(size=12, color='black'),
         axis.text.x = element_markdown(size=12, color='black')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 30, xmin = 0.65, xmax = 0.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0282', textsize = 2,
+    y_position = 30, xmin = 0.65, xmax = 0.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 30, xmin = 1.65, xmax = 1.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0503', textsize = 2,
+    y_position = 30, xmin = 1.65, xmax = 1.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) 
 
 p3 <- ggboxplot(T5524_data_subset_qpcr_3_melted, x = "variable", y = "value",
@@ -282,25 +289,25 @@ p3 <- ggboxplot(T5524_data_subset_qpcr_3_melted, x = "variable", y = "value",
   theme(axis.title.y = element_markdown(size=12, color='black'),
         axis.text.x = element_markdown(size=12, color='black')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 4, xmin = 0.65, xmax = 0.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0282', textsize = 2,
+    y_position = 4, xmin = 0.65, xmax = 0.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) +
   geom_signif(
-    annotation = '**', textsize = 5,
-    y_position = 4, xmin = 1.65, xmax = 1.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0080', textsize = 2,
+    y_position = 4, xmin = 1.65, xmax = 1.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   ) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 4, xmin = 2.65, xmax = 2.85, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0484', textsize = 2,
+    y_position = 4, xmin = 2.65, xmax = 2.85, size = 0.5,
+    tip_length = c(0.015, 0.015)
   )
 
 ggarrange(p1, p2, p3, widths = c(7, 9.5, 14, 14),
           ncol = 4, nrow = 1, align = "h")
 
-ggsave(filename = file.path(path, 'qpcr2.svg'), 
+ggsave(filename = file.path(path, 'qpcr2.pdf'), 
        scale = 0.5, width = 44, height = 18, units='cm')
 
 
@@ -321,8 +328,8 @@ VlnPlot(multiome_pt, features='BCL2', pt.size=0,
         legend.title = element_text(size=12, color="grey10"),
         legend.text = element_text(size=12, color='grey10')) + ggtitle('')
 
-ggsave(filename = file.path(path, 'bcl2_violinplot.svg'), 
-       scale = 0.5, width = 25, height = 15, units='cm')
+ggsave(filename = file.path(path, 'bcl2_violinplot.pdf'), 
+       scale = 0.5, width = 18, height = 12, units='cm')
 
 
 # Figure 8j - Heatmap of inflammatory PT after ABT263 treatment
@@ -483,7 +490,7 @@ ggplot(results, aes(x = Sample, y = Value, fill = Cell_Type)) +
   guides(fill=guide_legend(title="Cell Type")) +
   facet_grid(~ Condition, scales="free_x")
 
-ggsave(filename = file.path(path, 'barplot_proportions.svg'), 
+ggsave(filename = file.path(path, 'barplot_proportions.pdf'), 
        scale = 0.5, width = 40, height = 15, units='cm')
 
 
@@ -510,8 +517,8 @@ df2 <- summary[!summary$Condition%in%c('d42 RUUO + ABT263'),]
 df2$group <- rep('2', nrow(df2))
 summary <- rbind(rbind(df1, df1, df2))
 
-stats::t.test(x=results_melted_subset$Value[results_melted_subset$Condition=='R-UUO+Vehicle(d42)'],
-              y=results_melted_subset$Value[results_melted_subset$Condition=='R-UUO+ABT-263(d42)'])
+stats::t.test(x=results_subset$Value[results_subset$Condition=='d42 RUUO + Vehicle'],
+              y=results_subset$Value[results_subset$Condition=='d42 RUUO + ABT263'])
 
 
 ggplot(summary, aes(fill = Condition, y = mean, x = Condition)) +
@@ -530,11 +537,11 @@ ggplot(summary, aes(fill = Condition, y = mean, x = Condition)) +
   ylim(0,80) +
   scale_color_manual(values=c("#dbd7d2", "#efdecd", '#faa76c', '#7366bd')) +
   geom_signif(
-    annotation = '*', textsize = 5,
-    y_position = 75, xmin = 3, xmax = 4, size = 1,
-    tip_length = c(0.0, 0.0)
+    annotation = '0.0147', textsize = 3,
+    y_position = 75, xmin = 3, xmax = 4, size = 0.5,
+    tip_length = c(0.03, 0.03)
   )
 
-ggsave(filename = file.path(path, 'abt_proportions.svg'), 
+ggsave(filename = file.path(path, 'abt_proportions.pdf'), 
        scale = 0.5, width = 12, height = 18, units='cm')
 

@@ -108,7 +108,6 @@ ggsave(filename = file.path(path, 'spatial_plot_biopsy1_zoom3.pdf'),
 
 
 # Figure 4c - Spatial plot colored by niche
-colours_cosmx_niche
 crop1 <- Crop(cosmx[["nephrectomy_1"]], x = c(139300, 143800), y = c((-7500), (-3000)))
 cosmx[["zoom1"]] <- crop1
 DefaultBoundary(cosmx[["zoom1"]]) <- "segmentation"
@@ -224,7 +223,7 @@ Idents(subset_epithelia) <- factor(subset_epithelia$Annotation.Lvl2, levels=(c('
 
 
 # Dotplot, including NegPrb to keep consistent size between subplots, cropped later
-DotPlot(subset_epithelia, features = c('PAX8', 'MME', 'VCAM1', 'SOX9', 'ITGB8', 'NegPrb10'), 
+DotPlot(subset_epithelia, features = c('VCAM1', 'SOX9', 'ITGB8', 'NegPrb10'), 
         cols=c('grey85', 'skyblue4'), scale=T) + NoLegend() + 
   theme_bw() +
   theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
@@ -236,15 +235,17 @@ DotPlot(subset_epithelia, features = c('PAX8', 'MME', 'VCAM1', 'SOX9', 'ITGB8', 
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic", size=12),
+        axis.text.y = element_text(size=12)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_1.svg'), 
-       scale = 0.5, width = 35, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_1.pdf'), 
+       scale = 0.5, width = 35, height = 12, units='cm')
 
 # Subplot 2
-DotPlot(subset_epithelia, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'CXCL16', 'C3', 'TNC', 'MMP7', 'NegPrb10'),
+DotPlot(subset_epithelia, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 'CXCL16', 'MMP7', 'NegPrb10'),
         cols=c('grey85', 'red4'), scale=T) + NoLegend() + 
   theme_bw() +
   theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
@@ -256,12 +257,14 @@ DotPlot(subset_epithelia, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic", size=12),
+        axis.text.y = element_text(size=12)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_2.svg'), 
-       scale = 0.5, width = 35, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_2.pdf'), 
+       scale = 0.5, width = 35, height = 12, units='cm')
 
 
 
@@ -450,7 +453,7 @@ fibroblast_1$CellType[fibroblast_1$CellType == 'PT Inflammatory'] <- 'Inflammato
 
 # Calculate mean for monocyte transcripts
 monocyte <- LYZ
-monocyte$count <- (LYZ$count + s100a9$count + cd14$count)
+monocyte$count <- (LYZ$count + s100a9$count + cd14$count)/3
 monocyte_1 <- monocyte[monocyte$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
 monocyte_2 <- monocyte[monocyte$CellType%in%c('LOH-DCT', 'LOH-DCT Injured', 'LOH-DCT Inflammatory'),]
 monocyte_1$count <- (monocyte_1$count+monocyte_2$count)/2
@@ -470,31 +473,31 @@ dc_1$CellType[dc_1$CellType == 'PT'] <- 'Healthy Epithelia'
 dc_1$CellType[dc_1$CellType == 'PT Injured'] <- 'Injured Epithelia'
 dc_1$CellType[dc_1$CellType == 'PT Inflammatory'] <- 'Inflammatory Epithelia'
 
-results <- list(infl_1, fibroblast_1, monocyte_1, macrophage_1, dc_1)
+results <- list(infl_1, fibroblast_1, monocyte_1, dc_1)
 purples <- pal_material("deep-purple", alpha = 1)(10)
 
 for (res in results){
   p <- ggplot(res, aes(x = Distance,  y = count, colour=CellType)) +
     geom_point(size=1) + 
-    geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=0.2, span = 1, size=1.5) +
+    geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=0.2, span = 1, size=1.9) +
     geom_vline(xintercept = 5, linetype="dashed", 
                color = "grey20", size=1) +
     theme_bw() +
-    theme(axis.title.x = element_text(size=14, face = "bold", hjust=0.9, color='grey10')) +
-    theme(axis.title.y = element_text(size=14, face = "bold", hjust=0.9, color='grey10')) +
-    theme(legend.title = element_text(face = "bold", color='grey10'),
-          legend.text = element_text(face = "bold", color='grey10'),
-          plot.title = element_text(size=14, face="bold", hjust = 0.07, color='grey10')) +
+    theme(axis.title.x = element_text(size=14, hjust=0.9, color='black')) +
+    theme(axis.title.y = element_text(size=14, hjust=0.9, color='black')) +
+    theme(legend.title = element_text(color='black'),
+          legend.text = element_text(color='black'),
+          plot.title = element_text(size=14, hjust = 0.07, color='black')) +
     theme(legend.position="right",
-          axis.text.x = element_text(face="bold", color="grey10", size=12),
-          axis.text.y = element_text(face="bold", color="grey10", size=12),
-          panel.border = element_rect(colour = "grey10", fill=NA, size=2),
+          axis.text.x = element_text(color="black", size=12),
+          axis.text.y = element_text(color="black", size=12),
+          panel.border = element_rect(colour = "black", fill=NA, size=2),
           panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) +
     labs(x = "", y = '') +
     scale_colour_manual(values=  c('Inflammatory Epithelia'='#702963', 
                                    'Injured Epithelia'="sandybrown", 
                                    'Healthy Epithelia'=purples[4])) +
-    NoLegend() + coord_cartesian(ylim = c(0, 8)) +
+    NoLegend() + coord_cartesian(ylim = c(0, 3)) +
     guides(colour = guide_legend(override.aes = list(size=5)))
   print(p)
 }
@@ -813,11 +816,17 @@ plot_data_pt$celltype <- as.character(plot_data_pt$celltype)
 plot_data_pt$celltype[plot_data_pt$celltype=='PT'] <- 'PT Healthy'
 plot_data_pt$celltype <- factor(plot_data_pt$celltype, level=c('PT Healthy', 'PT Injured', 'PT Inflammatory'))
 
+
+t.test(x=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Healthy'],
+            y=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Inflammatory'], paired = T)
+
+t.test(x=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Injured'],
+            y=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Inflammatory'], paired = T)
+
+
 ggplot(plot_data_pt, aes(x=target, y=enrichment-1, fill=celltype)) +
-  geom_bar(stat="summary", color="black", position=position_dodge()) +
-  geom_errorbar(stat = 'summary', position = position_dodge(width = 0.9), width = 0.4) +
-  stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(width = 0.9), width = 0.4) +
-  #geom_boxplot(outlier.alpha = 0) +
+  geom_bar(stat="summary", color="black", position=position_dodge(), size=0.7) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(width = 0.9), width = 0.4, size=0.8) +
   theme_half_open(12) +
   scale_fill_manual(values= c(indigos[6], "sandybrown", '#702963')) +
   xlab("") + ylab('Enrichment in 25µm radius [log2]') +
@@ -833,20 +842,20 @@ ggplot(plot_data_pt, aes(x=target, y=enrichment-1, fill=celltype)) +
   geom_hline(yintercept=0, color = "black", size=1) + 
   coord_cartesian(ylim = c(-0.3, 0.7)) +
   geom_signif(
-    y_position = c(0.5, 0.65), xmin = c(0.75, 1), xmax = c(1.25, 1.25),
-    annotation = c("***", "**"), tip_length = 0.005, textsize = 5) +
+    y_position = c(0.5, 0.6), xmin = c(0.75, 1), xmax = c(1.25, 1.25),
+    annotation = c("0.0001", "0.0230"), tip_length = 0.005, textsize = 3) +
   geom_signif(
-    y_position = c(0.4, 0.55), xmin = c(1.75, 2), xmax = c(2.25, 2.25),
-    annotation = c("**", "*"), tip_length = 0.005, textsize = 5) +
+    y_position = c(0.4, 0.5), xmin = c(1.75, 2), xmax = c(2.25, 2.25),
+    annotation = c("0.0799", "0.0334"), tip_length = 0.005, textsize = 3) +
   geom_signif(
-    y_position = c(0.4, 0.55), xmin = c(2.75, 3), xmax = c(3.25, 3.25),
-    annotation = c("*", "*"), tip_length = 0.005, textsize = 5) +
+    y_position = c(0.4, 0.5), xmin = c(2.75, 3), xmax = c(3.25, 3.25),
+    annotation = c("0.0317", "0.0093"), tip_length = 0.005, textsize = 3) +
   geom_signif(
-    y_position = c(0.5, 0.65), xmin = c(3.75, 4), xmax = c(4.25, 4.25),
-    annotation = c("***", "**"), tip_length = 0.005, textsize = 5) 
+    y_position = c(0.4, 0.5), xmin = c(3.75, 4), xmax = c(4.25, 4.25),
+    annotation = c("0.0035", "0.0091"), tip_length = 0.005, textsize = 3) 
 
-ggsave(filename = file.path(path, 'pt_neighbour_enrichment.svg'), 
-       scale = 0.5, width = 36, height = 20, units='cm')
+ggsave(filename = file.path(path, 'pt_neighbour_enrichment.pdf'), 
+       scale = 0.5, width = 32, height = 20, units='cm')
 
 
 
@@ -1004,8 +1013,8 @@ df$percentage_vec_pt <- as.numeric(df$percentage_vec_pt)
 df$eGFR_vec <- as.numeric(df$eGFR_vec)
 df$percentage_vec_pt <- df$percentage_vec_pt*100
 
-ggscatter(df, x='eGFR_vec', y='percentage_vec_pt', add = "reg.line", add.params = list(color='red4')) +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
+ggscatter(df, x='percentage_vec_pt', y='eGFR_vec', add = "reg.line", add.params = list(color='red4', fill = "lightgray"), conf.int = TRUE) +
+  stat_cor(label.x = 4, label.y = 10, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
   ylab('') +
@@ -1015,8 +1024,8 @@ ggscatter(df, x='eGFR_vec', y='percentage_vec_pt', add = "reg.line", add.params 
         legend.title = element_text(size=9, color="black"),
         legend.text = element_text(size=8, color="black")) +
   scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+  scale_y_continuous(breaks = c(10, 30, 50, 70, 90, 110))
 
-ggsave(filename = file.path(path, 'eGFR_corr_plot.svg'), 
+ggsave(filename = file.path(path, 'eGFR_corr_plot.pdf'), 
        scale = 0.6, width = 15, height = 9, units='cm')
 

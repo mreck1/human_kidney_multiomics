@@ -4,6 +4,7 @@ path <- "path/to/files"
 source(file.path(path, 'utils.R'))
 # Load the data
 multiome <- readRDS(multiome_path)
+cosmx6k <- readRDS(cosmx6k_path)
 #-------------------------------------------------------------------------------
 
 # Figure 1a - graphic
@@ -37,7 +38,7 @@ ggsave(filename = file.path(path, 'umap_control_uuo.png'),
 
 # Figure 1d - UMAP coloured by injury score
 multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'ITGB6', 'ITGB8'))) 
-multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'MET', 'RELB', 'ITGB6', 'ITGB8'))) 
+#multiome <- AddModuleScore_UCell(multiome, features = list(injury_score=c('PROM1', 'DCDC2', 'SPP1', 'MET', 'RELB', 'ITGB6', 'ITGB8'))) 
 pal <- viridis(n = 100, option = "D")
 FeaturePlot_scCustom(multiome, features='injury_score_UCell', 
                      reduction='umap_wnn', order=T, col=pal, na_cutoff = 0) + NoLegend() + NoAxes() + ggtitle('')
@@ -116,23 +117,26 @@ summary_non_epithelia <- non_epithelia %>%
   )
 
 # Significance calculated with wilcox.test, bars manually positioned below, e.g.:
-wilcox.test(non_epithelia$percent[non_epithelia$cluster=='PEC'&non_epithelia$Condition=='Control'], 
-            non_epithelia$percent[non_epithelia$cluster=='PEC'&non_epithelia$Condition=='UUO'], 
+wilcox.test(non_epithelia$percent[non_epithelia$cluster=='Monocyte Transitioning'&non_epithelia$Condition=='Control'], 
+            non_epithelia$percent[non_epithelia$cluster=='Monocyte Transitioning'&non_epithelia$Condition=='UUO'], 
             alternative = "two.sided", exact=T)
 
 ggplot(summary_non_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
-                position = position_dodge(width = 0.9), width=0.4, size=1)+
-  geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
+                position = position_dodge(width = 0.9), width = 0.4, size = 1) +
+  geom_bar(stat = "identity", color = "black", position = position_dodge(width = 0.9), width = 0.8) +
+  geom_point(data = non_epithelia, aes(y = percent, x = cluster), 
+             color = "black", size = 1.8, alpha = 0.7, position = position_dodge(width = 0.9)) +
   theme_classic() +
   RotatedAxis() +
-  xlab('') + ylab(bquote('% of total cells')) + 
+  xlab('') + 
+  ylab(bquote('% of total cells')) + 
   scale_fill_manual(values = c('grey50', '#7366bd')) +
-  theme(axis.text.x = element_text(size = 18, colour='black'),
+  theme(axis.text.x = element_text(size = 18, colour = 'black'),
         axis.text.y = element_text(size = 18),
-        axis.title.y =element_text(size = 24)) +
-  ylim(0,20) +
-  # Add significance bars
+        axis.title.y = element_text(size = 24)) +
+  ylim(0, 23) +
+  # Significance bars
   geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 
                        4.75, 5.75, 6.75, 7.75, 8.75, 
                        9.75, 10.75, 11.75, 12.75, 13.75, 14.75, 15.75, 16.75, 17.75, 18.75, 
@@ -143,20 +147,19 @@ ggplot(summary_non_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
                        9.25, 10.25, 11.25, 12.25, 13.25, 14.25, 15.25, 16.25, 17.25, 18.25, 
                        19.25, 20.25, 21.25, 22.25, 23.25, 24.25, 25.25, 26.25, 27.25, 
                        28.25, 29.25, 30.25, 31.25, 32.25, 33.25, 34.25),
-              y_position = c(2.3, 1, 2.3, 1.5, 2,  4.5,
-                             1.5, 1.5, 1.5, 2.5, 3, 
-                             2.5, 2.5, 2.5, 4.5, 2.8, 1, 1, 3.3, 1, 1.8, 1, 
-                             5.2, 14.5, 4, 7.5, 7.5, 3, 3, 3, 3,
-                             3, 14.5, 2.5), 
+              y_position = c(4.3, 2.6, 5, 2.5, 3.5, 8.7, 3.1, 2.4, 2.4, 4.9, 5.2, 2.7, 3.9, 
+                             3.2, 7.8, 5.3, 2.7, 2.3, 3.5, 2.2, 3.3, 3, 11, 21.4, 5.8, 11.9, 
+                             11.4, 6.8, 4.7, 3.7, 4.1, 6.6, 15, 3.5),
               annotation = c('NS', 'NS', 'NS', 'NS', 'NS', '*',
                              'NS', 'NS', '**', '**', '**',
-                             'NS', '**', '*', '**', '**', 'NS', '*', '**', 'NS', '**', 'NS',
+                             'NS', '**', '**', '**', '**', 'NS', '*', '**', 'NS', '**', 'NS',
                              '**', '**', '*', '**', '**', '*', 'NS', '**', 'NS',
                              '**', '**', '**'),
               tip_length = 0.005)
 
 
-ggsave(filename = file.path(path, 'barplot_non_epithelia.svg'), 
+
+ggsave(filename = file.path(path, 'barplot_non_epithelia.pdf'), 
        scale = 0.5, width = 100, height = 33.5, units='cm')
 
 
@@ -230,8 +233,11 @@ summary_epithelia <- plot_data %>%
 
 ggplot(summary_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
-                position = position_dodge(width = 0.9), width=0.4, size=1)+
+                position = position_dodge(width = 0.9), width=0.4, size=1) +
   geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
+  geom_point(data = plot_data, aes(y = percent, x = cluster), 
+             color = "black", size = 1.8, alpha = 0.7, 
+             position = position_dodge(width = 0.9)) + # Jitter points added here
   theme_classic() +
   RotatedAxis() +
   xlab('') + ylab(bquote('% of epithelial cells')) + 
@@ -247,19 +253,18 @@ ggplot(summary_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
               xmax = c(1.25, 2.25, 3.25, 
                        4.25, 5.25, 6.25, 7.25, 8.25, 
                        9.25, 10.25, 11.25, 12.25, 13.25, 14.25, 15.25, 16.25),
-              y_position = c(28, 42, 5,  7,
-                             17, 12, 12, 12, 22, 
-                             12, 32, 17, 17, 7, 7, 8), 
+              y_position = c(42.28, 48.3, 7, 12.36, 21.01, 14.23, 12.55, 11.94, 31.2, 15.52, 
+                             40.59, 20.78, 21.91, 7.24, 9.52, 12.2),
               annotation = c('*', '*', 'NS', 'NS', '**', '*', 'NS', 'NS',
                              '**', '**', '**', '**', '**', '**', '**', '*'),
               tip_length = 0.005)
 
-ggsave(filename = file.path(path, 'barplot_epithelia.svg'), 
+ggsave(filename = file.path(path, 'barplot_epithelia.pdf'), 
        scale = 0.5, width = 55, height = 30, units='cm')
 
 
 # Figure 1f - CosMx umap
-DimPlot(cosmx_proj, label=F, pt.size=0.00001, cols=colours_cosmx6k_lvl1, group.by = 'Annotation.Lvl1', raster=F, order=F, repel=T, alpha=0.1) + NoAxes() + ggtitle('') #+ NoLegend()
+DimPlot(cosmx6k, label=F, pt.size=0.00001, cols=colours_cosmx6k_lvl1, group.by = 'Annotation.Lvl1', raster=F, order=F, repel=T, alpha=0.1) + NoAxes() + ggtitle('') #+ NoLegend()
 
 ggsave(filename = file.path(path, 'umap_6k.png'), 
        scale = 0.5, width = 35, height = 27, units='cm')
@@ -267,12 +272,12 @@ ggsave(filename = file.path(path, 'umap_6k.png'),
 
 # Figure 1g - CosMx spatial plots
 # Control example
-crop1 <- SeuratObject::Crop(cosmx[["ffpe"]], x = c(61159, 81159), y = c(69563, 89563))
-cosmx[["zoom1"]] <- crop1
-DefaultBoundary(cosmx[["zoom1"]]) <- "centroids"
+crop1 <- SeuratObject::Crop(cosmx6k[["ffpe"]], x = c(61159, 81159), y = c(69563, 89563))
+cosmx6k[["zoom1"]] <- crop1
+DefaultBoundary(cosmx6k[["zoom1"]]) <- "centroids"
 
-ImageDimPlot(cosmx, 
-             fov = "ffpe", axes = TRUE, group.by = 'Annotation.Lvl1',
+ImageDimPlot(cosmx6k, 
+             fov = "zoom1", axes = TRUE, group.by = 'Annotation.Lvl1',
              dark.background=F, size=1.2) + 
   scale_fill_manual(values =   cols <- colours_cosmx6k_lvl1) + theme_classic() + NoLegend()
 
@@ -281,12 +286,12 @@ ggsave(filename = file.path(path, 'control_overview.png'),
 
 
 # UUO example
-crop1 <- SeuratObject::Crop(cosmx[["ffpe"]], y = c(1012, 21012), x = c(107462, 127462))
-cosmx[["zoom2"]] <- crop1
-DefaultBoundary(cosmx[["zoom2"]]) <- "centroids"
+crop1 <- SeuratObject::Crop(cosmx6k[["ffpe"]], y = c(1012, 21012), x = c(107462, 127462))
+cosmx6k[["zoom2"]] <- crop1
+DefaultBoundary(cosmx6k[["zoom2"]]) <- "centroids"
 
 
-ImageDimPlot(cosmx, 
+ImageDimPlot(cosmx6k, 
              fov = "zoom2", axes = TRUE, group.by = 'Annotation.Lvl1',
              cols = "glasbey", dark.background=F, size=1) + 
   scale_fill_manual(values =   cols <- colours_cosmx6k_lvl1) + theme_classic() + NoLegend()

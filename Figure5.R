@@ -10,7 +10,7 @@ options(future.globals.maxSize = 60000 * 1024^2)
 
 #-------------------------------------------------------------------------------
 
-# Figure 5a and 5f - Outgoing interaction dot plots
+# Figure 5a - Outgoing interaction dot plots
 multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
 Idents(multiome_pt) <- factor(multiome_pt$Annotation.Lvl2, levels=rev(c('PT Inflammatory', 'PT Injured', 'PT S3', 'PT S2', 'PT S1')))
 multiome_other <- subset(multiome, subset=Annotation.Lvl1%in%c('T Cell', 'Myeloid Cell', 'B Cell', 'Interstitium'))
@@ -51,7 +51,7 @@ ggsave(filename = file.path(path, 'uuo3_niche.png'),
 
 
 # Figure S16c - Cell type enrichment in niches
-meta <- cosmx@meta.data
+meta <- cosmx6k@meta.data
 meta$group <- as.character(meta$Annotation.Lvl2)
 meta <- meta[!meta$Annotation.Lvl1%in%c('Capsule', 'Border Region'),]
 
@@ -93,7 +93,7 @@ df_prop$healthy_ratio <- log2((df_prop$healthy_count/df_prop$healthy_chance)+1)-
 df_prop <- df_prop[df_prop$ct%in%c('CD14 Monocyte', 'Monocyte Transitioning', 'Myofibroblast', 'Macrophage', 'cDC', 'PT Inflammatory', 'PT Injured', 'PT'),]
 
 plot_data <- df_prop %>%
-  select(ct, fibrotic_ratio, inj_ratio, healthy_ratio) %>%
+  dplyr::select(ct, fibrotic_ratio, inj_ratio, healthy_ratio) %>%
   pivot_longer(cols = ends_with("ratio"), 
                names_to = "Niche", 
                values_to = "Enrichment_Ratio") %>%
@@ -116,7 +116,9 @@ plot_data$ct <- factor(plot_data$ct, levels=rev(c('PT', 'PT Injured', 'PT Inflam
 ggplot(plot_data, aes(x = ct, y = Enrichment_Ratio)) +
   geom_segment(aes(x = ct, xend = ct, y = 0, yend = Enrichment_Ratio), color = "black", size = 0.6) +
   geom_point(aes(color = Niche), size = 4) +
-  scale_color_manual(values = c("Fibrotic Niche" = "#702963", "Injured Epithelia" = "sandybrown", "Healthy Epithelia" = indigos[6])) +
+  scale_color_manual(values = c("Fibrotic Niche" = "#702963", 
+                                "Injured Epithelia" = "sandybrown", 
+                                "Healthy Epithelia" = indigos[6])) +
   labs(x = "", y = "Enrichment [log2]") +
   theme_minimal() +
   geom_hline(yintercept = 0) +
@@ -125,14 +127,13 @@ ggplot(plot_data, aes(x = ct, y = Enrichment_Ratio)) +
   theme(
     panel.grid.minor.x = element_blank(),
     panel.grid.major.x = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1, size=10),
-    axis.text.y = element_text(size=10),
-    panel.border = element_rect(color = "black", fill = NA, size = 0.5)  # Adds a black border
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+    axis.text.y = element_text(size = 10, hjust = 0),
+    panel.border = element_rect(color = "black", fill = NA, size = 1.8)
   ) + NoLegend()
 
 ggsave(filename = file.path(path, 'niche_ct_enrichment.pdf'), 
        scale = 0.5, width = 20, height = 18, units='cm')
-
 
 
 # Figure 5d - Localisation of inflammatory PT cells (UUO3)
@@ -147,12 +148,12 @@ palette_InjuryState <- c('PT'=pastellize(purples[3], 0.7),
 )
 
 # Density maps
-p0 <- ImageDimPlot(cosmx,
-                   fov = "ffpe", axes = TRUE, group.by = 'InjuryState',
+p0 <- ImageDimPlot(cosmx6k,
+                   fov = "UUO3", axes = TRUE, group.by = 'InjuryState',
                    cols = "glasbey", dark.background=F, size=1.2, boundaries='centroids') + 
   scale_fill_manual(values =  palette_InjuryState) + theme_void() + NoLegend() 
 p0
-ggsave(filename = file.path(path, 'celltype_overview.jpg'), 
+ggsave(filename = file.path(path, 'celltype_overview.png'), 
        scale = 0.5, width = 250, height = 250, units='cm', limitsize = FALSE)
 
 p_data <- p0[[1]][["data"]]
@@ -162,11 +163,11 @@ p1 <- ggplot(p_data, aes(x = y, y = x)) +
   xlim(min(p_data$y), max(p_data$y)) +
   ylim(min(p_data$x), max(p_data$x)) + 
   geom_density_2d_filled(data = subset(p_data, InjuryState %in% c('PT Inflammatory')),
-                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.1) +
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.3) +
   scale_fill_viridis_d(option = "magma", na.value = "white",) + theme_void() + scale_alpha(guide = 'none') + NoLegend()
 p1
-ggsave(filename = file.path(path, 'density_overview.jpg'), 
-       scale = 0.5, width = 120, height = 100, units='cm')
+ggsave(filename = file.path(path, 'density_overview.png'), 
+       scale = 0.5, width = 25, height = 25, units='cm')
 
 
 
@@ -230,7 +231,9 @@ ggplot(all_summary_data, aes(fill = ct, y = adjusted_proportion, x = gene)) +
   scale_fill_manual(values = colours_cosmx6k_lvl1) +
   labs(x = '', y = "Proportion", fill = "Cell Type") +
   theme_classic() + 
-  RotatedAxis() + coord_flip()
+  RotatedAxis() + 
+  coord_flip() +
+  theme(axis.text.y = element_text(face = "italic"))
 
 ggsave(filename = file.path(path, 'transcript_origin.pdf'), 
        scale = 0.5, width = 22, height = 14, units='cm')
@@ -245,11 +248,11 @@ DefaultBoundary(cosmx1k[["zoom3"]]) <- "segmentation"
 # Image 1
 ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
              coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx1k_cell_state,
+             cols=colours_cosmx_cell_state,
              mols.cols = c('CCL2'='red', 'CCL20'='orange', 'CCL28'='lightgoldenrod1', 'CXCL1'='purple',
                            'CSF1'='blue', 'IL34'='#74c476'),
              molecules = rev(c('CCL2', 'CCL20', 'CCL28', 'CSF1', 'IL34', 'CXCL1')),
-             mols.alpha = 1, alpha=0.9, mols.size = 1.5, nmols = 1000, border.color = "grey10", border.size=0.1) + 
+             mols.alpha = 1, alpha=0.9, mols.size = 1.5, nmols = 1000, border.color = "grey10", border.size=0.03) + 
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.text = element_text(colour="grey10", size=10, 
@@ -262,11 +265,11 @@ ggsave(filename = file.path(path, 'spatial_plot_ligands.pdf'),
 # Image 2
 ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
              coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx1k_cell_state,
+             cols=colours_cosmx_cell_state,
              mols.cols = c('CD163'='red', 'MRC1'='red', 
                            'LYZ'='blue', 'S100A8' ='blue'),
              molecules = rev(c('CD163', 'LYZ', 'MRC1', 'S100A8')),
-             mols.alpha = 0.9, alpha=0.9, mols.size = 2, nmols = 1000, border.color = "grey10", border.size=0.1) + 
+             mols.alpha = 0.9, alpha=0.9, mols.size = 2, nmols = 1000, border.color = "grey10", border.size=0.03) + 
   theme_bw() +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         legend.text = element_text(colour="grey10", size=10, 
@@ -276,7 +279,7 @@ ggsave(filename = file.path(path, 'spatial_plot_markers.pdf'),
        scale = 0.5, width = 25, height = 25, units='cm')
 
 
-# Figure 5g - Density plot CCL2, FCN1 transcripts
+# Figure 5g - Density plot CCL2 transcripts
 p0 <- ImageDimPlot(cosmx6k, fov = "UUO3", axes = TRUE, group.by = 'Niche',
                    nmols=100000000, mols.size = 3,
                    molecules = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CCR2'),
@@ -314,20 +317,26 @@ ggsave(filename = file.path(path, 'uuo3_ccr2.png'),
        scale = 0.5, width = 20, height = 20, units='cm')
 
 
-# Plot 2
-ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
-             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
-             cols=colours_cosmx1k_cell_state,
-             mols.cols = c('PDGFRA'='red', 'PDGFRB'='#2044e8'),
-             molecules = rev(c('PDGFRA', 'PDGFRB')),
-             mols.alpha = 1, alpha=0.9, mols.size = 3, nmols = 3000, border.color = "grey10", border.size=0.1) + 
-  theme_bw() +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold")) + NoLegend() + NoAxes()
+# Figure 5h - Outgoing interaction dot plots
+multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
+Idents(multiome_pt) <- factor(multiome_pt$Annotation.Lvl2, levels=rev(c('PT Inflammatory', 'PT Injured', 'PT S3', 'PT S2', 'PT S1')))
+multiome_other <- subset(multiome, subset=Annotation.Lvl1%in%c('T Cell', 'Myeloid Cell', 'B Cell', 'Interstitium'))
+multiome_other <- subset(multiome_other, subset=Annotation.Lvl2 %in% c('vSMC', 'Pericyte', 'JG Cell'), invert=T)
+Idents(multiome_other) <- factor(multiome_other$Annotation.Lvl2, levels=c('Fibroblast', 'Myofibroblast', 'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated',
+                                                                          'Macrophage Resident', 'Macrophage HIF1A+', 'cDC1', 'cDC2', 'cDC CCR7+', 'pDC', 'Mast Cell', 'Naïve Th Cell', 'Effector Th Cell',
+                                                                          'Treg', 'Naïve Tc Cell', 'Effector Tc Cell', 'MAIT', 'NKT Cell', 'NK CD56dim',
+                                                                          'NK CD56bright', 'Naïve B Cell', 'Memory B Cell', 'Plasma Cell'))
 
-ggsave(filename = file.path(path, 'spatial_plot_pdgf_receptors.pdf'), 
-       scale = 0.5, width = 15.7767, height = 25, units='cm')
+# All subplots were generated with DotPlot, e.g.:
+DotPlot(multiome_pt, features=rev(c('LIF')), cols=c('grey85', '#702963'), scale=T) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() + theme(axis.text.y = element_text(hjust = 0)) +
+  theme(axis.text.y = element_text(face="bold", size=10, hjust=1, vjust=0.5),
+        axis.text.x = element_text(face="bold", size=10, angle=90, hjust=0, vjust=0.5))
+
+DotPlot(multiome_other, features=rev(c('LIFR', IL6ST)), cols=c('grey85', '#702963'), scale=T) + coord_flip() + 
+  theme_minimal() + labs(x = "", y = "") + NoLegend() + theme(axis.text.y = element_text(hjust = 0)) +
+  theme(axis.text.y = element_text(face="bold", size=10, hjust=1, vjust=0.5),
+        axis.text.x = element_text(face="bold", size=10, angle=90, hjust=0, vjust=0.5))
 
 
 # Figure 5i Density plot of fibroblast activation pathways
@@ -345,7 +354,7 @@ p1 <- ggplot(p_data, aes(x = y, y = x)) +
   scale_colour_manual(values =  colours_cosmx6k_niche) +
   xlim(min(p_data$y), max(p_data$y)) +
   ylim(min(p_data$x), max(p_data$x)) + 
-  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('COL1A1', 'COL3A1', 'PDGFA')),
+  geom_density_2d_filled(data = subset(p_data2, molecule %in% c('COL1A1', 'COL3A1', 'PDGFRA')),
                          aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.8) +
   scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
 p1
@@ -358,7 +367,7 @@ p1 <- ggplot(p_data, aes(x = y, y = x)) +
   xlim(min(p_data$y), max(p_data$y)) +
   ylim(min(p_data$x), max(p_data$x)) + 
   geom_density_2d_filled(data = subset(p_data2, molecule %in% c('PDGFA')),
-                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.6) +
+                         aes(x = y, y = x, fill = ..level..), alpha=0.6, adjust=0.4) +
   scale_fill_viridis_d(option = "H", na.value = "white",) + theme_void() + NoLegend() + scale_alpha(guide = 'none')
 p1
 ggsave(filename = file.path(path, 'uuo3_pdgfa.png'), 
@@ -386,9 +395,23 @@ ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
 ggsave(filename = file.path(path, 'spatial_plot_pdgf_ligands.pdf'), 
        scale = 0.5, width = 15.7767, height = 25, units='cm')
 
+# Plot 2
+ImageDimPlot(cosmx1k, fov = "zoom3", group.by = 'InjuryState',
+             coord.fixed = FALSE, axes=T, size = 0.9, dark.background=F,
+             cols=colours_cosmx1k_cell_state,
+             mols.cols = c('PDGFRA'='red', 'PDGFRB'='#2044e8'),
+             molecules = rev(c('PDGFRA', 'PDGFRB')),
+             mols.alpha = 1, alpha=0.9, mols.size = 3, nmols = 3000, border.color = "grey10", border.size=0.1) + 
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        legend.text = element_text(colour="grey10", size=10, 
+                                   face="bold")) + NoLegend() + NoAxes()
+
+ggsave(filename = file.path(path, 'spatial_plot_pdgf_receptors.pdf'), 
+       scale = 0.5, width = 15.7767, height = 25, units='cm')
+
 
 # Figure 5k - Incoming interaction dot plots
-# Plots are generated similarly to 4a
 multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
 Idents(multiome_pt) <- factor(multiome_pt$Annotation.Lvl2, levels=c('PT Inflammatory', 'PT Injured', 'PT S3', 'PT S2', 'PT S1'))
 multiome_other <- subset(multiome, subset=Annotation.Lvl1%in%c('PT', 'T Cell', 'Myeloid Cell', 'B Cell', 'Interstitium'))

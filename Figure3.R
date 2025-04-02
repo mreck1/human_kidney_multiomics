@@ -3,7 +3,7 @@ path <- "path/to/files"
 # Load utilities
 source(file.path(path, 'utils.R'))
 # Load the data
-multiome <- readRDS(cosmx6k_path)
+cosmx <- readRDS(cosmx6k_path)
 #-------------------------------------------------------------------------------
 
 # Figure 3a - CosMx spatial and density plots
@@ -147,11 +147,7 @@ find_neighborhoods <- function(centroids, distance){
   
   ###Calculate enrichment over random distribution
   ct_frequency_enrichment <- log2((ct_frequency_norm_nCells/ct_frequency_random)+1)
-  #ct_frequency_enrichment <- log2(ct_frequency_norm_nCells+1) - log2(ct_frequency_random+1)
-  
-  #ct_frequency_enrichment_scaled <- (ct_frequency_enrichment - min(ct_frequency_enrichment)) / (max(ct_frequency_enrichment) - min(ct_frequency_enrichment))
-  #ct_frequency_enrichment <- (ct_frequency_norm_nCells / ct_frequency_random)
-  
+
   ###Convert to diagonal matrix, multiply cell type pairs
   diagonal_enrichment_matrix <- matrix(0, nrow = nrow(ct_frequency_enrichment), ncol = ncol(ct_frequency_enrichment),
                                        dimnames = dimnames(ct_frequency_enrichment))
@@ -621,61 +617,61 @@ oranges <- pal_material("orange", alpha = 0.8)(10)
 compounds = expression(bold(Log2~((Neighbors['obs']~paste('/')~Neighbors[rand])+1)))
 
 plot_data_pt <- plot_data[plot_data$celltype %in% c('PT', 'PT Injured', 'PT Inflammatory'),]
-plot_data_pt$target <- factor(plot_data_pt$target, levels=(c('CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage', 'cDC', 'Myofibroblast')))
+plot_data_pt$target <- factor(plot_data_pt$target, levels=(rev(c('Myofibroblast', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage', 'cDC'))))
 plot_data_pt$celltype <- as.character(plot_data_pt$celltype)
 plot_data_pt$celltype[plot_data_pt$celltype=='PT'] <- 'PT Healthy'
 plot_data_pt$celltype <- factor(plot_data_pt$celltype, level=(c('PT Healthy', 'PT Injured', 'PT Inflammatory')))
 plot_data_pt$sample_ID <- rep(c('UUO1', 'UUO2', 'UUO3', 'UUO4', 'UUO5'), nrow(plot_data_pt)/5)
 
 
+t.test(x=plot_data_pt$enrichment[plot_data_pt$target=='cDC' & plot_data_pt$celltype=='PT Healthy'],
+            y=plot_data_pt$enrichment[plot_data_pt$target=='cDC' & plot_data_pt$celltype=='PT Inflammatory'], paired = T)
+
+t.test(x=plot_data_pt$enrichment[plot_data_pt$target=='cDC' & plot_data_pt$celltype=='PT Injured'],
+            y=plot_data_pt$enrichment[plot_data_pt$target=='cDC' & plot_data_pt$celltype=='PT Inflammatory'], paired = T)
+
+
 ggplot(plot_data_pt, aes(x=target, y=enrichment-1, fill=celltype)) +
-  geom_bar(stat="summary", color="black", position=position_dodge()) +
+  geom_bar(stat="summary", color="black", position=position_dodge(width = 0.9)) +
   geom_errorbar(stat = 'summary', position = position_dodge(width = 0.9), width = 0.4) +
   stat_summary(fun.data = mean_se, geom = "errorbar", position = position_dodge(width = 0.9), width = 0.4) +
-  #geom_boxplot(outlier.alpha = 0) +
+  geom_point(aes(fill = celltype), color = "black", size = 1.5, alpha = 0.8,
+             position = position_dodge(width = 0.9)) +
   theme_half_open(12) +
   scale_fill_manual(values= (c(indigos[6], "sandybrown", '#702963'))) +
   xlab("") + ylab('Enrichment in 25µm radius [log2]') +
   theme(axis.title.x = element_markdown()) +
-  theme(legend.text = element_text(, size=8),
-        axis.text.x = element_text(, size=12, angle=45, hjust=1),
-        axis.text.y = element_text(, size=12),
-        strip.background = element_rect(, fill="grey80", size=1.5, linetype="solid"),
+  theme(legend.text = element_text(size=8),
+        axis.text.x = element_text(size=12, angle=45, hjust=1),
+        axis.text.y = element_text(size=12),
+        strip.background = element_rect(fill="grey80", size=1.5, linetype="solid"),
         strip.text.x = element_text(),
         legend.position="right",
         axis.title.y = element_text(margin = margin(t = 0, r = 20, b = 0, l = 0), size=12)) +
   guides(fill=guide_legend(title="")) +
   geom_hline(yintercept=0, color = "black", size=1) + 
-  coord_cartesian(ylim = c(-0.75, 0.6)) +
+  coord_cartesian(ylim = c(-0.8, 0.7)) +
   geom_signif(
-    y_position = c(0.4, 0.52), xmin = c(0.75, 1), xmax = c(1.25, 1.25),
-    annotation = c("**", "*"), tip_length = 0.005) +
+    y_position = c(0.48, 0.62), xmin = c(0.75, 1), xmax = c(1.25, 1.25),
+    annotation = c("0.0011", "0.0025"), tip_length = 0.005) +
   geom_signif(
-    y_position = c(0.4, 0.52), xmin = c(1.75, 2), xmax = c(2.25, 2.25),
-    annotation = c("**", "**"), tip_length = 0.005) +
+    y_position = c(0.48, 0.62), xmin = c(1.75, 2), xmax = c(2.25, 2.25),
+    annotation = c("0.0630", "0.1132"), tip_length = 0.005) +
   geom_signif(
-    y_position = c(0.4, 0.52), xmin = c(2.75, 3), xmax = c(3.25, 3.25),
-    annotation = c("*", "ns"), tip_length = 0.005) +
+    y_position = c(0.48, 0.62), xmin = c(2.75, 3), xmax = c(3.25, 3.25),
+    annotation = c("0.0039", "0.0136"), tip_length = 0.005) +
   geom_signif(
-    y_position = c(0.4, 0.52), xmin = c(3.75, 4), xmax = c(4.25, 4.25),
-    annotation = c("**", "**"), tip_length = 0.005) +
+    y_position = c(0.48, 0.62), xmin = c(3.75, 4), xmax = c(4.25, 4.25),
+    annotation = c("0.0032", "0.0209"), tip_length = 0.005) +
   geom_signif(
-    y_position = c(0.4, 0.52), xmin = c(4.75, 5), xmax = c(5.25, 5.25),
-    annotation = c("**", "**"), tip_length = 0.005) + NoLegend()
+    y_position = c(0.48, 0.62), xmin = c(4.75, 5), xmax = c(5.25, 5.25),
+    annotation = c("0.0032", "0.0059"), tip_length = 0.005) + NoLegend() + coord_flip()
+
+ggsave(filename = file.path(path, 'proximity_barplot.pdf'),
+       scale = 0.5, width = 28, height = 20, units='cm')
 
 
-wilcox.test(x=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Healthy'],
-            y=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Inflammatory'])
-
-wilcox.test(x=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Injured'],
-            y=plot_data_pt$enrichment[plot_data_pt$target=='Myofibroblast' & plot_data_pt$celltype=='PT Inflammatory'])
-
-
-ggsave(filename = file.path(path, 'proximity_barplot.png'),
-       scale = 0.5, width = 26, height = 20, units='cm')  
-
-
-# Figure 3j - Enrichment of transcripts in proximity to cell types
+# Figure 3d - Enrichment of transcripts in proximity to cell types
 # Select random cells as baseline reference
 set.seed(1)
 cosmx$random <- colnames(cosmx) %in% colnames(cosmx)[sample(1:ncol(cosmx), size=50000)]
@@ -700,7 +696,8 @@ molecule_distance <- function(data, cell_type, meta_variable, molecule, bin_widt
   
   #Start loop to get binned counts of molecules
   for (image in c('UUO1', 'UUO2', 'UUO3', 'UUO4', 'UUO5')){
-    conversion_factor <- 0.12
+    print(image)
+    conversion_factor <- 0.120280945
     
     
     #Query centroids and molecules from data object
@@ -818,7 +815,7 @@ infl_1$CellType <- factor(infl_1$CellType, levels=c('PT', 'PT Injured', 'PT Infl
 
 # Calculate mean for myofibroblast transcripts
 fibroblast <- col1a1
-fibroblast$count <- (col1a1$count + col3a1$count + pdgfra$count)/3
+fibroblast$count <- (col1a1$count + col3a1$count + fap$count)/3
 fibroblast_1 <- fibroblast[fibroblast$CellType%in%c('PT', 'PT Injured', 'PT Inflammatory'),]
 fibroblast_1$CellType <- factor(fibroblast_1$CellType, levels=c('PT', 'PT Injured', 'PT Inflammatory'))
 
@@ -870,57 +867,9 @@ for (res in results){
   print(p)
 }
 
-# Figure 3e - Dotplots for IF
-subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('PT'))
-subset_pt$Annotation.Lvl2[subset_pt$Annotation.Lvl2%in%c('PT S1', 'PT S2', 'PT S3')] <- 'PT'
-Idents(subset_pt) <- factor(subset_pt$Annotation.Lvl2, levels=rev(c('PT Inflammatory', 'PT Injured', 'PT')))
-
-DotPlot(subset_pt, features = c('ICAM1', 'VCAM1', 'LINC02511'), 
-        cols=c('grey85', 'red4'), scale=T) + NoLegend() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(color="grey10", size=14),
-        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
-  labs(x = "", y = "") +
-  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
-           alpha = .1,fill = "white") + 
-  theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10),
-        legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
-  guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") + NoLegend() + coord_flip()
-
-ggsave(filename = file.path(path, 'markers_1.svg'), 
-       scale = 0.5, width = 26, height = 32, units='cm')
-
-
-subset_pt <- subset(multiome, subset=Annotation.Lvl1 %in% c('Interstitium', 'Myeloid Cell'))
-subset_pt <- subset(subset_pt, subset=Annotation.Lvl2 %in% c('Fibroblast', 'Myofibroblast', 'Pericyte', 'vSMC', 'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated', 'Macrophage Resident'))
-Idents(subset_pt) <- factor(subset_pt$Annotation.Lvl2, levels=c('Fibroblast', 'Myofibroblast', 'Pericyte', 'vSMC', 'CD16 Monocyte', 'CD14 Monocyte', 'Monocyte Transitioning', 'Macrophage Activated', 'Macrophage Resident'))
-
-DotPlot(subset_pt, features = c('CD68', 'FAP', 'LINC02511'), 
-        cols=c('grey85', 'purple4'), scale=T) + NoLegend() + 
-  theme_bw() +
-  theme(axis.text.x = element_text(color="grey10", size=14, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(color="grey10", size=14),
-        panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
-  labs(x = "", y = "") +
-  annotate("rect", xmin = 0, xmax = 20, ymin = 2.5, ymax = 5.5,
-           alpha = .1,fill = "white") + 
-  theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10),
-        legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
-  guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") + NoLegend() + coord_flip()
-
-ggsave(filename = file.path(path, 'markers_2.svg'), 
-       scale = 0.5, width = 35, height = 32, units='cm')
-
 
 # Figure 5j - Segmentation measurement gating
-measurements <- file.path(path, 'intensity_measurements.csv')
+measurements <- read.csv(file.path(path, 'intensity_measurements.csv'))
 measurements <- measurements[measurements$Classification!='Cortex',]
 
 # Log transform measurements
@@ -949,7 +898,7 @@ ggplot(measurements, aes(x=FAP, y=CD68)) +
   ylab('Mean CD68 [log2]') + 
   xlim(c(-0.3,3.5)) + ylim(c(-0.3,3.5))
 
-ggsave(filename = file.path(path, 'gating1.svg'), 
+ggsave(filename = file.path(path, 'gating1.pdf'), 
        scale = 0.5, width = 13, height = 10, units='cm')
 
 # Plot gating 2
@@ -974,7 +923,7 @@ ggplot(measurements_subset, aes(x=PanCK, y=VCAM)) +
   ylab('Mean VCAM1 [log2]') + 
   xlim(c(0,8)) + ylim(c(0,4))
 
-ggsave(filename = file.path(path, 'gating2.svg'), 
+ggsave(filename = file.path(path, 'gating2.pdf'), 
        scale = 0.5, width = 13, height = 10, units='cm')
 
 # Plot gating 3
@@ -999,7 +948,7 @@ ggplot(measurements_subset, aes(x = ICAM, y = Classification, fill=Classificatio
   xlab('Mean ICAM1 [log2]') +
   ylab('')
 
-ggsave(filename = file.path(path, 'gating3.svg'), 
+ggsave(filename = file.path(path, 'gating3.pdf'), 
        scale = 0.5, width = 13, height = 10, units='cm')
 
 
@@ -1027,7 +976,7 @@ colnames(umap_data) <- c("UMAP1", "UMAP2")
 umap_data$class <- measurements$group
 
 # Plot
-ggplot(umap_data, aes(x = UMAP1, y = UMAP2, color=class)) +
+ggplot(umap_data, aes(x = -UMAP1, y = -UMAP2, color=class)) +
   geom_point(size=0.1) +
   labs(title = "", x = "UMAP1", y = "UMAP2") +
   theme_void() +
@@ -1088,7 +1037,44 @@ calculate_enrichment <- function(geo, radius, tubule_polygons, fap_polygons){
   return(coverage_df)
 }
 
+
+# Load measurements
+measurements <- read.csv(file.path(path, 'intensity_measurements.csv'))
+measurements <- measurements[measurements$Classification!='Cortex',]
+
+# Log transform measurements
+measurements$VCAM <- log2(measurements$ROI..0.50.µm.per.pixel..VCAM1...Opal.690..Mean+1)
+measurements$ICAM <- log2(measurements$ROI..0.50.µm.per.pixel..ICAM1...Opal.570..Mean+1)
+measurements$PanCK <- log2(measurements$ROI..0.50.µm.per.pixel..PanCK...Opal.480..Mean+1)
+measurements$FAP <- log2(measurements$ROI..0.50.µm.per.pixel..FAP...Opal.520..Mean+1)
+measurements$CD68 <- log2(measurements$ROI..0.50.µm.per.pixel..CD68...Opal.620..Mean+1)
+
+measurements <- measurements[(measurements$Classification=='Tubules' & 
+                                measurements$CD68<0.6 & measurements$FAP<1.8) | 
+                               measurements$Classification%in%c('CD68+', 'FAP+'),]
+measurements$group <- measurements$Classification
+measurements$group[measurements$group=='Tubules' & measurements$PanCK>4.8 & measurements$PanCK<7 & 
+                     measurements$VCAM>2] <- 'VCAM1+ ICAM- Tubules'
+measurements$group[measurements$group=='VCAM1+ ICAM- Tubules' & measurements$ICAM>0.6] <- 'VCAM1+ ICAM+ Tubules'
+measurements$group[measurements$group=='Tubules'] <- 'Other Tubules'
+
+
+# Load polygons
 # Calculate for slide 1
+geo_09_02 <- sf::st_read(file.path(path, '09_02_22.geojson'), promote_to_multi = FALSE)
+geo_09_02 <- geo_09_02[geo_09_02$id%in%measurements$Object.ID,]
+st_crs(geo_09_02) <- NA
+geo_09_02 <- st_set_crs(geo_09_02, 3857)
+tubule_polygons_09_02 <- geo_09_02[grep('Tubule', geo_09_02$classification),]
+fap_polygons_09_02 <- geo_09_02[grep('FAP+', geo_09_02$classification),]
+cd68_polygons_09_02 <- geo_09_02[grep('CD68+', geo_09_02$classification),]
+
+results_09_02_fap <- calculate_enrichment(geo_09_02, 25, tubule_polygons_09_02, fap_polygons_09_02)
+results_09_02_fap$Image <- 'UUO1'
+results_09_02_cd68 <- calculate_enrichment(geo_09_02, 25, tubule_polygons_09_02, cd68_polygons_09_02)
+results_09_02_cd68$Image <- 'UUO1'
+
+# Calculate for slide 2
 geo_28_03 <- sf::st_read(file.path(path, '28_03_22.geojson'), promote_to_multi = FALSE)
 geo_28_03 <- geo_28_03[geo_28_03$id%in%measurements$Object.ID,]
 st_crs(geo_28_03) <- NA
@@ -1101,20 +1087,6 @@ results_28_03_fap <- calculate_enrichment(geo_28_03, 25, tubule_polygons_28_03, 
 results_28_03_fap$Image <- 'UUO2'
 results_28_03_cd68 <- calculate_enrichment(geo_28_03, 25, tubule_polygons_28_03, cd68_polygons_28_03)
 results_28_03_cd68$Image <- 'UUO2'
-
-# Calculate for slide 2
-geo_16_01 <- sf::st_read(file.path(path, '16_01_23.geojson'), promote_to_multi = FALSE)
-geo_16_01 <- geo_16_01[geo_16_01$id%in%measurements$Object.ID,]
-st_crs(geo_16_01) <- NA
-geo_16_01 <- st_set_crs(geo_16_01, 3857)
-tubule_polygons_16_01 <- geo_16_01[grep('Tubule', geo_16_01$classification),]
-fap_polygons_16_01 <- geo_16_01[grep('FAP+', geo_16_01$classification),]
-cd68_polygons_16_01 <- geo_16_01[grep('CD68+', geo_16_01$classification),]
-
-results_16_01_fap <- calculate_enrichment(geo_16_01, 25, tubule_polygons_16_01, fap_polygons_16_01)
-results_16_01_fap$Image <- 'UUO5'
-results_16_01_cd68 <- calculate_enrichment(geo_16_01, 25, tubule_polygons_16_01, cd68_polygons_16_01)
-results_16_01_cd68$Image <- 'UUO5'
 
 # Calculate for slide 3
 geo_10_11 <- sf::st_read(file.path(path, '10_11_22.geojson'), promote_to_multi = FALSE)
@@ -1131,25 +1103,26 @@ results_10_11_cd68 <- calculate_enrichment(geo_10_11, 25, tubule_polygons_10_11,
 results_10_11_cd68$Image <- 'UUO3'
 
 # Calculate for slide 4
-geo_09_02 <- sf::st_read(file.path(path, '09_02_22.geojson'), promote_to_multi = FALSE)
-geo_09_02 <- geo_09_02[geo_09_02$id%in%measurements$Object.ID,]
-st_crs(geo_09_02) <- NA
-geo_09_02 <- st_set_crs(geo_09_02, 3857)
-tubule_polygons_09_02 <- geo_09_02[grep('Tubule', geo_09_02$classification),]
-fap_polygons_09_02 <- geo_09_02[grep('FAP+', geo_09_02$classification),]
-cd68_polygons_09_02 <- geo_09_02[grep('CD68+', geo_09_02$classification),]
+geo_16_01 <- sf::st_read(file.path(path, '16_01_23.geojson'), promote_to_multi = FALSE)
+geo_16_01 <- geo_16_01[geo_16_01$id%in%measurements$Object.ID,]
+st_crs(geo_16_01) <- NA
+geo_16_01 <- st_set_crs(geo_16_01, 3857)
+tubule_polygons_16_01 <- geo_16_01[grep('Tubule', geo_16_01$classification),]
+fap_polygons_16_01 <- geo_16_01[grep('FAP+', geo_16_01$classification),]
+cd68_polygons_16_01 <- geo_16_01[grep('CD68+', geo_16_01$classification),]
 
-results_09_02_fap <- calculate_enrichment(geo_09_02, 25, tubule_polygons_09_02, fap_polygons_09_02)
-results_09_02_fap$Image <- 'UUO1'
-results_09_02_cd68 <- calculate_enrichment(geo_09_02, 25, tubule_polygons_09_02, cd68_polygons_09_02)
-results_09_02_cd68$Image <- 'UUO1'
+results_16_01_fap <- calculate_enrichment(geo_16_01, 25, tubule_polygons_16_01, fap_polygons_16_01)
+results_16_01_fap$Image <- 'UUO5'
+results_16_01_cd68 <- calculate_enrichment(geo_16_01, 25, tubule_polygons_16_01, cd68_polygons_16_01)
+results_16_01_cd68$Image <- 'UUO5'
+
 
 # Summarise results for FAP
 results_fap <- rbind(results_28_03_fap, results_16_01_fap, results_10_11_fap, results_09_02_fap)
 results_fap$area_percent <- as.numeric(results_fap$`25`)
 results_fap$Object.ID <- rownames(results_fap)
 results_fap <- results_fap %>%
-  left_join(measurements %>% select(Object.ID, group, Area.µm.2), by = "Object.ID")
+  left_join(measurements %>% dplyr::select(Object.ID, group, Area.µm.2), by = "Object.ID")
 results_fap <- results_fap[results_fap$group!='Other Tubules',]
 results_fap$area_percent <- results_fap$area_percent*100
 
@@ -1158,70 +1131,66 @@ results_cd68 <- rbind(results_28_03_cd68, results_16_01_cd68, results_10_11_cd68
 results_cd68$area_percent <- as.numeric(results_cd68$`25`)
 results_cd68$Object.ID <- rownames(results_cd68)
 results_cd68 <- results_cd68 %>%
-  left_join(measurements %>% select(Object.ID, group, Area.µm.2), by = "Object.ID")
+  dplyr::left_join(measurements %>% dplyr::select(Object.ID, group, Area.µm.2), by = "Object.ID")
 results_cd68 <- results_cd68[results_cd68$group!='Other Tubules',]
 results_cd68$area_percent <- results_cd68$area_percent*100
 
-# FAP plot
-summary_fap <- results_fap %>%
-  group_by(group) %>%
-  summarize(
-    mean = mean(area_percent, na.rm = TRUE),
-    sem = sd(area_percent, na.rm = TRUE) / sqrt(n())
-  )
 
-wilcox.test(results_fap$area_percent[results_fap$group=='VCAM1+ ICAM- Tubules'], 
-            results_fap$area_percent[results_fap$group=='VCAM1+ ICAM+ Tubules'], 
+# FAP plot
+wilcox.test(log2(results_fap$area_percent[results_fap$group=='VCAM1+ ICAM+ Tubules']+1), 
+            log2(results_fap$area_percent[results_fap$group=='VCAM1+ ICAM- Tubules']+1), 
             alternative = "two.sided")
 
-ggplot(summary_fap, aes(fill = group, y = mean, x = group)) +
-  geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
-                position = position_dodge(width = 0.9), width=0.4, size=1) +
-  geom_bar(stat = "identity", color="black", position='dodge') +
+# Plot
+ggplot(results_fap, aes(x = group, y = log2(area_percent + 1), fill = group)) +
+  geom_violin(trim = FALSE, aes(fill = group), color = "black", alpha = 1) +
   theme_classic() +
-  RotatedAxis() +
-  xlab('') + ylab(bquote(FAP^'+'~'area  [% of total area]')) +
   scale_fill_manual(values = c('sandybrown', '#702963')) +
-  theme(axis.text.x = element_text(size = 10, color='black'),
+  scale_color_manual(values = c('black', 'black')) +
+  scale_y_continuous(
+    labels = c(0, 1, 2.5, 5, 10, 25, 50, 100),
+    breaks = c(0, 1, 1.807355, 2.584963, 3.459432, 4.70044, 5.672425, 6.658211)
+  ) +
+  xlab('') + ylab(bquote('log2(FAP'^'+'~'area + 1) [%]')) +
+  theme(axis.text.x = element_text(size = 10, color = 'black'),
         axis.text.y = element_text(size = 10)) +
-  ylim(0,10) +
   geom_signif(xmin = c(1), xmax = c(2),
               y_position = c(8), 
-              annotation = c("***"), textsize = 5,
-              tip_length = 0.01) + NoLegend()
+              annotation = c("< 0.0001"), textsize = 5,
+              tip_length = 0.01) + 
+  NoLegend()
 
-ggsave(filename = file.path(path, 'fap_barplot.svg'), 
-       scale = 0.5, width = 8, height = 20, units='cm')
+ggsave(filename = file.path(path, 'fap_plot.pdf'), 
+       scale = 0.5, width = 10, height = 15, units='cm')
+
 
 # CD68 plot
-wilcox.test(results_cd68$area_percent[results_cd68$group=='VCAM1+ ICAM- Tubules'], 
-            results_cd68$area_percent[results_cd68$group=='VCAM1+ ICAM+ Tubules'], 
+wilcox.test(log2(results_cd68$area_percent[results_cd68$group=='VCAM1+ ICAM+ Tubules']+1), 
+            log2(results_cd68$area_percent[results_cd68$group=='VCAM1+ ICAM- Tubules']+1), 
             alternative = "two.sided")
 
-summary_cd68 <- results_cd68 %>%
-  group_by(group) %>%
-  summarize(
-    mean = mean(area_percent, na.rm = TRUE),
-    sem = sd(area_percent, na.rm = TRUE) / sqrt(n())
-  )
-
-# Plot CD68
-ggplot(summary_cd68, aes(fill = group, y = mean, x = group)) +
-  geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
-                position = position_dodge(width = 0.9), width=0.4, size=1) +
-  geom_bar(stat = "identity", color="black", position='dodge') +
+# Plot
+ggplot(results_cd68, aes(x = group, y = log2(area_percent + 1), fill = group)) +
+  geom_violin(trim = FALSE, aes(fill = group), color = "black", alpha = 1) +
   theme_classic() +
-  RotatedAxis() +
-  xlab('') + ylab(bquote(CD68^'+'~'area  [% of total area]')) +
   scale_fill_manual(values = c('sandybrown', '#702963')) +
-  theme(axis.text.x = element_text(size = 10, color='black'),
+  scale_color_manual(values = c('black', 'black')) +
+  scale_y_continuous(
+    labels = c(0, 1, 2.5, 5, 10, 25, 50, 100),
+    breaks = c(0, 1, 1.807355, 2.584963, 3.459432, 4.70044, 5.672425, 6.658211)
+  ) +
+  xlab('') + ylab(bquote('log2(CD68'^'+'~'area + 1) [%]')) +
+  theme(axis.text.x = element_text(size = 10, color = 'black'),
         axis.text.y = element_text(size = 10)) +
-  ylim(0,1.5) +
   geom_signif(xmin = c(1), xmax = c(2),
-              y_position = c(1.3), 
-              annotation = c("***"), textsize = 5,
-              tip_length = 0.01) + NoLegend()
+              y_position = c(5), 
+              annotation = c("< 0.0001"), textsize = 5,
+              tip_length = 0.01) + 
+  NoLegend()
 
-ggsave(filename = file.path(path, 'cd68_barplot.svg'), 
-       scale = 0.5, width = 8, height = 20, units='cm')
+ggsave(filename = file.path(path, 'cd68_plot.pdf'), 
+       scale = 0.5, width = 10, height = 15, units='cm')
+
+
+
 

@@ -40,7 +40,7 @@ ggplot(df, aes(x=n_cres)) +
   geom_vline(xintercept = 11, linetype="dashed", color = "black", size=1.5)
 
 ggsave(filename = file.path(path, 'histogram_cre_links.pdf'), 
-       scale = 0.5, width = 26, height = 10, units='cm')
+       scale = 0.5, width = 36, height = 14, units='cm')
 
 
 # Figure 6c - Histogram of TFs in healthy PTs
@@ -48,9 +48,9 @@ multiome_pt <- subset(multiome, subset=Annotation.Lvl1=='PT')
 regulons <- read.csv(file.path(path, 'regulons_pt_expressed.csv'))
 
 # Rankplot of DEGs between healthy and altered PTs
-markers <- FindMarkers(multiome_pt, ident.1 = c('PT S1', 'PT S2', 'PT S3'), 
+markers <- FindMarkers(multiome, ident.1 = c('PT S1', 'PT S2', 'PT S3'), 
                        ident.2 = c('PT Injured', 'PT Inflammatory'), 
-                       min.pct = 0.03, logfc.threshold=0.1)
+                       min.pct = 0.01, logfc.threshold=0)
 
 genes_up <- rownames(markers)[markers$avg_log2FC>0.1]
 lfcs <- markers[order(-markers$avg_log2FC),]
@@ -97,25 +97,25 @@ df$ngenes_list <- as.numeric(df$ngenes_list); df$ncres_list <- as.numeric(df$ncr
 df$corr_list <- as.numeric(df$corr_list)
 
 df <- df[order(-df$ngenes_list),]
-df <- df[df$ngenes_list>200,]
+df <- df[df$ngenes_list>208,]
 df$ngenes_list <- as.numeric(df$ngenes_list)
 
 df <- df %>% mutate(name = fct_reorder(tf_list, dplyr::desc(-ngenes_list))) 
 
-ggplot(df, aes(x=name, y=ngenes_list, fill=ncres_list)) +
+p <- ggplot(df, aes(x=name, y=ngenes_list, fill=ncres_list)) +
   geom_bar(stat="identity", alpha=1, width=0.6) +
   coord_flip() +
   xlab("") +
   theme_classic() + scale_fill_viridis_c(option='D') +
   xlab("") + ylab("Number of genes with linked CREs") +
   labs(fill = "Number of linked CREs") + 
-  theme(axis.title.y = element_text(face = "bold", size=14, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=14, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
+  theme(axis.title.y = element_text(size=14, margin = margin(r = 15)),
+        axis.text.x = element_text(size=12, angle = 0, hjust = 0.5, color = "black"),
+        axis.title.x = element_text(size=14, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
         panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))
+        legend.title = element_text(size=14, color="black"),
+        legend.text = element_text(size=12, color='black'))
 
 ggsave(filename = file.path(path, 'tf_n_target_genes.pdf'), 
        scale = 0.5, width = 50, height = 38, units='cm')
@@ -167,8 +167,8 @@ pheatmap(jaccard_matrix, single=T, cluster_cols=T, scale='none',
          cutree_rows=4,
          cutree_cols=4,
          color = viridis(1000, option='B', alpha=.9),
-         labels_row = make_bold_names(jaccard_matrix, rownames, rownames(jaccard_matrix)),
-         labels_col = make_bold_names(jaccard_matrix, colnames, colnames(jaccard_matrix)),
+         labels_row = rownames(jaccard_matrix),
+         labels_col = colnames(jaccard_matrix),
 )
 
 
@@ -234,23 +234,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="black", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "top", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + guides(size="none") +
-  coord_cartesian(ylim = c(-1, 1)) 
+  coord_cartesian(ylim = c(-1, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_expression_set1.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -275,23 +272,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="black", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "top", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + guides(size="none") +
-  coord_cartesian(ylim = c(-1, 1)) 
+  coord_cartesian(ylim = c(-1, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_expression_set2.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -316,23 +310,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="black", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
+  coord_cartesian(ylim = c(-2, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_gene_score_set1.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -357,23 +348,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="grey10", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
+  coord_cartesian(ylim = c(-2, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_gene_score_set2.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -398,23 +386,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="black", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
+  coord_cartesian(ylim = c(-2, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_region_score_set1.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -439,23 +424,20 @@ ggplot(melted_df, aes(x=pseudotime, y=Numeric_Value, color=Gene, size=Gene)) +
   geom_smooth(method=loess, se=F, span=20) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'grey20')) +
-  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 3)) +
+  scale_colour_manual(values=c(brewer.pal(n = length(unique(melted_df$Gene))-1, name = "Paired"), 'black')) +
+  scale_size_manual(values=c(rep(1, length(unique(melted_df$Gene))-1), 2)) +
   theme(axis.text.x = element_blank(),
-        axis.text.y = element_text(face="bold", color="grey10", size=12),
-        axis.title.y = element_text(face="bold", color="grey10", size=12),
+        axis.text.y = element_text(color="black", size=12),
+        axis.title.y = element_text(color="black", size=12),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0),
         legend.position = "left", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=10, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=10, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "grey10", fill=NA, size=2),
-        plot.title = element_text(colour="grey10", size=12, 
-                                  face="bold")) + 
+        legend.text = element_text(colour="black", size=10),
+        legend.title = element_text(colour="black", size=10),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        plot.title = element_text(colour="black", size=12)) + 
   labs(colour = "TF expression") + ggtitle('') + 
-  coord_cartesian(ylim = c(-2, 1))
+  coord_cartesian(ylim = c(-2, 1)) + NoLegend()
 
 ggsave(filename = file.path(path, 'tf_region_score_set2.pdf'), 
        scale = 0.5, width = 15, height = 12, units='cm')
@@ -600,7 +582,7 @@ hnf4a_genes <- hnf4a_genes[hnf4a_genes%in%rownames(mouse_iri)]
 
 mouse_iri <- AddModuleScore_UCell(mouse_iri, features=list(targets=hnf4a_genes))
 
-plot_data <- as.data.frame(cbind(timepoint=mouse_iri$Group, expression=mouse_iri$targets_UCell, cluster=mouse_iri$Celltype_2))
+plot_data <- as.data.frame(cbind(timepoint=mouse_iri$Timepoint, expression=mouse_iri$targets_UCell, cluster=mouse_iri$Annotation_new))
 plot_data$expression <- as.numeric(plot_data$expression)
 
 plot_data$timepoint[plot_data$timepoint=='Control'] <- 'Baseline'

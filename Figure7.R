@@ -43,18 +43,18 @@ ggplot(merged_lfc, aes(x = -L2FC_gex, y = -L2FC_regulon, label = gene)) +
   theme_linedraw() +
   geom_hline(yintercept = healthy_y, linetype = "dashed", color = "red4", size=1, alpha=0.8) +
   geom_vline(xintercept = healthy_x, linetype = "dashed", color = "red4", size=1, alpha=0.8) + 
-  theme(axis.title.x = element_text(size=12, face = "bold", hjust=0.9)) +
-  theme(axis.title.y = element_text(size=12, face = "bold", hjust=0.9)) +
+  theme(axis.title.x = element_text(size=12, hjust=0.9)) +
+  theme(axis.title.y = element_text(size=12, hjust=0.9)) +
   labs(x = "L2FC Gene Expression", y = "Difference TF Score") +
-  theme(axis.title.y = element_text(face = "bold", size=14, margin = margin(r = 15)),
-        axis.text.x = element_text(face = "bold", size=12, angle = 0, hjust = 0.5, color = "grey10"),
-        axis.title.x = element_text(face = "bold", size=14, color = "grey10"),
-        axis.text.y = element_text(face = "bold", size=12, color = "grey10"),
+  theme(axis.title.y = element_text(size=14, margin = margin(r = 15)),
+        axis.text.x = element_text(size=12, angle = 0, hjust = 0.5, color = "black"),
+        axis.title.x = element_text(size=14, color = "black"),
+        axis.text.y = element_text(size=12, color = "black"),
         panel.grid.major.y = element_line(color = "gray50"),
-        legend.title = element_text(face = "bold", size=14, color="grey10"),
-        legend.text = element_text(face='bold', size=12, color='grey10'))
+        legend.title = element_text(size=14, color="black"),
+        legend.text = element_text(size=12, color='black'))
 
-ggsave(filename = file.path(path, 'tf_scatterplot.svg'), 
+ggsave(filename = file.path(path, 'tf_scatterplot.pdf'), 
        scale = 0.5, width = 23, height = 30, units='cm')
 
 
@@ -127,7 +127,7 @@ pheatmap(avg_expr_3, cluster_cols=F, scale='row',
 # Lineplot of average expression, repeat for early/mid/late
 pseudotime <- multiome_pt$Pseudotime
 counts <- multiome_pt@assays$ATAC@data
-counts <- as.data.frame(t(as.matrix(counts[regions[regions$cluster==c('late'), 'regions'],])))
+counts <- as.data.frame(t(as.matrix(counts[regions[regions$cluster==c('early'), 'regions'],])))
 counts <- as.data.frame(scale(counts))
 counts$pseudotime <- pseudotime
 
@@ -141,7 +141,7 @@ ggplot(result, aes(x=pseudotime, y=mean_numeric_value, color=factor)) +
   geom_smooth(method='loess', se=F, span=0.3, size=2) +
   theme_bw() +
   labs(x = "", y = "") +
-  scale_color_manual(values= 	'#fde725') +
+  scale_color_manual(values= 	'#A6CAEC') +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_text(face="bold", color="grey10", size=12),
         axis.title.y = element_text(face="bold", color="grey10", size=12),
@@ -266,13 +266,14 @@ multiome_pt$chromatin_scaled_nfkb1 <- scale(multiome_pt$acc_nfkb1_UCell)
 multiome_pt$NFKB1_score <- rowMeans(cbind(multiome_pt$gex_scaled_nfkb1, multiome_pt$chromatin_scaled_nfkb1), na.rm=TRUE)
 
 # UMAP Plots
-FeaturePlot(multiome_pt, features='AP1_score', reduction='umap_wnn', min.cutoff = 0, order=T, pt.size=0.9, cols = c('grey90', 'red4')) +
-  NoAxes() + ggtitle('') + scale_color_viridis_c(option='D')
-ggsave(filename = file.path(path, 'umap_ap1_score.png'), 
+FeaturePlot(multiome_pt, features='AP1_score', reduction='umap_wnn', min.cutoff = 0, order=T, pt.size=0.9, cols = c('grey90', '#75147C')) +
+  NoAxes() + ggtitle('')
+ggsave(filename = file.path(path, 'umap_ap1_score.pdf'), 
        scale = 0.5, width = 30, height = 20, units='cm')
-FeaturePlot(multiome_pt, features='NFKB1_score', reduction='umap_wnn', min.cutoff = 0, order=T, pt.size=0.7,cols = c('grey90', 'navy')) +
+
+FeaturePlot(multiome_pt, features='NFKB1_score', reduction='umap_wnn', min.cutoff = 0, order=T, pt.size=0.7,cols = c('grey90', '#326089')) +
   NoAxes() +ggtitle('')
-ggsave(filename = file.path(path, 'umap_nfkb1_score.png'), 
+ggsave(filename = file.path(path, 'umap_nfkb1_score.pdf'), 
        scale = 0.5, width = 30, height = 20, units='cm')
 
 
@@ -302,8 +303,8 @@ multiome_pt <- Footprint(
 )
 
 p <- PlotFootprint(multiome_pt, features = c('FOS::JUN'), show.expected = F, 
-                   idents=c('PT Healthy', 'PT Injured', 'PT Inflammatory')) + ylim(-0.5, 2.5) + geom_line(size = 0.6)  +
-  scale_color_manual(values=c("sandybrown", '#702963','grey40')) +
+                   idents=c('PT Healthy', 'PT Injured', 'PT Inflammatory')) + ylim(-0.5, 2.5) + geom_line(size = 0.4)  +
+  scale_color_manual(values=c("sandybrown", '#702963','#4172B1')) +
   theme(axis.title.y = element_text( size=14, margin = margin(r = 15)),
         axis.text.x = element_text(size=12, angle = 0, hjust = 0.5, color = "black"),
         axis.title.x = element_text(size=14, color = "black"),
@@ -313,13 +314,13 @@ p <- PlotFootprint(multiome_pt, features = c('FOS::JUN'), show.expected = F,
 p[[1]][["layers"]][[2]] <- NULL
 p
 
-ggsave(filename = file.path(path, 'ap1_footprint.svg'), 
+ggsave(filename = file.path(path, 'ap1_footprint.pdf'), 
        scale = 0.5, width = 30, height = 15, units='cm')
 
 
 p <- PlotFootprint(multiome_pt, features = c('RELA'), show.expected = F, 
-                   idents=c('PT Healthy', 'PT Injured', 'PT Inflammatory'))  + geom_line(size = 0.6)  +
-  scale_color_manual(values=c("sandybrown", '#702963','grey40')) +
+                   idents=c('PT Healthy', 'PT Injured', 'PT Inflammatory'))  + geom_line(size = 0.4)  +
+  scale_color_manual(values=c("sandybrown", '#702963','#4172B1')) +
   theme(axis.title.y = element_text(size=14, margin = margin(r = 15)),
         axis.text.x = element_text(size=12, angle = 0, hjust = 0.5, color = "black"),
         axis.title.x = element_text(size=14, color = "black"),
@@ -329,7 +330,7 @@ p <- PlotFootprint(multiome_pt, features = c('RELA'), show.expected = F,
 p[[1]][["layers"]][[2]] <- NULL
 p
 
-ggsave(filename = file.path(path, 'nfkb1_footprint.svg'), 
+ggsave(filename = file.path(path, 'nfkb1_footprint.pdf'), 
        scale = 0.5, width = 30, height = 15, units='cm')
 
 
@@ -368,7 +369,7 @@ ggplot(da_jun, aes(x=avg_log2FC, y=-log10(p_val), color=col)) +
         legend.title = element_text(size=14, color="black"),
         legend.text = element_text(size=12, color='black')) + NoLegend() + xlim(c(-10, 10))
 
-ggsave(filename = file.path(path, 'jun_peaks_da.png'), 
+ggsave(filename = file.path(path, 'jun_peaks_da.pdf'), 
        scale = 0.5, width = 20, height = 12, units='cm')
 
 # Accessibility change of NFKB1 peaks 
@@ -395,7 +396,7 @@ ggplot(da_nfkb, aes(x=avg_log2FC, y=-log10(p_val), color=col)) +
         legend.title = element_text(size=14, color="grey10"),
         legend.text = element_text(size=12, color='grey10')) + NoLegend() + xlim(c(-10, 10))
 
-ggsave(filename = file.path(path, 'nfkb1_peaks_da.png'), 
+ggsave(filename = file.path(path, 'nfkb1_peaks_da.pdf'), 
        scale = 0.5, width = 20, height = 12, units='cm')
 
 # Motif enrichment in DA peaks
@@ -421,7 +422,7 @@ enriched.motifs %>%
         legend.title = element_text(size=14, color="black"),
         legend.text = element_text(size=12, color='black'))
 
-ggsave(filename = file.path(path, 'jun_motifs_enrichment.svg'), 
+ggsave(filename = file.path(path, 'jun_motifs_enrichment.pdf'), 
        scale = 0.5, width = 18, height = 7, units='cm')
 
 # NFKB1
@@ -445,7 +446,7 @@ enriched.motifs.nfkb %>%
         legend.title = element_text(size=14, color="black"),
         legend.text = element_text(size=12, color='black'))
 
-ggsave(filename = file.path(path, 'nfkb1_motifs_enrichment.svg'), 
+ggsave(filename = file.path(path, 'nfkb1_motifs_enrichment.pdf'), 
        scale = 0.5, width = 16, height = 7, units='cm')
 
 

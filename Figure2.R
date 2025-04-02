@@ -105,8 +105,8 @@ summary <- plot_data %>%
   )
 
 # Significance calculated with wilcox.test, bars manually positioned below, e.g.:
-wilcox.test(plot_data$percent[plot_data$Annotation.Lvl2=='PT Inflammatory'&plot_data$Condition=='Control'], 
-            plot_data$percent[plot_data$Annotation.Lvl2=='PT Inflammatory'&plot_data$Condition=='UUO'], 
+wilcox.test(plot_data$percent[plot_data$Annotation.Lvl2=='PT Injured'&plot_data$Condition=='Control'], 
+            plot_data$percent[plot_data$Annotation.Lvl2=='PT Injured'&plot_data$Condition=='UUO'], 
             alternative = "two.sided")
 
 # Plot proportions
@@ -125,10 +125,10 @@ ggplot(summary, aes(fill = Condition, y = mean, x = Annotation.Lvl2)) +
   ylim(0,80) +
   geom_signif(xmin = c(0.75, 1.75), xmax = c(1.25, 2.25),
               y_position = c(75, 40), 
-              annotation = c("**", "**"), textsize = 5,
+              annotation = c("0.0101", "0.0025"), textsize = 5,
               tip_length = 0.01) + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_barplot.svg'), 
+ggsave(filename = file.path(path, 'pt_barplot.pdf'), 
        scale = 0.5, width = 13, height = 20, units='cm')
 
 
@@ -151,12 +151,13 @@ DotPlot(subset_pt, features = c('PAX8', 'HNF4A', 'MME', 'CUBN', 'VCAM1', 'HAVCR1
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_1.svg'), 
-       scale = 0.5, width = 35, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_1.pdf'), 
+       scale = 0.5, width = 35, height = 14, units='cm')
 
 
 # Subplot 2
@@ -172,12 +173,13 @@ DotPlot(subset_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXC
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_2.svg'), 
-       scale = 0.5, width = 35, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_2.pdf'), 
+       scale = 0.5, width = 35, height = 14, units='cm')
 
 # Subplot 3
 DotPlot(subset_pt, features = c('IL18', 'IL32', 'C3', 'TGFB2', 'TGM2', 'PDGFB', 'PDGFD', 'TNC', 'MMP7', 'CCN1', 'LINC02511'), 
@@ -192,12 +194,13 @@ DotPlot(subset_pt, features = c('IL18', 'IL32', 'C3', 'TGFB2', 'TGM2', 'PDGFB', 
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_3.svg'), 
-       scale = 0.5, width = 29, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_3.pdf'), 
+       scale = 0.5, width = 32, height = 14, units='cm')
 
 # Subplot 4
 DotPlot(subset_pt, features = c('ICAM1', 'CLDN1', 'CD44', 'CDKN1A', 'HDAC9', 'BIRC3', 'FAS', 'LINC02511'), 
@@ -212,12 +215,13 @@ DotPlot(subset_pt, features = c('ICAM1', 'CLDN1', 'CD44', 'CDKN1A', 'HDAC9', 'BI
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_4.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'pt_markers_4.pdf'), 
+       scale = 0.5, width = 35, height = 14, units='cm')
 
 
 # Figure 2d - KPMP aPT and projected inflammatory PT UMAP plot
@@ -596,11 +600,12 @@ DotPlot(subset_pt, features = c('PAX8', 'HNF4A', 'MME', 'CUBN', 'VCAM1', 'SOX9',
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_1.svg'), 
+ggsave(filename = file.path(path, 'pt_markers_1.pdf'), 
        scale = 0.5, width = 35, height = 13, units='cm')
 
 # Subplot 2
@@ -616,11 +621,12 @@ DotPlot(subset_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXC
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face = "italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'pt_markers_2.svg'), 
+ggsave(filename = file.path(path, 'pt_markers_2.pdf'), 
        scale = 0.5, width = 35, height = 13, units='cm')
 
 
