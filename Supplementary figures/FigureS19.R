@@ -97,7 +97,7 @@ ggtree_plot <- ggtree::ggtree(ddgram)
 dotplot <- meta %>% mutate(Gene = factor(Gene, levels = clust$labels[clust$order])) %>% 
   ggplot(aes(x=Annotation.Lvl2, y = Gene)) + 
   geom_point(aes(size = Pct_RNA, fill = Avg_regulon), color="black", shape=21) +
-  scale_size("% expressed", range = c(0,6), limits = c(0,100)) +
+  scale_size("% expressed", range = c(0,4), limits = c(0,100)) +
   cowplot::theme_cowplot() + 
   theme_bw() +
   theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
@@ -113,70 +113,70 @@ dotplot <- meta %>% mutate(Gene = factor(Gene, levels = clust$labels[clust$order
                                               frame.colour = "black"),
                        name = "TF score")
 
-dotplot <- dotplot + theme(axis.title.y = element_text(face = "bold", size=10, margin = margin(r = 15)),
-                           axis.text.x = element_text(face = "bold", size=12, angle = 60, hjust = 1, color = "black"),
-                           axis.text.y = element_text(face = "bold", size=8, color = "grey10"),
-                           legend.title = element_text(face = "bold", size=10, color="grey10"),
-                           legend.text = element_text(face='bold', size=10, color='grey10')) 
+dotplot <- dotplot + theme(axis.title.y = element_text(size=10, margin = margin(r = 15)),
+                           axis.text.x = element_text(size=12, angle = 60, hjust = 1, color = "black"),
+                           axis.text.y = element_text(size=8, color = "black"),
+                           legend.title = element_text(size=10, color="black"),
+                           legend.text = element_text(face='bold', size=10, color='black')) 
 
-dotplot + geom_vline(xintercept = 3.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 7.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 9.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 14.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 17.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 23.5, color = "grey10", size=1) + 
-  geom_vline(xintercept = 25.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 27.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 31.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 34.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 36.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 39.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 42.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 47.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 54.5, color = "grey10", size=1) +
-  geom_vline(xintercept = 56.5, color = "grey10", size=1) +
-  geom_hline(yintercept = 5, color = "grey10", size=0.2) +
-  geom_hline(yintercept = 10, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 15, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 20, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 25, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 30, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 35, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 40, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 45, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 50, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 55, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 60, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 65, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 70, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 75, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 80, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 85, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 90, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 95, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 100, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 105, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 110, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 115, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 120, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 125, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 130, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 135, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 140, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 145, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 150, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 155, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 160, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 165, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 170, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 175, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 180, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 185, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 190, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 195, color = "grey10", size=0.2)+
-  geom_hline(yintercept = 200, color = "grey10", size=0.2)
+dotplot + geom_vline(xintercept = 3.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 7.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 9.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 14.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 17.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 23.5, color = "black", size=0.5) + 
+  geom_vline(xintercept = 25.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 27.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 31.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 34.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 36.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 39.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 42.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 47.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 54.5, color = "black", size=0.5) +
+  geom_vline(xintercept = 56.5, color = "black", size=0.5) +
+  geom_hline(yintercept = 5, color = "black", size=0.1) +
+  geom_hline(yintercept = 10, color = "black", size=0.1)+
+  geom_hline(yintercept = 15, color = "black", size=0.1)+
+  geom_hline(yintercept = 20, color = "black", size=0.1)+
+  geom_hline(yintercept = 25, color = "black", size=0.1)+
+  geom_hline(yintercept = 30, color = "black", size=0.1)+
+  geom_hline(yintercept = 35, color = "black", size=0.1)+
+  geom_hline(yintercept = 40, color = "black", size=0.1)+
+  geom_hline(yintercept = 45, color = "black", size=0.1)+
+  geom_hline(yintercept = 50, color = "black", size=0.1)+
+  geom_hline(yintercept = 55, color = "black", size=0.1)+
+  geom_hline(yintercept = 60, color = "black", size=0.1)+
+  geom_hline(yintercept = 65, color = "black", size=0.1)+
+  geom_hline(yintercept = 70, color = "black", size=0.1)+
+  geom_hline(yintercept = 75, color = "black", size=0.1)+
+  geom_hline(yintercept = 80, color = "black", size=0.1)+
+  geom_hline(yintercept = 85, color = "black", size=0.1)+
+  geom_hline(yintercept = 90, color = "black", size=0.1)+
+  geom_hline(yintercept = 95, color = "black", size=0.1)+
+  geom_hline(yintercept = 100, color = "black", size=0.1)+
+  geom_hline(yintercept = 105, color = "black", size=0.1)+
+  geom_hline(yintercept = 110, color = "black", size=0.1)+
+  geom_hline(yintercept = 115, color = "black", size=0.1)+
+  geom_hline(yintercept = 120, color = "black", size=0.1)+
+  geom_hline(yintercept = 125, color = "black", size=0.1)+
+  geom_hline(yintercept = 130, color = "black", size=0.1)+
+  geom_hline(yintercept = 135, color = "black", size=0.1)+
+  geom_hline(yintercept = 140, color = "black", size=0.1)+
+  geom_hline(yintercept = 145, color = "black", size=0.1)+
+  geom_hline(yintercept = 150, color = "black", size=0.1)+
+  geom_hline(yintercept = 155, color = "black", size=0.1)+
+  geom_hline(yintercept = 160, color = "black", size=0.1)+
+  geom_hline(yintercept = 165, color = "black", size=0.1)+
+  geom_hline(yintercept = 170, color = "black", size=0.1)+
+  geom_hline(yintercept = 175, color = "black", size=0.1)+
+  geom_hline(yintercept = 180, color = "black", size=0.1)+
+  geom_hline(yintercept = 185, color = "black", size=0.1)+
+  geom_hline(yintercept = 190, color = "black", size=0.1)+
+  geom_hline(yintercept = 195, color = "black", size=0.1)+
+  geom_hline(yintercept = 200, color = "black", size=0.1)
 
-ggsave(filename = file.path(path, 'dotplot_tfs_all.svg'),  
+ggsave(filename = file.path(path, 'dotplot_tfs_all.pdf'),  
        scale = 0.5, width = 80, height = 100, units='cm')
 
 

@@ -44,11 +44,11 @@ pheatmap(avg_expr, cluster_rows=F, cluster_cols=F, scale='column',
          clustering_method='ward.D2',
          breaks=seq(-0.6, 1.2, length.out=11),
          gaps_row = c(5),
-         hcl.colors(10, "Purples2", rev=T),
+         color = hcl.colors(10, "Purples2", rev=T),  # Ensure color is properly defined
          gaps_col = c(6, 10, 14),
          border_color = "black",
          labels_row = rownames(avg_expr),
-         labels_col = colnames(avg_expr),
+         labels_col = parse(text = paste0("italic('", colnames(avg_expr), "')")),  # Italic colnames
          fontsize = 10)
 
 
@@ -91,7 +91,7 @@ colnames(plot_data) <- c('ct', 'Direction', 'value')
 
 # Plot as barplot
 ggplot(plot_data ,aes(x=ct, y = ifelse(Direction == "upregulated", value, value), fill=Direction))+ 
-  geom_bar(stat="identity", position="identity", width=0.8, size=0.5, color="black") +
+  geom_bar(stat="identity", position="identity", width=0.8, size=0.8, color="black") +
   coord_flip() +
   scale_y_continuous(limits = c(-max(plot_data$value), max(plot_data$value))) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 15)) +
@@ -102,7 +102,7 @@ ggplot(plot_data ,aes(x=ct, y = ifelse(Direction == "upregulated", value, value)
   theme(axis.text.x = element_text(size = 12),
         axis.text.y = element_text(size = 12))
 
-ggsave(filename = file.path(path, 'number_degs.svg'), 
+ggsave(filename = file.path(path, 'number_degs.pdf'), 
        scale = 0.5, width = 38, height = 18, units='cm')
 
 
@@ -294,6 +294,9 @@ ggplot(summary, aes(fill = var2, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
                 position = position_dodge(width = 0.9), width=0.4, size=1) +
   geom_bar(stat = "identity", color="black", position='dodge') +
+  geom_point(data = plot_data, aes(x = cluster, y = percent), 
+             position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9, jitter.height = 0),
+             size = 2, shape = 16, color = "black", alpha=0.8) + 
   theme_classic() +
   RotatedAxis() +
   xlab('') + ylab(bquote('% of TAL cells')) + 
@@ -302,16 +305,16 @@ ggplot(summary, aes(fill = var2, y = mean, x = cluster)) +
         axis.text.y = element_text(size = 12)) +
   ylim(0,80) +
   geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 4.75), xmax = c(1.25, 2.25, 3.25, 4.25, 5.25),
-              y_position = c(50, 55, 45, 62, 50), 
-              annotation = c("**", "*", '*', '**', '**'),
+              y_position = c(75, 75, 75, 75, 75), 
+              annotation = c("0.0101", "0.0303", '0.0479', '0.0025', '0.0050'),
               tip_length = 0.01)
 
-ggsave(filename = file.path(path, 'tal_barplot.svg'), 
-       scale = 0.5, width = 22, height = 14, units='cm')
+ggsave(filename = file.path(path, 'tal_barplot.pdf'), 
+       scale = 0.5, width = 30, height = 18, units='cm')
 
 # Significance bars are added manually, p-value caluclated using wilcox.test:
-wilcox.test(plot_data$percent[plot_data$cluster=='cTAL1'&plot_data$var2=='Control'], 
-            plot_data$percent[plot_data$cluster=='cTAL1'&plot_data$var2=='UUO'], 
+wilcox.test(plot_data$percent[plot_data$cluster=='TAL Inflammatory'&plot_data$var2=='Control'], 
+            plot_data$percent[plot_data$cluster=='TAL Inflammatory'&plot_data$var2=='UUO'], 
             alternative = "two.sided")
 
 
@@ -388,7 +391,7 @@ scv.pl.velocity_embedding_stream(merged_adata, basis='umap', color='celltype',
 subset_epithelia <- subset(x = multiome, idents = c('DCT1', 'DCT2', 'DCT Injured', 'CNT', 'CNT Injured', 'cPC', 'mPC', 'PC Injured'))
 
 # Example plot for MMP7, the other plots were generated in the same way
-FeaturePlot(subset_epithelia, features = c('MMP7'), cols=c('grey80', 'navy'), order=T, reduction='umap_wnn') +
+p <- FeaturePlot(subset_epithelia, features = c('MMP7'), cols=c('grey80', 'navy'), order=T, reduction='umap_wnn') +
   xlab("") + ylab("") +
   theme(axis.text.x = element_text(face = "bold", size=0, angle = 45, hjust = 1, color = "grey10"),
         axis.text.y = element_text(face = "bold", size=0, color = "grey10"),
@@ -515,6 +518,9 @@ ggplot(summary, aes(fill = var2, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
                 position = position_dodge(width = 0.9), width=0.4, size=1) +
   geom_bar(stat = "identity", color="black", position='dodge') +
+  geom_point(data = plot_data, aes(x = cluster, y = percent), 
+             position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9, jitter.height = 0),
+             size = 2, shape = 16, color = "black", alpha=0.8) + 
   theme_classic() +
   RotatedAxis() +
   xlab('') + ylab(bquote('% of cell type')) + 
@@ -523,17 +529,17 @@ ggplot(summary, aes(fill = var2, y = mean, x = cluster)) +
         axis.text.y = element_text(size = 12)) +
   geom_signif(xmin = c(0.75, 1.75, 2.75, 3.75, 4.75, 5.75, 6.75, 7.75), 
               xmax = c(1.25, 2.25, 3.25, 4.25, 5.25, 6.25, 7.25, 8.25),
-              y_position = c(82, 60, 105, 105, 95, 85, 52, 95), 
-              annotation = c("**", "*", '**', '**', '**', '*', '*',  '**'),
+              y_position = c(110, 110, 110, 110, 110, 110, 110, 110), 
+              annotation = c("0.0101", "0.0303", '0.0025', '0.0081', '0.0050', '0.0303', '0.0479',  '0.0025'),
               tip_length = 0.01) + 
-  scale_y_continuous(breaks=c(0, 25, 50, 75, 100), limits=c(0, 110))
+  scale_y_continuous(breaks=c(0, 25, 50, 75, 100), limits=c(0, 119))
 
-ggsave(filename = file.path(path, 'epi_barplot.svg'), 
-       scale = 0.5, width = 30, height = 14, units='cm')
+ggsave(filename = file.path(path, 'epi_barplot.pdf'), 
+       scale = 0.5, width = 45, height = 20, units='cm')
 
 # Significance bars are added manually, p-value caluclated using wilcox.test:
-wilcox.test(plot_data1$percent[plot_data1$cluster=='DCT1'&plot_data1$var2=='Control'], 
-            plot_data1$percent[plot_data1$cluster=='DCT1'&plot_data1$var2=='UUO'], 
+wilcox.test(plot_data$percent[plot_data$cluster=='CNT'&plot_data$var2=='Control'], 
+            plot_data$percent[plot_data$cluster=='CNT'&plot_data$var2=='UUO'], 
             alternative = "two.sided")
 
 

@@ -66,7 +66,7 @@ p4 <- VlnPlot(multiome, features = 'nCount_ATAC', pt.size = 0, group.by = 'Sampl
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of Fragments') +
   theme(legend.position = "bottom", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=28),
+        legend.text = element_text(colour="black", size=28),
         legend.title = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) + NoLegend() + 
@@ -91,7 +91,7 @@ p5 <- VlnPlot(multiome, features = 'nFeature_ATAC', pt.size = 0, group.by = 'Sam
 arrange <- ggarrange(p1, p2, p3, p4, p5, ncol = 1, nrow = 5)
 arrange
 
-ggsave(filename = file.path(path, 'per_sample_qc.svg'), arrange,
+ggsave(filename = file.path(path, 'per_sample_qc.pdf'), arrange,
        scale = 0.5, width = 20, height = 50, units='cm')
 
 
@@ -116,28 +116,28 @@ ggsave(filename = file.path(path, 'umap_wnn.png'),
 
 # Figure S3c - UMAPs by meta data variables
 DimPlot(multiome, label=F, pt.size=0.1, group.by = 'Sex', reduction='umap_wnn', order=F, shuffle=T) + NoAxes() + ggtitle('') +
-  scale_color_manual(values=c(purples[9], browns[3])) + theme(legend.text = element_text(size=14, face="bold"))
+  scale_color_manual(values=c(purples[9], browns[3])) + theme(legend.text = element_text(size=14))
 
 ggsave(filename = file.path(path, 'umap_sex.png'),
        scale = 0.5, width = 30, height = 25, units='cm')
 
 
 DimPlot(multiome, label=F, pt.size=0.1, group.by = 'Condition', reduction='umap_wnn', order=F, shuffle=T) + NoAxes() + ggtitle('') +
-  scale_color_manual(values=c(indigos[9], browns[3])) + theme(legend.text = element_text(size=14, face="bold"))
+  scale_color_manual(values=c(indigos[9], browns[3])) + theme(legend.text = element_text(size=14))
 
 ggsave(filename = file.path(path, 'umap_condition.png'),
        scale = 0.5, width = 30, height = 25, units='cm')
 
 
 DimPlot(multiome, label=F, pt.size=0.1, group.by = 'Sample', reduction='umap_wnn', order=F, shuffle=T) + NoAxes() + ggtitle('') +
-  scale_color_manual(values=DiscretePalette_scCustomize(num_colors = 12, palette = "stepped", shuffle_pal = F)) + theme(legend.text = element_text(size=14, face="bold"))
+  scale_color_manual(values=DiscretePalette_scCustomize(num_colors = 12, palette = "stepped", shuffle_pal = F)) + theme(legend.text = element_text(size=14))
 
 ggsave(filename = file.path(path, 'umap_sample.png'),
        scale = 0.5, width = 30, height = 25, units='cm')
 
 
 DimPlot(multiome, label=F, pt.size=0.1, group.by = 'Library', reduction='umap_wnn', order=F, shuffle=T) + NoAxes() + ggtitle('') +
-  scale_color_manual(values=DiscretePalette_scCustomize(num_colors = 24, palette = "stepped", shuffle_pal = T)) + theme(legend.text = element_text(size=14, face="bold"))
+  scale_color_manual(values=DiscretePalette_scCustomize(num_colors = 24, palette = "stepped", shuffle_pal = T)) + theme(legend.text = element_text(size=14))
 
 ggsave(filename = file.path(path, 'umap_library.png'),
        scale = 0.5, width = 30, height = 25, units='cm')
@@ -266,86 +266,87 @@ ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
   geom_bar(stat="identity", alpha=.9, width=.6) +
   theme_bw() + ggtitle('Number of nuclei') + xlab('') + ylab('') +
   scale_fill_manual(values=color_palette_multiome_modified) +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        title = element_text(colour="grey10", size=14, face="bold", hjust = 0.5),
+  theme_classic() + 
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=16),
+        axis.title.y = element_text(color="black", size=16),
+        title = element_text(colour="black", size=14, hjust = 0.5),
         panel.grid.minor = element_line(colour = "white", size = 0), 
         panel.grid.major = element_line(colour = "white", size = 0), 
-        panel.border = element_rect(colour = "grey10", fill=NA, size=0)) + 
+        panel.border = element_rect(colour = "black", fill=NA, size=0)) +
   NoLegend() + 
   scale_x_discrete(labels = seq(1, 59)) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(filename = file.path(path, 'n_cells_celltype.svg'),
+ggsave(filename = file.path(path, 'n_cells_celltype.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')
 
 
 VlnPlot(multiome, features = 'nCount_RNA', pt.size = 0, group.by = 'label', col=color_palette_multiome_modified) + NoLegend() +
   scale_x_discrete(labels = seq(1, 59)) + xlab('') + ylab('') + ggtitle('UMIs per cell') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold"), 
-        title = element_text(colour="grey10", size=14, face="bold")) +
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14), 
+        title = element_text(colour="black", size=14)) +
   guides(color = guide_legend(override.aes = list(size = 3)))
 
-ggsave(filename = file.path(path, 'qc_plots_1.svg'),
+ggsave(filename = file.path(path, 'qc_plots_1.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')
 
 
 VlnPlot(multiome, features = 'nFeature_RNA', pt.size = 0, group.by = 'label', col=color_palette_multiome_modified) + NoLegend() +
   scale_x_discrete(labels = seq(1, 59)) + xlab('') + ylab('') + ggtitle('Genes per cell') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold"), 
-        title = element_text(colour="grey10", size=14, face="bold")) +
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14), 
+        title = element_text(colour="black", size=14)) +
   guides(color = guide_legend(override.aes = list(size = 3)))
 
-ggsave(filename = file.path(path, 'qc_plots_2.svg'),
+ggsave(filename = file.path(path, 'qc_plots_2.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')
 
 
 VlnPlot(multiome, features = 'percent_mitochrondrial', pt.size = 0, group.by = 'label', col=color_palette_multiome_modified) + NoLegend() +
   scale_x_discrete(labels = seq(1, 59)) + xlab('') + ylab('') + ggtitle('% mitochondrial transcripts') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold"), 
-        title = element_text(colour="grey10", size=14, face="bold")) +
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14), 
+        title = element_text(colour="black", size=14)) +
   guides(color = guide_legend(override.aes = list(size = 3))) + ylim(c(1, 20))
 
-ggsave(filename = file.path(path, 'qc_plots_3.svg'),
+ggsave(filename = file.path(path, 'qc_plots_3.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')
 
 
 VlnPlot(multiome, features = 'nCount_ATAC', pt.size = 0, group.by = 'label', col=color_palette_multiome_modified) + NoLegend() +
   scale_x_discrete(labels = seq(1, 59)) + xlab('') + ylab('') + ggtitle('Fragments per cell') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold"), 
-        title = element_text(colour="grey10", size=14, face="bold")) +
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14), 
+        title = element_text(colour="black", size=14)) +
   guides(color = guide_legend(override.aes = list(size = 3)))
 
-ggsave(filename = file.path(path, 'qc_plots_4.svg'),
+ggsave(filename = file.path(path, 'qc_plots_4.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')
 
 
 VlnPlot(multiome, features = 'nFeature_ATAC', pt.size = 0, group.by = 'label', col=color_palette_multiome_modified) + NoLegend() +
   scale_x_discrete(labels = seq(1, 59)) + xlab('') + ylab('') + ggtitle('Peaks per cell') +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=12, angle=0, hjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=14),
-        axis.title.y = element_text(face="bold", color="grey10", size=16),
-        legend.text = element_text(colour="grey10", size=14, face="bold"),
-        legend.title = element_text(colour="grey10", size=14, face="bold"), 
-        title = element_text(colour="grey10", size=14, face="bold")) +
+  theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
+        axis.text.y = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=16),
+        legend.text = element_text(colour="black", size=14),
+        legend.title = element_text(colour="black", size=14), 
+        title = element_text(colour="black", size=14)) +
   guides(color = guide_legend(override.aes = list(size = 3)))
 
-ggsave(filename = file.path(path, 'qc_plots_5.svg'),
+ggsave(filename = file.path(path, 'qc_plots_5.pdf'),
        scale = 0.5, width = 70, height = 10, units='cm')

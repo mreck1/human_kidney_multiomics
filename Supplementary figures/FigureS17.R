@@ -414,12 +414,12 @@ NK_cell_1$CellType <- factor(NK_cell_1$CellType, level=c('Inflammatory Epithelia
 B_cell_1$CellType <- factor(B_cell_1$CellType, level=c('Inflammatory Epithelia', 
                                                        'Injured Epithelia', 
                                                        'Healthy Epithelia'))
-endothelia_1$CellType <- factor(endothelia_1$CellType, level=c('Inflammatory Epithelia', 
+macrophage_1$CellType <- factor(macrophage_1$CellType, level=c('Inflammatory Epithelia', 
                                                        'Injured Epithelia', 
                                                        'Healthy Epithelia'))
 
 # Plot, change data input for different target cell type
-ggplot(t_cell_1, aes(x = Distance,  y = count, colour=CellType)) +
+ggplot(macrophage_1, aes(x = Distance,  y = count, colour=CellType)) +
   geom_point(size=1) + 
   geom_smooth(method="loess", se=TRUE, fullrange=FALSE, level=0.2, span = 1, size=1.5) +
   geom_vline(xintercept = 5, linetype="dashed", 
@@ -743,6 +743,40 @@ pheatmap(R, cluster_rows=F, cluster_cols=F, color = colorRampPalette(c('grey90',
 
 
 # Figure S17g - Supplementary scatterplots showing correlation with clinical parameters
+# Scatterplot Fibrosis vs eGFR
+meta <- cosmx@meta.data
+meta <- meta[meta$Slide_ID!='Nephrectomy',]
+
+egfr <- unique(paste(meta$eGFR, meta$Specimen, sep='_'))
+fibrosis <- unique(paste(meta$Fibrosis_percentage, meta$eGFR, sep='_'))
+
+split_vector_egfr <- strsplit(egfr, "_")
+egfr <- sapply(split_vector_egfr, "[", 1)
+split_vector_fibrosis <- strsplit(fibrosis, "_")
+fibrosis <- sapply(split_vector_fibrosis, "[", 1)
+
+plot_data <- as.data.frame(cbind(egfr, fibrosis))
+plot_data$egfr <- as.numeric(plot_data$egfr)
+plot_data$fibrosis <- as.numeric(plot_data$fibrosis)
+
+p <- ggscatter(plot_data, x='egfr', y='fibrosis', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
+  stat_cor(label.x = 55, label.y = 55, size=4) +
+  geom_point(pch=21, size=2, colour="black") + 
+  xlab('') +
+  ylab('') +
+  labs(fill = "") +
+  theme(axis.text.x = element_text(size=9, color = "black"),
+        axis.text.y = element_text(size=9, color = "black"),
+        legend.title = element_text(size=9, color="black"),
+        legend.text = element_text(size=8, color="black")) +
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
+  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+
+ggsave(filename = file.path(path, 'egfr_vs_fibrosis.pdf'),
+       scale = 0.6, width = 15, height = 9, units='cm')
+
+
+# Figure S17h - Supplementary scatterplots showing correlation with clinical parameters
 # Scatterplot % Infl PT vs. Fibrosis area %
 meta <- cosmx@meta.data
 meta$Fibrosis_percentage_Sensor <- paste(meta$Fibrosis_percentage, meta$Sensor_ID, sep='_')
@@ -780,8 +814,8 @@ results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
 results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
 results$percentage_vec_pt <- results$percentage_vec_pt*100
 
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
+ggscatter(results, x='percentage_vec_pt', y='fibrosis_vec', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
+  stat_cor(label.x = 5, label.y = 60, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
   ylab('') +
@@ -790,14 +824,13 @@ ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", ad
         axis.text.y = element_text(size=9, color = "black"),
         legend.title = element_text(size=9, color="black"),
         legend.text = element_text(size=8, color="black")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) 
 
-ggsave(filename = file.path(path, 'correlation_infl_pt_vs_fibrosis.svg'), 
+ggsave(filename = file.path(path, 'correlation_infl_pt_vs_fibrosis.pdf'), 
        scale = 0.6, width = 15, height = 9, units='cm')
 
 
-# Figure S17h - Supplementary scatterplots showing correlation with clinical parameters
+# Figure S17i - Supplementary scatterplots showing correlation with clinical parameters
 # Scatterplot % Infl TAL vs. eGFR
 meta <- cosmx@meta.data
 meta$eGFR_Sensor_ID <- paste(meta$eGFR, meta$Sensor_ID, sep='_')
@@ -835,8 +868,8 @@ results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
 results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
 results$percentage_vec_pt <- results$percentage_vec_pt*100
 
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
+ggscatter(results, x='percentage_vec_pt', y='fibrosis_vec', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
+  stat_cor(label.x = 3, label.y = 15, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
   ylab('') +
@@ -845,11 +878,11 @@ ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", ad
         axis.text.y = element_text(size=9, color = "black"),
         legend.title = element_text(size=9, color="black"),
         legend.text = element_text(size=8, color="black")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2]))
 
-ggsave(filename = file.path(path, 'correlation_infl_tal_vs_egfr.svg'), 
+ggsave(filename = file.path(path, 'correlation_infl_tal_vs_egfr.pdf'), 
        scale = 0.6, width = 15, height = 9, units='cm')
+
 
 
 # Scatterplot % Infl TAL vs. Fibrosis area %
@@ -889,8 +922,8 @@ results$percentage_vec_pt <- as.numeric(results$percentage_vec_pt)
 results$fibrosis_vec <- as.numeric(results$fibrosis_vec)
 results$percentage_vec_pt <- results$percentage_vec_pt*100
 
-ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
-  stat_cor(label.x = 10, label.y = 25, size=4) +
+ggscatter(results, x='percentage_vec_pt', y='fibrosis_vec', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
+  stat_cor(label.x = 3, label.y = 55, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
   ylab('') +
@@ -899,43 +932,10 @@ ggscatter(results, x='fibrosis_vec', y='percentage_vec_pt', add = "reg.line", ad
         axis.text.y = element_text(size=9, color = "black"),
         legend.title = element_text(size=9, color="black"),
         legend.text = element_text(size=8, color="black")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
+  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2]))
 
-ggsave(filename = file.path(path, 'correlation_infl_tal_vs_fibrosis.svg'), 
+ggsave(filename = file.path(path, 'correlation_infl_tal_vs_fibrosis.pdf'), 
        scale = 0.6, width = 15, height = 9, units='cm')
 
 
-# Figure S17i - Supplementary scatterplots showing correlation with clinical parameters
-# Scatterplot Fibrosis vs eGFR
-meta <- cosmx@meta.data
-meta <- meta[meta$Slide_ID!='Nephrectomy',]
-
-egfr <- unique(paste(meta$eGFR, meta$Specimen, sep='_'))
-fibrosis <- unique(paste(meta$Fibrosis_percentage, meta$eGFR, sep='_'))
-
-split_vector_egfr <- strsplit(egfr, "_")
-egfr <- sapply(split_vector_egfr, "[", 1)
-split_vector_fibrosis <- strsplit(fibrosis, "_")
-fibrosis <- sapply(split_vector_fibrosis, "[", 1)
-
-plot_data <- as.data.frame(cbind(egfr, fibrosis))
-plot_data$egfr <- as.numeric(plot_data$egfr)
-plot_data$fibrosis <- as.numeric(plot_data$fibrosis)
-
-ggscatter(plot_data, x='egfr', y='fibrosis', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
-  stat_cor(label.x = 55, label.y = 55, size=4) +
-  geom_point(pch=21, size=2, colour="black") + 
-  xlab('') +
-  ylab('') +
-  labs(fill = "") +
-  theme(axis.text.x = element_text(size=9, color = "black"),
-        axis.text.y = element_text(size=9, color = "black"),
-        legend.title = element_text(size=9, color="black"),
-        legend.text = element_text(size=8, color="black")) +
-  scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
-  scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
-
-ggsave(filename = file.path(path, 'egfr_vs_fibrosis.svg'),
-       scale = 0.6, width = 15, height = 9, units='cm')
 

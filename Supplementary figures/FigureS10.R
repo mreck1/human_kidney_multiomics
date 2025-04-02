@@ -119,11 +119,12 @@ DotPlot(iri, features = c('Pax8', 'Hnf4a', 'Havcr1', 'Vcam1', 'Tmem161a'),
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'iri_markers_1.svg'), 
+ggsave(filename = file.path(path, 'iri_markers_1.pdf'), 
        scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 2
@@ -139,12 +140,13 @@ DotPlot(iri, features = c('Ccl2', 'Cxcl1', 'Cxcl2', 'Cxcl16', 'Tnf', 'Lif', 'Tme
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'iri_markers_2.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'iri_markers_2.pdf'), 
+       scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 3
 DotPlot(iri, features = c('C3', 'Tgfb2', 'Pdgfb', 'Pdgfd', 'Ccn1', 'Tmem161a'), 
@@ -159,12 +161,13 @@ DotPlot(iri, features = c('C3', 'Tgfb2', 'Pdgfb', 'Pdgfd', 'Ccn1', 'Tmem161a'),
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'iri_markers_3.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'iri_markers_3.pdf'), 
+       scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 4
 DotPlot(iri, features = c('Icam1', 'Cldn1', 'Cd44', 'Cdkn1a', 'Birc3', 'Tmem161a'), 
@@ -179,12 +182,13 @@ DotPlot(iri, features = c('Icam1', 'Cldn1', 'Cd44', 'Cdkn1a', 'Birc3', 'Tmem161a
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'iri_markers_4.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'iri_markers_4.pdf'), 
+       scale = 0.5, width = 32, height = 16, units='cm')
 
 # RUUO model
 ruuo$Annotation_new_modified <- ruuo$Annotation_new
@@ -205,11 +209,12 @@ DotPlot(ruuo, features = c('Pax8', 'Hnf4a', 'Havcr1', 'Vcam1', 'Tmem161a'),
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'ruuo_markers_1.svg'), 
+ggsave(filename = file.path(path, 'ruuo_markers_1.pdf'), 
        scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 2
@@ -225,12 +230,13 @@ DotPlot(ruuo, features = c('Ccl2', 'Cxcl1', 'Cxcl2', 'Cxcl16', 'Tnf', 'Lif', 'Tm
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'ruuo_markers_2.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'ruuo_markers_2.pdf'), 
+       scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 3
 DotPlot(ruuo, features = c('C3', 'Tgfb2', 'Pdgfb', 'Pdgfd', 'Ccn1', 'Tmem161a'), 
@@ -245,12 +251,13 @@ DotPlot(ruuo, features = c('C3', 'Tgfb2', 'Pdgfb', 'Pdgfd', 'Ccn1', 'Tmem161a'),
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression") #+ NoLegend()
+  labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'ruuo_markers_3.svg'), 
-       scale = 0.5, width = 60, height = 16, units='cm')
+ggsave(filename = file.path(path, 'ruuo_markers_3.pdf'), 
+       scale = 0.5, width = 32, height = 16, units='cm')
 
 # Subplot 4
 DotPlot(ruuo, features = c('Icam1', 'Cldn1', 'Cd44', 'Cdkn1a', 'Birc3', 'Tmem161a'), 
@@ -265,11 +272,12 @@ DotPlot(ruuo, features = c('Icam1', 'Cldn1', 'Cd44', 'Cdkn1a', 'Birc3', 'Tmem161
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="grey10", size=10),
         legend.title = element_text(colour="grey10", size=10),
+        axis.text.x = element_text(size=12, color="black", face="italic"),
         panel.border = element_rect(colour = "white", fill=NA, size=2)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
-ggsave(filename = file.path(path, 'ruuo_markers_4.svg'), 
+ggsave(filename = file.path(path, 'ruuo_markers_4.pdf'), 
        scale = 0.5, width = 32, height = 16, units='cm')
 
 

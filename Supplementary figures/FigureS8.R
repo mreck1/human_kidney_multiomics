@@ -21,7 +21,7 @@ cosmx_subset <- NormalizeData(cosmx_subset)
 
 
 
-genes <- rev(c('HNF4A', 'MME', 'ASS1', 
+genes <- (c('HNF4A', 'MME', 'ASS1', 
                'KNG1', 'CASR',
                'SLC12A3', 'SLC8A1', 
                'AQP3', 'SPINK1',
@@ -41,24 +41,27 @@ genes <- rev(c('HNF4A', 'MME', 'ASS1',
                'PDGFRB', 'RGS5', 'MYH11'))
 
 
-plot <- DotPlot(cosmx_subset, features = genes, cols=c('grey85', 'navy'), dot.scale=3, scale.min=1, scale.max=30, scale=T) + NoLegend() + 
-  cowplot::theme_cowplot() + RotatedAxis() + theme_bw() +
-  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
-        axis.text.y = element_text(size=12, color="black"),
-        axis.title = element_text(size=14))
-plot + coord_flip() +
+plot <- DotPlot(cosmx_subset, features = genes, cols = c('grey85', 'navy'), 
+                dot.scale = 3, scale.min = 1, scale.max = 30, scale = TRUE) + 
+  NoLegend() + 
+  cowplot::theme_cowplot() + 
   theme_bw() +
-  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
-        axis.text.y = element_text(size=12, color="black"),
-        axis.title = element_text(size=14)) +
+  coord_flip() +  # Flip axes while keeping their meaning
+  scale_x_discrete(position = "top") +  # Moves y-axis labels (row names) to the left
+  theme(
+    axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
+    axis.text.y = element_text(size=12, color="black", face="italic"), # Italicized y-axis labels
+    axis.title = element_text(size=14),
+    axis.ticks = element_blank(),
+    legend.title = element_text(size=10, color="black"),
+    legend.text = element_text(size=10, color='black')
+  ) +
   ylab('') +
-  theme(axis.ticks = element_blank()) +
   scale_color_gradient(low = "grey85", high = "navy",
                        guide = guide_colorbar(ticks.colour = "black",
-                                              frame.colour = "black")) + theme(axis.title.y = element_text(size=10, margin = margin(r = 15)),
-                                                                               axis.text.x = element_text(size=12, angle = 60, hjust = 1, color = "black"),
-                                                                               axis.text.y = element_text(size=10, color = "black"),
-                                                                               legend.title = element_text(size=10, color="black"),
-                                                                               legend.text = element_text(size=10, color='black')) 
-ggsave(filename = file.path(path, 'cosmx_dotplot.svg'), 
+                                              frame.colour = "black"))
+
+plot
+
+ggsave(filename = file.path(path, 'cosmx_dotplot.pdf'), 
        scale = 0.6, width = 60, height = 60, units='cm')

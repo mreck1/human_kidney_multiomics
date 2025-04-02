@@ -24,7 +24,7 @@ normalized_counts <- vst(dds, blind=FALSE)
 # Plot
 plotPCA(normalized_counts, intgroup=c("Condition"))
 
-ggsave(filename = file.path(path, 'rptec_pca.svg'),
+ggsave(filename = file.path(path, 'rptec_pca.pdf'),
        scale = 0.5, width = 25, height = 30, units='cm')
 
 
@@ -59,33 +59,41 @@ resLFC$hgnc_symbol <- NULL
 #Swap up/downregulated
 resLFC$log2FoldChange <- resLFC$log2FoldChange * (-1)
 
+lab_italics <- paste0("italic('", resLFC$Symbol, "')")
+selectLab_italics <- paste0(
+  "italic('",
+  c('CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 
+    'TNF', 'CDKN1A', 'FAS', 'HDAC9', 'BIRC3', 
+    'ICAM1', 'CLDN1', 'TGM2', 
+    'IL18', 'IL32', 'C3'),
+  "')"
+)
+
 p <- EnhancedVolcano(as.data.frame(resLFC),
-                     lab = resLFC$Symbol,
+                     lab = lab_italics,
                      x = 'log2FoldChange',
                      y = 'pvalue',
                      pCutoff = 0.00000000001,
                      FCcutoff = 1,
                      col=c('grey60', 'grey60', 'grey60', 'red3'),
                      colAlpha = 0.7, 
-                     selectLab=c('CCL28', 'CXCL1', 'CXCL2', 'CXCL3', 'CXCL6', 'CXCL8', 
-                                 'TNF', 'CDKN1A', 'FAS', 'HDAC9', 'BIRC3', 
-                                 'ICAM1', 'CLDN1', 'TGM2', 
-                                 'IL18', 'IL32', 'C3'),
+                     selectLab = selectLab_italics,
                      pointSize = 0.5,
                      labSize = 4.0,
                      labCol = 'black',
                      drawConnectors = TRUE,
-                     widthConnectors = 0.75)
+                     widthConnectors = 0.75,
+                     parseLabels = TRUE)  # Ensure italic formatting
 
-p + labs(x = 'L2FC', y = "-log10 p-value") + ggtitle('') +
+p + labs(x = 'L2FC', y = "-log10 p-value") +  
   theme_bw() +
   theme(axis.text.x = element_text(color="black", size=10),
         axis.text.y = element_text(color="black", size=10),
         axis.title.x = element_text(colour="black", size=14),
         axis.title.y = element_text(colour="black", size=14),
-        legend.text = element_text(colour="black", size=14),
-        legend.title = element_text(colour="black", size=14)) +
-  NoLegend()
+        legend.position = "none",  # Remove legend
+        plot.title = element_blank())  # Remove title
+
 
 ggsave(filename = file.path(path, 'rptec_volcano_plot.png'),
        scale = 0.5, width = 22, height = 20, units='cm')
@@ -185,9 +193,20 @@ rptec_matrix_ss <- rptec_matrix_ss[match(genes, rownames(rptec_matrix_ss)),]
 rptec_matrix_ss <- rptec_matrix_ss[,match(c('B1-NR', 'B3-NR', 'B4-NR', 'B5-NR', 'B6-NR',
                                             'B1-IR', 'B3-IR', 'B4-IR', 'B5-IR', 'B6-IR'), colnames(rptec_matrix_ss))]
 
-pheatmap(rptec_matrix_ss, scale='row', color=colorRampPalette(c(muted("navy", l=30, c = 70), "white", muted("red", l=40, c = 90)))(500),
-         annotation_col = annotations, annotation_colors=annot_colors, cluster_rows=F, cluster_cols=F,
-         clustering_method='ward.D2', gaps_col=5, show_colnames=F, fontsize=14,
-         labels_row = rownames(rptec_matrix_ss),
+labels_row = as.expression(lapply(rownames(rptec_matrix_ss), function(x) bquote(italic(.(x)))))
+pheatmap(rptec_matrix_ss, 
+         scale = 'row', 
+         color = colorRampPalette(c(muted("navy", l = 30, c = 70), "white", muted("red", l = 40, c = 90)))(500),
+         annotation_col = annotations, 
+         annotation_colors = annot_colors, 
+         cluster_rows = FALSE, 
+         cluster_cols = FALSE,
+         clustering_method = 'ward.D2', 
+         gaps_col = 5, 
+         show_colnames = FALSE, 
+         fontsize = 14,
+         labels_row = as.expression(lapply(rownames(rptec_matrix_ss), function(x) bquote(italic(.(x))))),
          labels_col = colnames(rptec_matrix_ss),
-         gaps_row=c(2, 16, 18), border_color='grey50')
+         gaps_row = c(2, 16, 18), 
+         border_color = 'grey50')
+

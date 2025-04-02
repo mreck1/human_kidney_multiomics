@@ -276,18 +276,22 @@ summary_plot_data <- plot_data %>%
 
 ggplot(summary_plot_data, aes(fill = Condition, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
-                position = position_dodge(width = 0.9), width=0.4, size=1)+
-  geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
+                position = position_dodge(width = 0.9), width=0.4, size=1) +
+  geom_bar(stat = "identity", color="black", position=position_dodge(width = 0.9), width = 0.8) +
+  geom_jitter(data = plot_data, aes(x = cluster, y = percent), 
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9, jitter.height = 0), 
+              size = 2, alpha = 0.7) + 
   theme_classic() +
   RotatedAxis() +
   xlab('') + ylab(bquote('% of total cells')) + 
   scale_fill_manual(values = c('grey50', '#7366bd')) +
   theme(axis.text.x = element_text(size = 18, colour='black'),
         axis.text.y = element_text(size = 18),
-        axis.title.y =element_text(size = 24)) +
+        axis.title.y =element_text(size = 24),
+        legend.position = "top") +
   ylim(0,20)
 
-ggsave(filename = file.path(path, 'barplot_non_epithelia.svg'), 
+ggsave(filename = file.path(path, 'barplot_non_epithelia.pdf'), 
        scale = 0.5, width = 100, height = 33.5, units='cm')
 
 
@@ -338,6 +342,9 @@ ggplot(summary_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
   geom_errorbar(aes(ymax = mean + sem, ymin = mean - sem), 
                 position = position_dodge(width = 0.9), width=0.4, size=1)+
   geom_bar(stat = "identity", color="black", position='dodge', width = 0.8) +
+  geom_jitter(data = plot_data, aes(x = cluster, y = percent), 
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.9, jitter.height = 0), 
+              size = 2, alpha = 0.7) + 
   theme_classic() +
   RotatedAxis() +
   xlab('') + ylab(bquote('% of epithelial cells')) + 
@@ -347,7 +354,7 @@ ggplot(summary_epithelia, aes(fill = Condition, y = mean, x = cluster)) +
         axis.title.y =element_text(size = 24)) +
   ylim(0,60)
 
-ggsave(filename = file.path(path, 'barplot_epithelia.svg'), 
+ggsave(filename = file.path(path, 'barplot_epithelia.pdf'), 
        scale = 0.5, width = 60, height = 30, units='cm')
 
 

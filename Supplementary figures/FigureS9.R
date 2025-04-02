@@ -67,7 +67,7 @@ purples <- pal_material("deep-purple", alpha = 0.5)(10)
 p <- DimPlot(kpmp_subset, label=F, pt.size=0.1, cols=c("sandybrown", 'grey40', purples[2], purples[4], purples[6]), group.by = 'subclass.l2', reduction='umap_projected', order=F, raster=F, shuffle = F) + NoAxes() + ggtitle('')
 p + theme(legend.text = element_text(size=14, color='black'))
 
-ggsave(filename = file.path(path, 'umap_kpmp_pt.png'), 
+ggsave(filename = file.path(path, 'umap_kpmp_pt.pdf'), 
        scale = 0.6, width = 45, height = 30, units='cm')
 
 
@@ -149,7 +149,8 @@ DotPlot(kpmp_pt, features = c('VCAM1', 'HAVCR1', 'SOX9', 'ITGB8', 'LINC02511'),
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="black", size=10),
         legend.title = element_text(colour="black", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face="italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
@@ -168,7 +169,8 @@ DotPlot(kpmp_pt, features = c('CCL2', 'CCL20', 'CCL28', 'CXCL1', 'CXCL2', 'CXCL3
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="black", size=10),
         legend.title = element_text(colour="black", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face="italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
@@ -187,7 +189,8 @@ DotPlot(kpmp_pt, features = c('IL18', 'IL32', 'C3', 'TGFB2', 'TGM2', 'PDGFB', 'P
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="black", size=10),
         legend.title = element_text(colour="black", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face="italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
@@ -206,7 +209,8 @@ DotPlot(kpmp_pt, features = c('ICAM1', 'CLDN1', 'CD44', 'CDKN1A', 'HDAC9', 'BIRC
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="black", size=10),
         legend.title = element_text(colour="black", size=10),
-        panel.border = element_rect(colour = "white", fill=NA, size=2)) +
+        panel.border = element_rect(colour = "white", fill=NA, size=2),
+        axis.text.x = element_text(face="italic")) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
   labs(colour = "Average Expression") + NoLegend()
 
@@ -229,7 +233,7 @@ p[["HAVCR1+ VCAM1+"]] +
         legend.text=element_text(size=12)
   )
 
-ggsave(filename = file.path(path, 'umap_havcr1_vcam1_multiome.png'), 
+ggsave(filename = file.path(path, 'umap_havcr1_vcam1_multiome.pdf'), 
        scale = 0.5, width = 30, height = 20, units='cm')
 
 # Plot2
@@ -245,12 +249,13 @@ p[["CCL2+ CXCL1+"]] +
         legend.text=element_text(size=12)
   )
 
-ggsave(filename = file.path(path, 'umap_ccl2_cxcl1_multiome.png'), 
+ggsave(filename = file.path(path, 'umap_ccl2_cxcl1_multiome.pdf'), 
        scale = 0.5, width = 30, height = 20, units='cm')
 
 
 # Figure S9e - Correlation of proportions, original aPT or projected infl.PT with Myofibroblasts/Activated Macrophages
 # Prepare inflammatory cell proportions (% of PT cells)
+subset_pt <- subset(kpmp, subset=Annotation.Lvl1_projected=='PT')
 meta <- subset_pt@meta.data
 meta$SampleXCondition <- paste(meta$specimen_id, meta$condition, sep='_')
 

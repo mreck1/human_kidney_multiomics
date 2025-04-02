@@ -17,16 +17,16 @@ ggplot(plot_data, aes(x=V1, y=V2, fill=V1)) +
   scale_fill_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
   theme(axis.title.y = element_text(color="black", size=16),
         axis.text.y = element_text(color="black", size=14),
-        axis.text.x = element_text(color="black", size=14, angle=90, vjust=0.5),
+        axis.text.x = element_text(color="black", size=14),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = '', y = 'Number of nuclei') +
   theme(legend.position = "bottom", legend.box = "horizontal",
         legend.text = element_text(colour="black", size=14),
         legend.title = element_blank(),
         panel.border = element_rect(colour = "black", fill=NA, size=1)) +
-  guides(colour = guide_colourbar(title.vjust = 0.85))
+  guides(colour = guide_colourbar(title.vjust = 0.85)) + RotatedAxis()
 
-ggsave(filename = file.path(path, 'barplot_nuclei_library.svg'), 
+ggsave(filename = file.path(path, 'barplot_nuclei_library.pdf'), 
        scale = 0.5, width = 20, height = 25, units='cm')
 
 
@@ -70,7 +70,7 @@ yplot <- ggboxplot(plot_data, x = "V3", y = "V2_log",
 plot_grid(xplot, NULL, p, yplot, ncol = 2, align = "hv", 
           rel_widths = c(2, 1), rel_heights = c(1, 2))
 
-ggsave(filename = file.path(path, 'scatter_fragments_umis.svg'), 
+ggsave(filename = file.path(path, 'scatter_fragments_umis.pdf'), 
        scale = 0.5, width = 35, height = 25, units='cm')
 
 
@@ -84,7 +84,7 @@ ggplot(plot_data, aes(x = length, y = group, fill = group, alpha=1)) +
   theme_ridges() + 
   theme(legend.position = "none") + xlim(c(0, 600)) +
   theme_bw() +
-  labs(x = 'Insert Length (bp)', y = '') +
+  labs(x = 'Insert Length [bp]', y = '') +
   scale_fill_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
   theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
         axis.text.y = element_text(color="black", size=14),
@@ -94,7 +94,7 @@ ggplot(plot_data, aes(x = length, y = group, fill = group, alpha=1)) +
         title = element_text(colour="black", size=14),
         panel.border = element_rect(colour = "black", fill=NA, size=1))
 
-ggsave(filename = file.path(path, 'nucleosomal_signal.svg'), 
+ggsave(filename = file.path(path, 'nucleosomal_signal.pdf'), 
        scale = 0.5, width = 32, height = 22, units='cm')
 
 
@@ -106,7 +106,7 @@ plot_data <- p[["data"]]
 ggplot(plot_data, aes(x = position, y = norm.value, colour=group, alpha=1)) +
   geom_line(stat = "identity", size = 0.4) +
   theme_bw() +
-  labs(x = 'Position from TSS (bp)', y = 'Mean TSS enrichment score') +
+  labs(x = 'Position from TSS [bp]', y = 'Mean TSS enrichment score') +
   scale_color_manual(values=c('#4292C6', '#54278F', '#238B45', '#FD8D3C', '#A50F15', '#8C510A')) +
   theme(axis.text.x = element_text(color="black", size=12, angle=0, hjust=0.5),
         axis.text.y = element_text(color="black", size=14),
@@ -116,7 +116,7 @@ ggplot(plot_data, aes(x = position, y = norm.value, colour=group, alpha=1)) +
         title = element_text(colour="black", size=14),
         panel.border = element_rect(colour = "black", fill=NA, size=2)) + NoLegend()
 
-ggsave(filename = file.path(path, 'tss_enrichment.svg'), 
+ggsave(filename = file.path(path, 'tss_enrichment.pdf'), 
        scale = 0.5, width = 25, height = 25, units='cm')
 
 

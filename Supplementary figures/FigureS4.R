@@ -43,23 +43,6 @@ genes <- c('CUBN', 'HNF4A', 'MME', 'SLC7A8', 'PRODH2', 'SLC34A1', 'SLC5A1', 'SLC
 
 
 
-plot <- DotPlot(multiome, features = genes, 
-                cols=c('grey85', '#702963'), dot.scale=3, dot.min=0.0, scale=T, assay='SCT') +
-  cowplot::theme_cowplot() + coord_flip() +
-  theme_bw() +
-  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
-        axis.text.y = element_text(size=12, color="black"),
-        axis.title = element_text(size=14)) +
-  ylab('') +
-  theme(axis.ticks = element_blank()) +
-  scale_color_gradient(low = "grey85", high = "navy",
-                       #limits=c(0.5,3),
-                       #oob=squish,
-                       guide = guide_colorbar(ticks.colour = "black",
-                                              frame.colour = "black")) 
-
-
-p_data <- plot[["data"]]
 dotplot <- p_data %>% 
   ggplot(aes(x=id, y = features.plot)) + 
   geom_point(aes(size = pct.exp, fill = avg.exp.scaled), color="black", shape=21) +
@@ -67,14 +50,31 @@ dotplot <- p_data %>%
   cowplot::theme_cowplot() + 
   theme_bw() +
   theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
-        axis.text.y = element_text(size=12, color="black"),
+        axis.text.y = element_text(size=12, color="black", face="italic"),
         axis.title = element_text(size=14)) +
   ylab('') +
   theme(axis.ticks = element_blank()) +
   scale_y_discrete(position = "right") +
   scale_fill_gradient(low = "grey85", high = "navy",
-                      #limits=c(0.5,3),
-                      #oob=squish,
+                      guide = guide_colorbar(ticks.colour = "black",
+                                             frame.colour = "black"),
+                      name = "Average expression")
+
+
+p_data <- plot[["data"]]
+dotplot <- p_data %>% 
+  ggplot(aes(x=id, y = features.plot)) + 
+  geom_point(aes(size = pct.exp, fill = avg.exp.scaled), color="black", shape=21) +
+  scale_size("% expressed", range = c(0,6), limits = c(1,100)) +
+  cowplot::theme_cowplot() + 
+  theme_bw() +
+  theme(axis.text.x = element_text(size=10, angle=45, hjust=1, color="black"),
+        axis.text.y = element_text(size=12, color="black", face="italic"),
+        axis.title = element_text(size=14)) +
+  ylab('') +
+  theme(axis.ticks = element_blank()) +
+  scale_y_discrete(position = "right") +
+  scale_fill_gradient(low = "grey85", high = "navy",
                       guide = guide_colorbar(ticks.colour = "black",
                                              frame.colour = "black"),
                       name = "Average expression")
@@ -129,11 +129,11 @@ dotplot + geom_vline(xintercept = 3.5, color = "black", size=1) +
   geom_hline(yintercept = 125, color = "black", size=0.2) + 
   NoLegend() + 
   theme_light() +
-  theme(axis.text.x = element_text(face="bold", color="black", size=8, angle=45, hjust=1),
-        axis.text.y = element_text(face="bold", color="black", size=8),
+  theme(axis.text.x = element_text(color="black", size=8, angle=45, hjust=1),
+        axis.text.y = element_text(color="black", size=8, face="italic"),
         axis.line = element_line(colour = "grey15", size = 1, linetype = "solid"),
         panel.grid.minor = element_line(colour = "white", size = 0.5), panel.grid.major = element_line(colour = "white", size = 0.1)) + 
   labs(x = "", y = "")
 
-ggsave(filename = file.path(path, 'dotplot_marker_genes.svg'),
+ggsave(filename = file.path(path, 'dotplot_marker_genes.pdf'),
        scale = 0.6, width = 80, height = 100, units='cm')

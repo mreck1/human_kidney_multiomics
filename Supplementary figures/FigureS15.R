@@ -67,15 +67,15 @@ dotplot <- p_data %>%
   theme(axis.ticks = element_blank()) +
   scale_y_discrete(position = "right") +
   scale_fill_gradient(low = "grey85", high = "navy",
-                      #limits=c(0.5,3),
-                      #oob=squish,
                       guide = guide_colorbar(ticks.colour = "black",
                                              frame.colour = "black"),
-                      name = "Average expression")
+                      name = "Average expression") +
+  theme(axis.text.y = element_text(size = 10, color = "black"))
+
 
 dotplot <- dotplot + theme(axis.title.y = element_text(size=10, margin = margin(r = 15)),
                            axis.text.x = element_text(size=12, angle = 60, hjust = 1, color = "black"),
-                           axis.text.y = element_text(size=10, color = "black"),
+                           axis.text.y = element_text(size=10, color = "black", face="italic"),
                            legend.title = element_text(size=10, color="black"),
                            legend.text = element_text(size=10, color='black')) 
 
@@ -99,6 +99,6 @@ dotplot + geom_vline(xintercept = 4.5, color = "black", size=1) +
   geom_hline(yintercept = 50, color = "black", size=0.2)+
   geom_hline(yintercept = 55, color = "black", size=0.2)
 
-ggsave(filename = file.path(path, 'cosmx_marker_genes.svg'), 
+ggsave(filename = file.path(path, 'cosmx_marker_genes.pdf'), 
        scale = 0.6, width = 60, height = 60, units='cm')
 

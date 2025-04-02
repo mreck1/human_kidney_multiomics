@@ -13,20 +13,18 @@ cosmx$Niche <- factor(cosmx$Niche, levels=c('Fibrotic', 'Tubular injury', 'PT',
 DotPlot(cosmx, features = rev(c('CCL2', 'CXCL1', 'MMP7', 'COL1A1', 'COL3A1', 'CD163', 'LYZ')), 
         group.by = 'Niche', scale=T, cols=c('grey90', 'navy')) + RotatedAxis() + coord_flip() +
   theme_bw() +
-  theme(axis.text.x = element_text(face="bold", color="grey10", size=10, angle=90, hjust=1, vjust=0.5),
-        axis.text.y = element_text(face="bold", color="grey10", size=10),
+  theme(axis.text.x = element_text(size=10),
+        axis.text.y = element_text(size=10, face="italic"),
         panel.grid.minor = element_line(colour = "white", size = 0), panel.grid.major = element_line(colour = "white", size = 0)) + 
   labs(x = "", y = "") +
   theme(legend.position = "none", legend.box = "horizontal",
-        legend.text = element_text(colour="grey10", size=12, 
-                                   face="bold"),
-        legend.title = element_text(colour="grey10", size=12, 
-                                    face="bold"),
-        panel.border = element_rect(colour = "black", fill=NA, size=1)) +
+        legend.text = element_text(size=12),
+        legend.title = element_text(size=12),
+        panel.border = element_rect(fill=NA, size=1)) +
   guides(colour = guide_colourbar(title.vjust = 0.85)) +
-  labs(colour = "Average Expression")
+  labs(colour = "Average Expression") + RotatedAxis()
 
-ggsave(filename = file.path(path, 'dotplot_niche_gene_expression.svg'),
+ggsave(filename = file.path(path, 'dotplot_niche_gene_expression.pdf'),
        scale = 0.5, width = 14, height = 24, units='cm')
 
 
@@ -151,7 +149,7 @@ ggplot(data=df_prop, aes(reorder(ct, fibrotic_ratio), y=fibrotic_ratio, fill=ct)
   labs(colour = "Average Expression") + ylim(c(-1,1)) + 
   geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
 
-ggsave(filename = file.path(path, 'cell_type_enrichment_fibrotic_niche.svg'),  
+ggsave(filename = file.path(path, 'cell_type_enrichment_fibrotic_niche.pdf'),  
        scale = 0.5, width = 20, height = 20, units='cm')
 
 # Plot injury niche
@@ -170,7 +168,7 @@ ggplot(data=df_prop, aes(reorder(ct, inj_ratio), y=inj_ratio, fill=ct)) +
   labs(colour = "Average Expression") + ylim(c(-1,1)) + 
   geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
 
-ggsave(filename = file.path(path, 'cell_type_enrichment_injury_niche.svg'),  
+ggsave(filename = file.path(path, 'cell_type_enrichment_injury_niche.pdf'),  
        scale = 0.5, width = 20, height = 20, units='cm')
 
 # Plot healthy niche
@@ -189,7 +187,7 @@ ggplot(data=df_prop, aes(reorder(ct, healthy_ratio), y=healthy_ratio, fill=ct)) 
   labs(colour = "Average Expression") + ylim(c(-1,1)) + 
   geom_hline(yintercept = 0, color='black', linewidth=1, alpha=0.8) + coord_flip()
 
-ggsave(filename = file.path(path, 'cell_type_enrichment_healthy_niche.svg'),  
+ggsave(filename = file.path(path, 'cell_type_enrichment_healthy_niche.pdf'),  
        scale = 0.5, width = 20, height = 20, units='cm')
 
 
@@ -217,7 +215,7 @@ plot_data$percent <- as.numeric(plot_data$percent)
 plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
 
 #Plot
-ggscatter(plot_data, x='eGFR', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+ggscatter(plot_data, x='eGFR', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
   stat_cor(label.x = 70, label.y = 60, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
@@ -230,7 +228,7 @@ ggscatter(plot_data, x='eGFR', y='percent', add = "reg.line", add.params = list(
   scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
   scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
 
-ggsave(filename = file.path(path, 'fibrotic_niche_vs_egfr.svg'),  
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_egfr.pdf'),  
        scale = 0.6, width = 15, height = 9, units='cm')
 
 
@@ -257,7 +255,7 @@ plot_data$percent <- as.numeric(plot_data$percent)
 plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
 
 # Plot
-ggscatter(plot_data, x='Fibrosis_percentage', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+ggscatter(plot_data, x='Fibrosis_percentage', y='percent', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
   stat_cor(label.x = 2, label.y = 60, size=4) +
   geom_point(pch=21, size=2, colour="black") + 
   xlab('') +
@@ -270,7 +268,7 @@ ggscatter(plot_data, x='Fibrosis_percentage', y='percent', add = "reg.line", add
   scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) +
   scale_x_continuous(breaks = c(10, 30, 50, 70, 90, 110))
 
-ggsave(filename = file.path(path, 'fibrotic_niche_vs_fibrosis.svg'),  
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_fibrosis.pdf'),  
        scale = 0.6, width = 15, height = 9, units='cm')
 
 
@@ -334,7 +332,7 @@ plot_data$percent <- as.numeric(plot_data$percent)
 plot_data <- plot_data[plot_data$cluster %in% c('Fibrotic'),]
 
 plot_data_combined <- data.frame(niche=plot_data$percent, infl=pct_infl_pt_df$percentage_vec_pt)
-ggscatter(plot_data_combined, x='infl', y='niche', add = "reg.line", add.params = list(color = "red4", fill = "lightgray")) +
+ggscatter(plot_data_combined, x='infl', y='niche', add = "reg.line", add.params = list(color = "red4", fill = "lightgray"), conf.int = TRUE) +
   stat_cor(label.x = 5, label.y = 60, size=4) +
   geom_point(pch=21, size=2, color='black') + 
   scale_color_viridis() +
@@ -347,7 +345,7 @@ ggscatter(plot_data_combined, x='infl', y='niche', add = "reg.line", add.params 
         legend.text = element_text(size=8, color="black")) +
   scale_fill_manual(values=c(brewer.pal(8, 'BrBG')[7], brewer.pal(8, 'RdBu')[2])) 
 
-ggsave(filename = file.path(path, 'fibrotic_niche_vs_infl_pt.svg'),  
+ggsave(filename = file.path(path, 'fibrotic_niche_vs_infl_pt.pdf'),  
        scale = 0.6, width = 15, height = 9, units='cm')
 
 
