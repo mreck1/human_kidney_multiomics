@@ -1,4 +1,4 @@
-# Human kidney multiomics
+# Multiomic analysis of human kidney disease identifies a tractable inflammatory, pro-fibrotic tubular cell phenotype
 This repository includes R/python3 scripts to reproduce all main and supplementary figures shown in the article 'Multiomic analysis of human kidney disease identifies a tractable inflammatory, pro-fibrotic tubular cell phenotype" (Nat. Commun. 2025).
 
 The required datasets (including raw and processed data in Seurat format) are available on GEO: GSE254185, GSE253439, GSE252584, GSE254187.
